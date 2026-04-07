@@ -1,0 +1,16 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+
+# React/Node
+frontend/node_modules/
+frontend/dist/
+
+# SQLite
+backend/pheatures.db
+
+# Environment variables
+.env
+.env.local
+.env.production
