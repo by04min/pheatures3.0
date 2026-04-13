@@ -2,6 +2,10 @@ import sqlite3
 import json
 import csv
 
+"""
+========================================
+00. SETUP!
+"""
 # establish connection to the database
 connection = sqlite3.connect("pheatures.db")
 db = connection.cursor() # an object that lets you execute SQL commands
@@ -15,8 +19,10 @@ db.execute("DELETE FROM dependencies")
 db.execute("DELETE FROM diacritics")
 db.execute("DELETE FROM sqlite_sequence")  # resets all autoincrement counters
 connection.commit()
+print("SETUP: cleared all existing tables for a clean slate!")
 
 """
+========================================
 01. PHONEME & FEATURES TABLES
 """
 # maps to store the IDs of features and phonemes to avoid mistakes later!
@@ -71,24 +77,37 @@ print("SUCCESS: populated phoneme, feature, and phoneme_features tables!")
 
 """
 ========================================
-HELPER FUNCTION: given a sequence of feature name/value pairs, and convert to JSON string
+HELPER FUNCTION: given a sequence of ';' separated features, convert to a list, then JSON
     PURPOSE:
     - reusable in contradictions, dependencies, and diacritics parsing
+    - certain rule conditions and consequences may contain multiple features
+    - we want to store those as bundles of features! (consistent with schema.sql)
 
     PARAMS:
-    - text: a string of feature name/value pairs, separated by commas
-    - ex. "+consonantal, -tense"
+    - text: an object of feature value/feature pairs (either a list or string)
+    - ex. "+consonantal; -tense"
+    
+    - delimeter: a character (;)
+    - whereas contradictions already come in as a list (because of csv.reader), dependencies & diacritics 
+    involve multiple features as a string sequence separated by ";"! to handle that, we pass it as a delimeter to make into a list
 
     RETURNS:
-    - a JSON string of the bundle
+    - a JSON string of the bundle, now as a list {[+consonantal, -tense]}
 """
-def create_bundle(text):
+def create_bundle(text, delimeter=None):
     bundle = []
-
-    for item in text.split(","):
+    
+    # if delimeter passed, split text into a list using it!
+    if delimeter:
+        text = text.split(delimeter)
+    
+    # creates a list, using specified delimeter
+    for item in text:
+        
+        # removes any whitespace
         item = item.strip()
         
-        # catches empty items (results from extra commas!)
+        # catches empty items (catch mistakes like an extra ;!)
         if not item:
             continue
 
@@ -105,23 +124,26 @@ def create_bundle(text):
 02. CONTRADICTIONS TABLE
 """
 
-# open the contradictions file, with UTF-8 encoding
-with open("./data/contradictions.rules", "r", encoding="utf-8") as file:
-    # the file is not a CSV, but is separated by newlines
-    contradiction_rules = file.readlines()
+# open the contradictions csv, with UTF-8 encoding
+with open("./data/contradictions.csv", "r", encoding="utf-8") as file:
+    reader = csv.reader(file)
+    contra_table_rows = list(reader)
+
+# skip the first row, since that's just a title
+contradiction_rules = contra_table_rows[1:][0:]
 
 for row in contradiction_rules:
-    row = row.strip() # remove any whitespace
-
-    # skip empty rows (results from newline at end of file)
+    # skip empty rows (in case there's an extra newline somewhere)
     if not row:
         continue
 
-    bundle = create_bundle(row)
+    # no delimeter, since csv.reader already makes the row into a list [feature1, feature2, etc.]
+    contra_bundle = create_bundle(row)
+    
     # insert the bundle into the contradictions table
     db.execute(
         "INSERT INTO contradictions (bundle) VALUES (?)",
-        (json.dumps(bundle),) # convert the bundle (python list) to a JSON string
+        (contra_bundle,) # convert the bundle (python list) to a JSON string
     )
 
 # commit the changes to the database
@@ -134,20 +156,24 @@ print("SUCCESS: populated contradictions table!")
 """
 
 # open the dependencies file, with UTF-8 encoding
-with open("./data/dependencies.rules", "r", encoding="utf-8") as file:
-    dependency_rules = file.readlines()
+with open("./data/dependencies.csv", "r", encoding="utf-8") as file:
+    reader = csv.reader(file)
+    dependency_table_rows = list(reader)
+
+# skip the first row, since that's just column headers
+dependency_rules = dependency_table_rows[1:][0:]
 
 for row in dependency_rules:
-    row = row.strip()
-
     if not row:
         continue
 
+    # dependency conditions and consequences are parsed as a list [conditions, consequences]
+    # this is what csv.reader does by default!
     
-    # dependency conditions and consequences are separated by a ">"
-    split_idx = row.index(">")
-    lhs = create_bundle(row[:split_idx].strip()) # convert the LHS (conditions) to a JSON string
-    rhs = create_bundle(row[split_idx+1:].strip()) # convert the RHS (consequences) to a JSON string
+    # assumes there's always 2 columns (cond, consequence)
+    # multiple features in cond/cons are separated by ";"
+    lhs = create_bundle(row[0], ";") # convert the conditions into a bundle
+    rhs = create_bundle(row[1], ";") # convert the consequences into a bundle
 
     db.execute(
         "INSERT INTO dependencies (condition, consequence) VALUES (?, ?)",
@@ -174,7 +200,6 @@ HELPER FUNCTION: given a sequence of feature name/value pairs, and convert to JS
     RETURNS:
     - a character (either the original text or the unicode integer converted to a char)
 """
-
 def parse_symbol(text):
     try:
         # if text is a valid unicode integer, convert it to a char symbol
@@ -184,29 +209,28 @@ def parse_symbol(text):
         return text
 
 # open the diacritics file, with UTF-8 encoding
-with open("./data/diacritics.rules", "r", encoding="utf-8") as file:
-    diacritic_rules = file.readlines()
+with open("./data/diacritics.csv", "r", encoding="utf-8") as file:
+    reader = csv.reader(file)
+    diacritic_table_rows = list(reader)
+
+# skip the first row, since that's just column headers
+diacritic_rules = diacritic_table_rows[1:][0:]
 
 for row in diacritic_rules:
-    row = row.strip()
-    
     if not row:
         continue
-
-    # diacritics consist of name, symbol, and condition/consequence, separated by a ;
-    first_split_idx = row.find(";") # find the index of the first ;
-    second_split_idx = row.find(";", first_split_idx+1) # find the index of the second ;
     
-    # parse the name, symbol, and rule
-    name = row[:first_split_idx].strip()
-    symbol = parse_symbol(row[first_split_idx+1:second_split_idx].strip())
-    rule = row[second_split_idx+1:].strip() # condition/consequence
-
-    # similar to dependencies, diacritics have a rule with condition and consequence separated by a ">"
-    rule_split_idx = rule.index(">")
-    lhs = create_bundle(rule[:split_idx].strip()) # convert the LHS (conditions) to a JSON string
-    rhs = create_bundle(rule[split_idx+1:].strip()) # convert the RHS (consequences) to a JSON string
-
+    # csv.reader represents each row as a list of 4 elements 
+    # format: [diacritic name, symbol/unicode val, condition, consequence]
+    
+    # this works on the assumption that each row consists of exactly 4 elements (which we know it does, since i made diacritics.csv!)
+    name = row[0].strip()
+    symbol = parse_symbol(row[1].strip()) # cleanup whitespace before parsing
+    
+    # again, conditions/consequences may consist of multiple featues, separated by ";"
+    lhs = create_bundle(row[2].strip(), ";")
+    rhs = create_bundle(row[3].strip(), ";")
+    
     db.execute(
         "INSERT INTO diacritics (diacritic_name, diacritic_symbol, condition, consequence) VALUES (?, ?, ?, ?)",
         (name, symbol, lhs, rhs)
