@@ -10,41 +10,31 @@ from logic.contradiction_funcs import no_contradictions
 01. TEST: no_contradictions
 """
 
-# this bundle SHOULD trigger a contradiction!
-invalid_bundle = [
-    {"feature":"sonorant", "value":"-"},
-    {"feature":"approximant", "value":"+"},
-    
-    {"feature":"coronal", "value":"+"},
-    {"feature":"distributed", "value":"0"},
+def test_contradictions():
+    # this bundle SHOULD trigger a contradiction!
+    invalid_bundle = [
+    {"sonorant":"-"},
+    {"approximant":"+"},
+    {"coronal":"+"},
+    {"distributed":"0"},
     
     # this one does NOT violate any rules, so we expect only the above two to be returned as violations
-    {"feature":"spread gl", "value":"-"},
-    {"feature":"constr gl", "value":"+"}
-]
-
-# this bundle should NOT trigger a contradiction!
-valid_bundle = [
-    {"feature":"high", "value":"+"},
-    {"feature":"front", "value":"+"},
-    {"feature":"consonantal", "value":"-"}
-]
-
-
-# recall no_contradiction returns a tuple, as (Bool, List)
-# where Bool represents whether no contradictiosn were found, and List consists of any violated rules
-
-print("=== EXPECTED: FAILURE ===")
-expect_fail = no_contradictions(invalid_bundle)
-if not expect_fail[0]:
-    print("TEST SUCCEEDED!\n")
-else:
-    print("TEST FAILED!\n")
+    {"spread gl":"-"},
+    {"constr gl":"+"}
+    ]
     
-print("=== EXPECTED: SUCCESS ===")
-expect_succeed = no_contradictions(valid_bundle)
-if expect_succeed[0]:
-    print("TEST SUCCEEDED!\n")
-else:
-    print("TEST FAILED!\n")
-    print("violations found: " + str(expect_succeed[1]))
+    # this bundle should NOT trigger a contradiction!
+    valid_bundle = [
+        {"high":"+"},
+        {"front":"+"},
+        {"consonantal":"-"}
+    ]
+    
+    # recall no_contradiction returns a tuple, as (Bool, List)
+    # where Bool represents whether no contradictiosn were found, and List consists of any violated rules
+    
+    test_fail = no_contradictions(invalid_bundle)
+    assert (not test_fail[0])
+    
+    test_succeed = no_contradictions(valid_bundle)
+    assert (test_succeed[0])

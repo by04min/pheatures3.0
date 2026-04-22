@@ -11,7 +11,7 @@ db = connection.cursor() # an object that lets you execute SQL commands
     - checks if a feature bundle contains any contradictory features!
     
     PARAMS:
-    - feature_bundle: a list of features
+    - feature_bundle: a dictionary of features and their values as key/value pairs e.g. {"voice": "+", "nasal": "-"}
     
     RETURNS: a tuple of the form...
     - (True, []) if no contradictions were found
@@ -20,7 +20,6 @@ db = connection.cursor() # an object that lets you execute SQL commands
 def no_contradictions(feature_bundle):
     
     # fetch all of the contradictions from the database
-    # each element in the contradiction is in tuples, like [({"feature": "blah", "value": blah}), ...]
     contradictory_rules = db.execute("SELECT bundle FROM contradictions").fetchall()
     
     # this keeps track of all contradiction rules that have been violated
@@ -32,8 +31,10 @@ def no_contradictions(feature_bundle):
         rule = json.loads(rule[0])
         
         # for each feature/value pair in the rule, check if it exists in the feature_bundle
-        # the type of violation_found is a Bool
-        violation_found = all(cond in feature_bundle for cond in rule)
+        violation_found = all(
+            feature_bundle.get(feature) == value
+            for feature, value in rule.items()
+        )
         
         if violation_found:
             violated_rules.append(rule)

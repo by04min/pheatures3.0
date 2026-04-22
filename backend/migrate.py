@@ -38,7 +38,8 @@ with open("./data/feature_table.csv", "r", encoding="utf-8") as file:
     1.1 POPULATE FEATURES TABLE
 """
 # grab the feature names from the first row of the csv (first col is just whitespace!)
-feature_names = feature_table_rows[0][1:]
+# make sure it's all in lowercase
+feature_names = [name.lower() for name in feature_table_rows[0][1:]]
 
 # insert the feature names into the database
 for name in feature_names:
@@ -95,7 +96,7 @@ HELPER FUNCTION: given a sequence of ';' separated features, convert to a list, 
     - a JSON string of the bundle, now as a list {[+consonantal, -tense]}
 """
 def create_bundle(text, delimeter=None):
-    bundle = []
+    bundle = {}
     
     # if delimeter passed, split text into a list using it!
     if delimeter:
@@ -112,10 +113,10 @@ def create_bundle(text, delimeter=None):
             continue
 
         value = item[0] # the first char is the value (+, -, 0)
-        feature_name = item[1:] # the rest is the feature name
+        feature_name = item[1:].strip().lower() # the rest is the feature name
 
-        # add the feature name and value to the bundle
-        bundle.append({"feature":feature_name, "value":value})
+        # add the feature name and value to the bundle, as a key/value pair
+        bundle[feature_name] = value
 
     return json.dumps(bundle) # convert the bundle (python list) to a JSON string
 
