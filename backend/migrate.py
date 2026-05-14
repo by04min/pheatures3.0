@@ -29,7 +29,7 @@ print("SETUP: cleared all existing tables for a clean slate!")
 feature_ids = {} 
 
 # open the feature table CSV file, with UTF-8 encoding
-with open("./data/feature_table.csv", "r", encoding="utf-8") as file:
+with open("../data/feature_table.csv", "r", encoding="utf-8") as file:
     reader = csv.reader(file)
     feature_table_rows = list(reader) # split the csv into rows of lists
 
@@ -126,7 +126,7 @@ def create_bundle(text, delimeter=None):
 """
 
 # open the contradictions csv, with UTF-8 encoding
-with open("./data/contradictions.csv", "r", encoding="utf-8") as file:
+with open("../data/contradictions.csv", "r", encoding="utf-8") as file:
     reader = csv.reader(file)
     contra_table_rows = list(reader)
 
@@ -157,7 +157,7 @@ print("SUCCESS: populated contradictions table!")
 """
 
 # open the dependencies file, with UTF-8 encoding
-with open("./data/dependencies.csv", "r", encoding="utf-8") as file:
+with open("../data/dependencies.csv", "r", encoding="utf-8") as file:
     reader = csv.reader(file)
     dependency_table_rows = list(reader)
 
@@ -210,7 +210,7 @@ def parse_symbol(text):
         return text
 
 # open the diacritics file, with UTF-8 encoding
-with open("./data/diacritics.csv", "r", encoding="utf-8") as file:
+with open("../data/diacritics.csv", "r", encoding="utf-8") as file:
     reader = csv.reader(file)
     diacritic_table_rows = list(reader)
 

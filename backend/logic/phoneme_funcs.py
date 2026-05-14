@@ -1,7 +1,9 @@
 import sqlite3
 
 # establish connection to the database
-connection = sqlite3.connect("pheatures.db")
+# check_same_thread=False allows Flask's worker threads to use this module-level connection
+# (by default SQLite only allows the thread that opened the connection to use it)
+connection = sqlite3.connect("pheatures.db", check_same_thread=False)
 db = connection.cursor() # an object that lets you execute SQL commands
 
 """
@@ -75,6 +77,19 @@ def get_phoneme(phoneme_id):
     symbol = db.execute(
             "SELECT phoneme_symbol FROM phonemes WHERE id = ?", (phoneme_id,)
         ).fetchone()
-        
+
     # since fetchone returns a tuple, unpack it!
     return symbol[0] if symbol else None
+
+
+"""
+03. GET ALL PHONEMES
+    PURPOSE:
+    - returns every phoneme in the database as a list of {id, symbol} dicts
+
+    RETURNS:
+    - a list of dicts: [{"id": 1, "symbol": "p"}, ...]
+"""
+def get_all_phonemes():
+    rows = db.execute("SELECT id, phoneme_symbol FROM phonemes ORDER BY id").fetchall()
+    return [{"id": row[0], "symbol": row[1]} for row in rows]

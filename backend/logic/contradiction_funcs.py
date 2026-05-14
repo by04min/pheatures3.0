@@ -2,7 +2,9 @@ import sqlite3
 import json
 
 # establish connection to the database
-connection = sqlite3.connect("pheatures.db")
+# check_same_thread=False allows Flask's worker threads to use this module-level connection
+# (by default SQLite only allows the thread that opened the connection to use it)
+connection = sqlite3.connect("pheatures.db", check_same_thread=False)
 db = connection.cursor() # an object that lets you execute SQL commands
 
 """
