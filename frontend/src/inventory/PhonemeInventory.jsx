@@ -22,10 +22,11 @@ import {
   VOWEL_CELLS,
   VOWEL_HEIGHTS,
 } from './format/phonemeLayout.js'
-import { FeaturePanel } from './featurePanel.jsx'
+import { useDiacriticRows } from '../components/ipaTable/useDiacriticRows.js'
+import { FeaturePanel } from '../pheatures/display/featurePanel.jsx'
 import InvalidDiacriticTarget from '../components/errorMsg.jsx'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import { SymbolButton, ConsonantCell, VowelCell, DiacriticChip } from './format/symbolCells.jsx'
+import { SymbolButton, ConsonantCell, VowelCell, DiacriticChip } from '../components/ipaTable/symbolCells.jsx'
 
 
 /** MAIN COMPONENT! **/
@@ -76,79 +77,11 @@ export default function PhonemeInventory() {
     return out
   }, [diacritics])
 
-  /*
-   * POSITION LOOKUPS
-   * The layout data (CONSONANT_CELLS etc.) maps position → symbol, but to place a DiacriticChip
-   * in the right column we need the reverse: symbol → position. These three memos build that
-   * inverted index once (layout constants never change, so the deps array is empty).
-   */
-  const consonantPositionOf = useMemo(() => {
-    const out = {}
-    for (const manner of MANNERS)
-      for (const place of PLACES)
-        CONSONANT_CELLS[manner]?.[place]?.forEach((sym, idx) => { if (sym) out[sym.trim()] = { manner, place, idx } })
-    return out
-  }, [])
-
-  const vowelPositionOf = useMemo(() => {
-    const out = {}
-    for (const height of VOWEL_HEIGHTS)
-      for (const backness of VOWEL_BACKNESS)
-        VOWEL_CELLS[height]?.[backness]?.forEach((sym, idx) => { if (sym) out[sym.trim()] = { height, backness, idx } })
-    return out
-  }, [])
-
-  const otherPositionOf = useMemo(() => {
-    const out = {}
-    for (const group of OTHER_PHONEME_GROUPS)
-      group.phonemes.forEach((sym, idx) => { if (sym) out[sym.trim()] = { label: group.label, idx } })
-    return out
-  }, [])
-
-  /*
-   * DIACRITIC ROW GROUPINGS
-   * when a diacritic is added to a phoneme, it appears in a new row under the base phoneme
-   * the base phoneme's relative location is memoized
-   */
-  const inventoryWithDiacritic = useMemo(
-    () => inventory.filter((item) => item.diacritic_id != null),
-    [inventory]
-  )
-
-  // structure: [manner][place][idx] → item[]  (idx 0 = voiceless/left, 1 = voiced/right)
-  const diacriticRowsByConsonant = useMemo(() => {
-    const out = {}
-    for (const item of inventoryWithDiacritic) {
-      const pos = consonantPositionOf[item.symbol.trim()]
-      if (!pos) continue
-      const cell = ((out[pos.manner] ??= {})[pos.place] ??= {})
-      ;(cell[pos.idx] ??= []).push(item)
-    }
-    return out
-  }, [inventoryWithDiacritic, consonantPositionOf])
-
-  // structure: [height][backness][idx] → item[]  (idx 0 = unrounded/left, 1 = rounded/right)
-  const diacriticRowsByVowel = useMemo(() => {
-    const out = {}
-    for (const item of inventoryWithDiacritic) {
-      const pos = vowelPositionOf[item.symbol.trim()]
-      if (!pos) continue
-      const cell = ((out[pos.height] ??= {})[pos.backness] ??= {})
-      ;(cell[pos.idx] ??= []).push(item)
-    }
-    return out
-  }, [inventoryWithDiacritic, vowelPositionOf])
-
-  // structure: [groupLabel][idx] → item[]
-  const diacriticRowsByOther = useMemo(() => {
-    const out = {}
-    for (const item of inventoryWithDiacritic) {
-      const pos = otherPositionOf[item.symbol.trim()]
-      if (!pos) continue
-      ;((out[pos.label] ??= {})[pos.idx] ??= []).push(item)
-    }
-    return out
-  }, [inventoryWithDiacritic, otherPositionOf])
+  const {
+    diacriticRowsByConsonant,
+    diacriticRowsByVowel,
+    diacriticRowsByOther,
+  } = useDiacriticRows(inventory)
 
   const inventoryKeys = useMemo(() => new Set(inventory.map((item) => item.key)), [inventory])
 

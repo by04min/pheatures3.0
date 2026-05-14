@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useInventoryStore } from '../store/inventoryStore'
-import { FEATURE_NAMES } from '../inventory/format/phonemeFeatures.js'
+import SheetView from './display/sheetView.jsx'
+import TableView from './display/tableView.jsx'
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ??
@@ -8,6 +9,7 @@ const API_BASE =
 
 export default function Pheatures() {
   const { inventory } = useInventoryStore()
+  const [view, setView] = useState('sheet')
 
   // { phoneme_id: { feature: value, ... } }
   const [baseFeatures, setBaseFeatures] = useState({})
@@ -56,47 +58,26 @@ export default function Pheatures() {
       : baseFeatures[String(item.phoneme_id)]
 
   return (
-    <div className="overflow-x-auto">
-      <table className="border-collapse text-[12px] font-light">
-        <thead>
-          <tr>
-            {/* empty top-left corner cell above the phoneme symbol column */}
-            <th className="border border-slate-200 px-3 py-2 bg-slate-50 text-left sticky left-0 z-10 whitespace-nowrap"/>
-
-            {/* feature name column headers */}
-            {FEATURE_NAMES.map((f) => (
-              <th
-                key={f}
-                className="border border-slate-200 px-3 py-2 bg-slate-50 whitespace-nowrap font-light"
-              >
-                {f.toLowerCase()}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {inventory.map((item) => {
-            const features = resolveFeatures(item)
-            const label = item.diacritic_symbol
-              ? `${item.symbol.trim()}${item.diacritic_symbol}`
-              : item.symbol.trim()
-            return (
-              <tr key={item.key}>
-                {/* phoneme symbol — sticky so it stays visible when scrolling horizontally */}
-                <td className="border border-slate-200 px-5 py-2 bg-slate-50 sticky left-0 text-center text-[16px] font-mono w-20">
-                  {label}
-                </td>
-                {/* feature values each feature column */}
-                {FEATURE_NAMES.map((f) => (
-                  <td key={f} className="border border-slate-200 px-3 py-2 text-[14px] text-center">
-                    {features?.[f.toLowerCase()] ?? ''}
-                  </td>
-                ))}
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+    <div className="space-y-[24px]">
+      <div className="flex gap-2">
+        {['sheet', 'table'].map((v) => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            className={`px-[16px] py-[8px] rounded-[4px] text-[14px] font-light capitalize transition-colors ${
+              view === v
+                ? 'bg-gray-800 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+      {view === 'sheet'
+        ? <SheetView inventory={inventory} resolveFeatures={resolveFeatures} />
+        : <TableView />
+      }
     </div>
   )
 }

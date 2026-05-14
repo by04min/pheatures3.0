@@ -1,4 +1,4 @@
-import { CONSONANT_CELLS, VOWEL_CELLS } from './phonemeLayout.js'
+import { CONSONANT_CELLS, VOWEL_CELLS } from '../../inventory/format/phonemeLayout.js'
 
 // 01. SYMBOL BUTTON: each symbol in the table is like a 'button' that the user can select
 export function SymbolButton({ symbol, disabled, isActive, isInInventory, isDragging, isDragTarget, isInvalidDropTarget, onSelect, onDrop, onInvalidDrop, title }) {
@@ -61,12 +61,12 @@ export function VowelCell({ height, backness, renderSymbolButton }) {
 
 // 04. DIACRITIC CHIP: a modified phoneme shown inline in the table row beneath its base phoneme.
 //     clicking removes it from the inventory (same toggleInventory logic as SymbolButton).
-export function DiacriticChip({ item, onRemove, isDragging }) {
+export function DiacriticChip({ item, onRemove, isDragging, onClick }) {
   const display = `${(item.symbol ?? '').trim()}${item.diacritic_symbol ?? ''}`
   return (
     <button
       type="button"
-      onClick={() => onRemove(item)}
+      onClick={() => onClick ? onClick(item) : onRemove(item)}
       title={`${display} — click to remove`}
       className={`w-14 h-10 text-base font-mono text-center transition-colors ${
         isDragging ? 'text-slate-300 cursor-not-allowed' : 'bg-blue-100 cursor-pointer'
