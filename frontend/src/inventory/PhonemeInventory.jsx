@@ -11,6 +11,7 @@
  */
 
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useInventoryStore } from '../store/inventoryStore'
 import { PHONEME_FEATURES } from './format/phonemeFeatures.js'
 import {
   CONSONANT_CELLS,
@@ -53,8 +54,7 @@ export default function PhonemeInventory() {
 
   /* SELECTED INVENTORY */
   const [activeSymbol, setActiveSymbol] = useState(null)
-  // stores the sounds the user has selected as { key, phoneme_id, symbol, diacritic_id?, diacritic_symbol? }
-  const [inventory, setInventory] = useState([])
+  const { inventory, toggleInventory, clearInventory } = useInventoryStore()
 
   /* DIACRITICS */
   // which diacritic is currently being dragged?
@@ -164,17 +164,6 @@ export default function PhonemeInventory() {
   const getInventoryKey = (phonemeId, diacriticId) =>
     diacriticId ? `${phonemeId}:${diacriticId}` : `${phonemeId}`
 
-  /** click same cell again to remove that inventory row (matched by entry.key). */
-  const toggleInventory = (entry) => {
-    setDiacriticError('')
-    setInventory((curr) => {
-      if (curr.some((item) => item.key === entry.key)) {
-        return curr.filter((item) => item.key !== entry.key)
-      }
-      return [...curr, entry]
-    })
-  }
-
   /** HANDLE CLICK: add/remove the base phoneme (no diacritic). */
   const onSelectSymbol = (rawSymbol) => {
     const symbol = rawSymbol?.trim()
@@ -182,6 +171,7 @@ export default function PhonemeInventory() {
     const phoneme = phonemesBySymbol[symbol]
     if (!phoneme) return
     const key = getInventoryKey(phoneme.id, null)
+    setDiacriticError('')
     toggleInventory({ key, phoneme_id: phoneme.id, symbol: phoneme.symbol, diacritic_id: null, diacritic_symbol: null })
     setActiveSymbol(symbol)
   }
@@ -595,7 +585,7 @@ export default function PhonemeInventory() {
 
       {/* Buttons */}
       <div className="shrink-0 pt-8 pb-16">
-        <button onClick={() => { setInventory([]); setDiacriticError('') }} className="px-[20px] py-[16px] bg-gray-800 rounded-[4px] hover:opacity-70">
+        <button onClick={() => { clearInventory(); setDiacriticError('') }} className="px-[20px] py-[16px] bg-gray-800 rounded-[4px] hover:opacity-70">
           <div className="flex flex-row items-center gap-2 text-white">
             <DeleteOutlinedIcon />
             <label className="text-[16px] font-light">Clear Inventory</label>
