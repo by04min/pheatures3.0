@@ -59,7 +59,7 @@ export function FeaturePanel({ symbol, onClose }) {
 
       {/* phoneme symbol + close button */}
       <div className="flex flex-row justify-between items-center">
-          <h2 className="text-[48px]">
+          <h2 className="text-[48px] font-mono">
             {symbol}
           </h2>
         <button
