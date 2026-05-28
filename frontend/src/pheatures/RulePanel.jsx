@@ -4,11 +4,13 @@
 // parent owns the row state; RulePanel just fires onChange callbacks
 
 import { FEATURE_NAMES } from '../inventory/format/phonemeFeatures.js'
+import { RuleContradictionError, RuleNonMinimalWarning } from '../components/errorMsg.jsx'
 
 const VALUES = ['+', '-', '0']
 
 // a single row: value selector (small) + feature selector (wide)
-function FeatureRow({ row, onChange }) {
+// excludeFeatures — Set of feature names already selected in sibling rows
+function FeatureRow({ row, onChange, excludeFeatures = new Set() }) {
   return (
     <div className="flex items-center gap-2">
       {/* +/-/0 selector */}
@@ -23,16 +25,18 @@ function FeatureRow({ row, onChange }) {
         ))}
       </select>
 
-      {/* feature name selector */}
+      {/* feature name selector — omits features already used in other rows */}
       <select
         value={row.feature}
         onChange={(e) => onChange({ ...row, feature: e.target.value })}
         className="border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[12px] font-light bg-white w-50"
       >
         <option value=""></option>
-        {FEATURE_NAMES.map((f) => (
-          <option key={f} value={f}>{f.toLowerCase()}</option>
-        ))}
+        {FEATURE_NAMES
+          .filter((f) => !excludeFeatures.has(f) || f === row.feature)
+          .map((f) => (
+            <option key={f} value={f}>{f.toLowerCase()}</option>
+          ))}
       </select>
     </div>
   )
@@ -56,13 +60,19 @@ function FeatureColumn({ label, rows, onChange }) {
         </button>
       </div>
       <div className="flex flex-col gap-2">
-        {rows.map((row, i) => (
-          <FeatureRow
-            key={i}
-            row={row}
-            onChange={(updated) => updateRow(i, updated)}
-          />
-        ))}
+        {rows.map((row, i) => {
+          const excludeFeatures = new Set(
+            rows.filter((_, idx) => idx !== i).map((r) => r.feature).filter(Boolean)
+          )
+          return (
+            <FeatureRow
+              key={i}
+              row={row}
+              onChange={(updated) => updateRow(i, updated)}
+              excludeFeatures={excludeFeatures}
+            />
+          )
+        })}
       </div>
       <button
         onClick={addRow}
@@ -74,19 +84,45 @@ function FeatureColumn({ label, rows, onChange }) {
   )
 }
 
-export default function RulePanel({ targetRows, featureChangeRows, onTargetChange, onChangesChange }) {
+export default function RulePanel({ targetRows, featureChangeRows, onTargetChange, onChangesChange, validation = {} }) {
+  const {
+    targetContradictions = [],
+    changeContradictions = [],
+    redundantTarget = false,
+    redundantChanges = false,
+  } = validation
+
+  const hasErrors =
+    targetContradictions.length > 0 || changeContradictions.length > 0 ||
+    redundantTarget || redundantChanges
+
   return (
-    <div className="flex flex-col md:flex-row gap-8 md:gap-36">
-      <FeatureColumn
-        label="Target Features"
-        rows={targetRows}
-        onChange={onTargetChange}
-      />
-      <FeatureColumn
-        label="Feature Changes"
-        rows={featureChangeRows}
-        onChange={onChangesChange}
-      />
+    <div className="flex flex-col gap-4">
+      {hasErrors && (
+        <div className="flex flex-col md:flex-row gap-8 md:gap-36">
+          <div className="flex flex-col gap-2 flex-1">
+            <RuleContradictionError violations={targetContradictions} />
+            <RuleNonMinimalWarning message={redundantTarget ? 'Target features are non-minimal' : null} />
+          </div>
+          <div className="flex flex-col gap-2 flex-1">
+            <RuleContradictionError violations={changeContradictions} />
+            <RuleNonMinimalWarning message={redundantChanges ? 'Feature changes are redundant' : null} />
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row gap-8 md:gap-36">
+        <FeatureColumn
+          label="Target Features"
+          rows={targetRows}
+          onChange={onTargetChange}
+        />
+        <FeatureColumn
+          label="Feature Changes"
+          rows={featureChangeRows}
+          onChange={onChangesChange}
+        />
+      </div>
     </div>
   )
 }

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useInventoryStore } from '../store/inventoryStore'
 import SheetView from './display/sheetView.jsx'
 import TableView from './display/tableView.jsx'
 import RulePanel from './RulePanel.jsx'
+import { hasRedundantTargetFeatures, hasRedundantChangeFeatures } from './ruleValidation.js'
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ??
@@ -95,6 +96,42 @@ export default function Pheatures() {
       .then(setTransforms)
   }, [targetRows, changeRows, inventory])
 
+  // contradiction results from /api/rules/check: { target_contradictions: [...], change_contradictions: [...] }
+  const [contradictions, setContradictions] = useState({ target_contradictions: [], change_contradictions: [] })
+
+  // call /api/rules/check whenever the rule rows change to detect phonologically impossible specs
+  useEffect(() => {
+    const targetFeatures = Object.fromEntries(
+      targetRows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
+    )
+    const featureChanges = Object.fromEntries(
+      changeRows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
+    )
+
+    if (Object.keys(targetFeatures).length === 0 && Object.keys(featureChanges).length === 0) {
+      setContradictions({ target_contradictions: [], change_contradictions: [] })
+      return
+    }
+
+    fetch(`${API_BASE}/rules/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_features: targetFeatures, feature_changes: featureChanges }),
+    })
+      .then((r) => r.json())
+      .then(setContradictions)
+  }, [targetRows, changeRows])
+
+  // minimality checks computed from the already-loaded feature bundles
+  const redundantTarget = useMemo(
+    () => hasRedundantTargetFeatures(targetRows, changeRows, inventory, baseFeatures, diacriticFeatures),
+    [targetRows, changeRows, inventory, baseFeatures, diacriticFeatures]
+  )
+  const redundantChanges = useMemo(
+    () => hasRedundantChangeFeatures(changeRows, targetRows, inventory, baseFeatures, diacriticFeatures),
+    [changeRows, targetRows, inventory, baseFeatures, diacriticFeatures]
+  )
+
   // resolve the feature bundle for a given inventory item, applying transforms when matched
   const resolveFeatures = (item) => {
     const t = transforms[String(item.phoneme_id)]
@@ -119,6 +156,12 @@ export default function Pheatures() {
         featureChangeRows={changeRows}
         onTargetChange={setTargetRows}
         onChangesChange={setChangeRows}
+        validation={{
+          targetContradictions: contradictions.target_contradictions,
+          changeContradictions: contradictions.change_contradictions,
+          redundantTarget,
+          redundantChanges,
+        }}
       />
 
       <div className="flex gap-2 justify-start items-center">

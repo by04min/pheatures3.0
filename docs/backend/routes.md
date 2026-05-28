@@ -73,6 +73,33 @@ Applies a phonological rule to a set of inventory phonemes. Phonemes that match 
 
 ---
 
+### `POST /api/rules/check`
+Checks a rule specification for phonologically impossible feature combinations without requiring an inventory. Calls `no_contradictions()` on the target spec and the change spec independently.
+
+**Request body:**
+```json
+{
+  "target_features": { "sonorant": "-", "approximant": "+" },
+  "feature_changes": { "voice": "-" }
+}
+```
+
+Either key may be omitted or empty — only the non-empty specs are checked.
+
+**Response:**
+```json
+{
+  "target_contradictions": [
+    { "sonorant": "-", "approximant": "+" }
+  ],
+  "change_contradictions": []
+}
+```
+
+Each entry in the arrays is a violated contradiction rule (a `{feature: value}` dict). Both arrays are empty when no violations are found.
+
+---
+
 ## Diacritic Routes (`routes/diacritics.py`)
 
 ### `GET /api/diacritics`

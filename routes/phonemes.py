@@ -84,3 +84,18 @@ def transform_phonemes():
         }
 
     return jsonify(results)
+
+@phonemes_bp.route("/rules/check", methods=["POST"])
+def check_rule():
+    """Check a rule spec for contradictions without needing an inventory."""
+    body = request.get_json(silent=True) or {}
+    target_features = body.get("target_features", {})
+    feature_changes = body.get("feature_changes", {})
+
+    _, target_violations  = no_contradictions(target_features)  if target_features  else (True, [])
+    _, change_violations  = no_contradictions(feature_changes)  if feature_changes  else (True, [])
+
+    return jsonify({
+        "target_contradictions": target_violations,
+        "change_contradictions": change_violations,
+    })

@@ -35,6 +35,20 @@ The parent (`pheatures.jsx`) owns all row state. `RulePanel` only fires `onTarge
 | `featureChangeRows` | `{value, feature}[]` | Current rows for the Feature Changes column |
 | `onTargetChange` | `fn(rows)` | Called whenever Target Features rows change |
 | `onChangesChange` | `fn(rows)` | Called whenever Feature Changes rows change |
+| `validation` | `object` | Validation results from `pheatures.jsx` — see below |
+
+**`validation` shape:**
+
+| Key | Type | Description |
+|---|---|---|
+| `targetContradictions` | `{feature: value}[]` | Violated contradiction rules in the target spec |
+| `changeContradictions` | `{feature: value}[]` | Violated contradiction rules in the change spec |
+| `redundantTarget` | `boolean` | True when a target feature can be removed without changing the matched set |
+| `redundantChanges` | `boolean` | True when a change feature is already satisfied by every matched phoneme |
+
+Errors and warnings are shown in a two-column region above the input rows, each column aligned with its respective feature column. The region is only rendered when at least one issue is present.
+
+Each row's feature dropdown excludes features already selected in sibling rows within the same column, preventing same-feature conflicts at the input level.
 
 ---
 
@@ -51,6 +65,7 @@ The Pheatures page manages all state and coordinates between the Rule Panel and 
 | `transforms` | Result from `/api/phonemes/transform`, keyed by phoneme id string |
 | `baseFeatures` | Feature bundles for each base phoneme in the inventory |
 | `diacriticFeatures` | Feature bundles for diacritic+phoneme pairs |
+| `contradictions` | Result from `/api/rules/check` — `{ target_contradictions, change_contradictions }` |
 
 **Transform `useEffect`**
 
@@ -79,6 +94,48 @@ When rules are active, only matched phonemes are passed to the views. Clearing b
 **`resolveFeatures(item)`**
 
 Returns the feature bundle for a given inventory item. When a transform is active and matched, returns the transformed `result_bundle` instead of the original.
+
+**Contradiction check `useEffect`**
+
+Fires whenever `targetRows` or `changeRows` change. Calls `POST /api/rules/check` with the current (non-empty) target and change specs. Saves the result to `contradictions`. Clears immediately when both columns are empty.
+
+**Minimality memos (`useMemo`)**
+
+Two memos derived from already-loaded feature bundles — no extra network calls:
+
+- `redundantTarget` — calls `hasRedundantTargetFeatures()` from `ruleValidation.js`. True when any target feature can be dropped without changing which phonemes are matched (strict redundancy), or when dropping it widens the class but every newly included phoneme already satisfies the change spec ("fire-and-rain").
+- `redundantChanges` — calls `hasRedundantChangeFeatures()` from `ruleValidation.js`. True when any change feature is already at the target value on every matched phoneme.
+
+---
+
+### `src/pheatures/ruleValidation.js`
+
+Pure utility functions for frontend minimality checks. No API calls — all checks use `baseFeatures` and `diacriticFeatures` already loaded in `pheatures.jsx`.
+
+| Function | Description |
+|---|---|
+| `hasRedundantTargetFeatures(targetRows, changeRows, inventory, baseFeatures, diacriticFeatures)` | Returns `true` if any target feature is redundant (strict or fire-and-rain) |
+| `hasRedundantChangeFeatures(changeRows, targetRows, inventory, baseFeatures, diacriticFeatures)` | Returns `true` if any change feature is already satisfied by every matched phoneme |
+
+**Strict redundancy:** removing feature `f` from the target selects exactly the same phonemes as before — `f` didn't narrow the class at all.
+
+**Fire-and-rain redundancy:** removing `f` widens the class, but every newly included phoneme already satisfies the entire change spec. The rule would be a no-op on those extras, so `f` is unnecessary. Example: target `[+voice]` with change `[-voice]` — dropping `+voice` adds all already-voiceless phonemes, which are already at the `-voice` target.
+
+---
+
+## Error and Warning Display
+
+### `src/components/errorMsg.jsx`
+
+Two new exported components handle rule validation feedback:
+
+**`RuleContradictionError({ violations, title })`**
+
+Shown when a feature spec violates a phonological contradiction rule from the database. `violations` is the array returned by `/api/rules/check`. `title` defaults to `'Contradictory feature combination'`. Displays each violated rule as a row of `FeatureValueBadge` + feature name pairs. Returns `null` when `violations` is empty.
+
+**`RuleNonMinimalWarning({ message })`**
+
+Shown when a rule spec is non-minimal. `message` is a plain string (e.g. `'Target features are non-minimal'`). Returns `null` when `message` is falsy.
 
 ---
 

@@ -1,4 +1,5 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined'
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import { FeatureValueBadge } from './badges'
 
 /* 01. INVENTORY ERRORS: error messages for diacritic application
@@ -7,7 +8,6 @@ import { FeatureValueBadge } from './badges'
 - displays an error message that details why a diacritic cannot apply to a particular phoneme (prints required conditions and mismatching features)
 
 */
-
 
 // 1.1 HELPER: formats details of invalid diacritic application
 function featureInfo({ condition, phonemeFeatures = {}}) {
@@ -56,6 +56,47 @@ export default function InvalidDiacriticTarget({ message }) {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+
+/* 02. RULE CONTRADICTION ERROR: shown when a feature spec violates a phonological
+       contradiction rule (e.g. -sonorant +approximant cannot coexist).
+       violations — array of violated rule objects [{ feature: value, ... }, ...]
+*/
+export function RuleContradictionError({ violations, title = 'Contradictory feature combination' }) {
+  if (!violations || violations.length === 0) return null
+  return (
+    <div className="flex flex-col gap-3 p-4 rounded-[4px] border border-[#ffccc7] bg-[#fff2f0]">
+      <div className="flex items-center gap-2">
+        <ErrorOutlineIcon sx={{ color: '#ad1214', fontSize: 18, flexShrink: 0 }} />
+        <p className="text-[14px]">{title}</p>
+      </div>
+      {violations.map((rule, i) => (
+        <div key={i} className="flex flex-wrap gap-x-4 gap-y-1">
+          {Object.entries(rule).map(([feat, val], j) => (
+            <div key={j} className="flex items-center gap-1.5">
+              <FeatureValueBadge value={val} />
+              <span className="text-[12px] text-slate-700">{feat}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* 03. RULE NON-MINIMAL WARNING: shown when a rule spec is non-minimal
+       (a feature can be removed without changing which phonemes are affected).
+       message — descriptive string shown to the user
+*/
+export function RuleNonMinimalWarning({ message }) {
+  if (!message) return null
+  return (
+    <div className="flex items-center gap-2 p-4 rounded-[4px] border border-[#ffe58f] bg-[#fffbe6]">
+      <WarningAmberOutlinedIcon sx={{ color: '#d46b08', fontSize: 18, flexShrink: 0 }} />
+      <p className="text-[14px]">{message}</p>
     </div>
   )
 }
