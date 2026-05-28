@@ -508,12 +508,6 @@ export default function PhonemeInventory() {
           </div>
         </section>
       </div>
-
-
-        {/* Feature bundle from PHONEME_FEATURES for activeSymbol
-        {activeSymbol && (
-          <FeaturePanel symbol={activeSymbol} onClose={() => setActiveSymbol(null)} />
-        )} */}
       </div>
 
       {/* Buttons */}

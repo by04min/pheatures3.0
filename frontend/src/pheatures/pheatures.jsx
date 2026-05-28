@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useInventoryStore } from '../store/inventoryStore'
 import SheetView from './display/sheetView.jsx'
 import TableView from './display/tableView.jsx'
+import RulePanel from './RulePanel.jsx'
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ??
@@ -16,6 +17,15 @@ export default function Pheatures() {
   // { item.key: { feature: value, ... } } for diacritic+phoneme pairs
   const [diacriticFeatures, setDiacriticFeatures] = useState({})
 
+  // rule panel row state: [{value: '+'/'-'/'0', feature: string}]
+  // start with one empty row so the panel always shows inputs on load
+  const [targetRows, setTargetRows] = useState([{ value: '', feature: '' }])
+  const [changeRows, setChangeRows] = useState([{ value: '', feature: '' }])
+
+  // transform results from /api/phonemes/transform: { phoneme_id_str: { matched, original_symbol, result_symbol, result_bundle, valid } }
+  const [transforms, setTransforms] = useState({})
+
+  // fetch base feature bundles whenever inventory changes
   useEffect(() => {
     if (inventory.length === 0) {
       setBaseFeatures({})
@@ -52,31 +62,75 @@ export default function Pheatures() {
     })
   }, [inventory])
 
-  const resolveFeatures = (item) =>
-    item.diacritic_id != null
+  // call the transform endpoint whenever rules or inventory changes
+  useEffect(() => {
+    // only rows where both value and feature are filled count
+    const targetFeatures = Object.fromEntries(
+      targetRows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
+    )
+    const featureChanges = Object.fromEntries(
+      changeRows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
+    )
+
+    // clear only when both columns are empty; either alone is enough to call the backend:
+    // - target only → filter inventory to matching phonemes
+    // - changes only → apply to all inventory phonemes (empty target matches everything)
+    if (Object.keys(targetFeatures).length === 0 && Object.keys(featureChanges).length === 0) {
+      setTransforms({})
+      return
+    }
+
+    const phonemeIds = [...new Set(inventory.map((item) => item.phoneme_id))]
+    if (phonemeIds.length === 0) {
+      setTransforms({})
+      return
+    }
+
+    fetch(`${API_BASE}/phonemes/transform`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phoneme_ids: phonemeIds, target_features: targetFeatures, feature_changes: featureChanges }),
+    })
+      .then((r) => r.json())
+      .then(setTransforms)
+  }, [targetRows, changeRows, inventory])
+
+  // resolve the feature bundle for a given inventory item, applying transforms when matched
+  const resolveFeatures = (item) => {
+    const t = transforms[String(item.phoneme_id)]
+    if (t?.matched && t.result_bundle) return t.result_bundle
+    return item.diacritic_id != null
       ? diacriticFeatures[item.key]
       : baseFeatures[String(item.phoneme_id)]
+  }
+
+  // when transforms has results, filter the inventory to only matched phonemes;
+  // computed inline each render so it's always in sync with transforms
+  const rulesActive = Object.keys(transforms).length > 0
+  const visibleInventory = rulesActive
+    ? inventory.filter((item) => transforms[String(item.phoneme_id)]?.matched)
+    : inventory
 
   return (
     <div className="space-y-[24px]">
-      <div className="flex gap-2">
-        {['sheet', 'table'].map((v) => (
-          <button
-            key={v}
-            onClick={() => setView(v)}
-            className={`px-[16px] py-[8px] rounded-[4px] text-[14px] font-light capitalize transition-colors ${
-              view === v
-                ? 'bg-gray-800 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            {v}
-          </button>
-        ))}
+      {/* phonological rule panel */}
+      <RulePanel
+        targetRows={targetRows}
+        featureChangeRows={changeRows}
+        onTargetChange={setTargetRows}
+        onChangesChange={setChangeRows}
+      />
+
+      <div className="flex gap-2 justify-start items-center">
+        {/* view toggle */}
+        <button onClick={() => setView('sheet')} className="font-light text-[14px] hover:opacity-60 transition-opacity">Sheet</button>
+        <span className="font-light text-[10px] leading-none">|</span>
+        <button onClick={() => setView('table')} className="font-light text-[14px] hover:opacity-60 transition-opacity">Table</button>
       </div>
+
       {view === 'sheet'
-        ? <SheetView inventory={inventory} resolveFeatures={resolveFeatures} />
-        : <TableView />
+        ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} />
+        : <TableView inventory={visibleInventory} transforms={transforms} />
       }
     </div>
   )

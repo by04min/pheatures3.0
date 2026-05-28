@@ -9,6 +9,7 @@
 // clicking any phoneme or diacritic chip opens a FeaturePanel modal.
 
 import { Fragment, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { useInventoryStore } from '../../store/inventoryStore'
 import { FeaturePanel } from './featurePanel.jsx'
@@ -24,11 +25,15 @@ import {
 import { useDiacriticRows } from '../../components/ipaTable/useDiacriticRows.js'
 import { DiacriticChip } from '../../components/ipaTable/symbolCells.jsx'
 
-export default function TableView() {
-  const { inventory, toggleInventory } = useInventoryStore()
+// inventory prop overrides the store when rules are active (filtered to matched phonemes)
+// transforms: { phoneme_id_str: { matched, original_symbol, result_symbol } } — drives chip labels
+export default function TableView({ inventory: inventoryProp, transforms = {} }) {
+  const { inventory: storeInventory, toggleInventory } = useInventoryStore()
+  // prefer the filtered prop passed from pheatures.jsx; fall back to full store inventory
+  const inventory = inventoryProp ?? storeInventory
   const [activeSymbol, setActiveSymbol] = useState(null)
 
-  // set of base phoneme symbols (no diacritics) that are in the inventory
+  // set of base phoneme symbols (no diacritics) that are in the (possibly filtered) inventory
   const baseSymbols = useMemo(
     () => new Set(inventory.filter((i) => i.diacritic_id == null).map((i) => i.symbol.trim())),
     [inventory]
@@ -81,26 +86,64 @@ export default function TableView() {
     [baseSymbols, diacriticRowsByOther]
   )
 
+  // map symbol → phoneme_id so renderSelectedSymbol can look up transforms
+  const symbolToPhonemeId = useMemo(() => {
+    const map = {}
+    for (const item of inventory) {
+      if (item.diacritic_id == null) map[item.symbol.trim()] = item.phoneme_id
+    }
+    return map
+  }, [inventory])
+
   // renders a single phoneme cell: empty placeholder if not in inventory,
-  // otherwise a clickable button that opens the FeaturePanel
+  // otherwise a clickable button that opens the FeaturePanel.
+  // when a transform is active, shows "original → result" (or "→ ?") inside the chip.
   const renderSelectedSymbol = (symbol) => {
     if (!symbol) return <div className="w-14 h-10" />
     const clean = symbol.trim()
     if (!baseSymbols.has(clean)) return <div className="w-14 h-10" />
+
+    const pid = symbolToPhonemeId[clean]
+    const t = pid != null ? transforms[String(pid)] : null
+    const label = t?.matched && t.transformed
+      ? `${t.original_symbol ?? clean} → ${t.result_symbol ?? '?'}`
+      : clean
+
+    // fill the flex slot when showing the arrow label, fixed width otherwise
+    const widthClass = t?.matched && t.transformed ? 'flex-1 px-2' : 'w-14'
+
     return (
       <button
         key={clean}
         type="button"
         onClick={() => setActiveSymbol(clean)}
-        className="w-14 h-10 text-base font-mono text-center flex items-center justify-center bg-blue-100 hover:bg-blue-200 transition-colors cursor-pointer"
+        className={`${widthClass} h-10 text-[12px] font-mono text-center flex items-center justify-center bg-blue-100 hover:bg-blue-200 transition-colors cursor-pointer whitespace-nowrap`}
       >
-        {clean}
+        {label}
       </button>
     )
   }
 
   if (inventory.length === 0) {
-    return <p className="text-sm text-slate-400">No phonemes selected.</p>
+    // rules are active but nothing matched — don't prompt user to add phonemes
+    const rulesActive = Object.keys(transforms).length > 0
+    if (rulesActive) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64">
+          <span className="text-[12px] font-light text-slate-400">no phonemes match the target features.</span>
+        </div>
+      )
+    }
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <Link
+          to="/inventory"
+          className="text-[12px] px-[8px] py-[8px] border rounded-[4px] font-light hover:bg-slate-50"
+        >
+          add to inventory
+        </Link>
+      </div>
+    )
   }
 
   return (

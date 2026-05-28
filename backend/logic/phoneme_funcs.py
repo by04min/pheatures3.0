@@ -122,3 +122,24 @@ def get_all_phonemes():
     rows = con.execute("SELECT id, phoneme_symbol FROM phonemes ORDER BY id").fetchall()
     con.close()
     return [{"id": row[0], "symbol": row[1]} for row in rows]
+
+
+"""
+05. FIND PHONEME BY FEATURES
+    PURPOSE:
+    - given a full feature bundle, find a phoneme in the DB whose features exactly match
+
+    PARAMS:
+    - bundle: a dict of feature/value pairs {"voice": "+", "nasal": "-", ...}
+
+    RETURNS:
+    - the phoneme symbol string if an exact match is found, or None
+"""
+def find_phoneme_by_features(bundle):
+    con = _connect()
+    rows = con.execute("SELECT id, phoneme_symbol FROM phonemes").fetchall()
+    con.close()
+    for phoneme_id, symbol in rows:
+        if get_phoneme_features(phoneme_id) == bundle:
+            return symbol
+    return None

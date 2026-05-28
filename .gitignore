@@ -10,7 +10,7 @@ frontend/node_modules/
 frontend/dist/
 
 # SQLite
-backend/pheatures.db
+backend/pheatures.db*
 
 # Environment variables
 .env
