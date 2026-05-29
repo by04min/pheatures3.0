@@ -1,6 +1,8 @@
 import sqlite3
+import os
 
-DB_PATH = "pheatures.db"
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DB_PATH = os.path.join(_REPO_ROOT, "pheatures.db")
 
 def _connect():
     return sqlite3.connect(DB_PATH)

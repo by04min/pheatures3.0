@@ -8,9 +8,12 @@ from flask import Flask
 from flask_cors import CORS
 from routes.phonemes import phonemes_bp
 from routes.diacritics import diacritics_bp
+from backend.init_db import init_db
 
 app = Flask(__name__)
 CORS(app)
+
+init_db()
 
 # all API endpoints are grouped under /api
 app.register_blueprint(phonemes_bp, url_prefix="/api")
