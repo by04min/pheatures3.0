@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import { FEATURE_NAMES } from '../inventory/format/phonemeFeatures.js'
 import { RuleContradictionError, RuleNonMinimalWarning } from '../components/errorMsg.jsx'
 
@@ -70,7 +71,10 @@ function FeatureColumn({ label, rows, onChange }) {
           onClick={clearRows}
           className="text-[14px] font-light underline hover:text-slate-600 transition-colors"
         >
-          Clear
+           <span className="flex items-center gap-1">
+                Clear
+                <DeleteOutlinedIcon style={{ fontSize: 14 }} />
+              </span>
         </button>
       </div>
       <div className="flex flex-col gap-4">
@@ -134,11 +138,11 @@ export default function RulePanel({ targetRows, featureChangeRows, onTargetChang
         <div className="flex flex-col md:flex-row gap-8 md:gap-36">
           <div className="flex flex-col gap-2 flex-1">
             <RuleContradictionError violations={targetContradictions} onClose={() => dismiss('targetContradictions')} />
-            <RuleNonMinimalWarning message={redundantTarget ? 'Target features are non-minimal' : null} onClose={() => dismiss('targetNonMinimal')} />
+            <RuleNonMinimalWarning message={redundantTarget ? 'Target features are non-minimal' : null} variant="target" onClose={() => dismiss('targetNonMinimal')} />
           </div>
           <div className="flex flex-col gap-2 flex-1">
             <RuleContradictionError violations={changeContradictions} onClose={() => dismiss('changeContradictions')} />
-            <RuleNonMinimalWarning message={redundantChanges ? 'Feature changes are redundant' : null} onClose={() => dismiss('changesNonMinimal')} />
+            <RuleNonMinimalWarning message={redundantChanges ? 'Feature changes are redundant' : null} variant="changes" onClose={() => dismiss('changesNonMinimal')} />
           </div>
         </div>
       )}

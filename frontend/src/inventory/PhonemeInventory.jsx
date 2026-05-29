@@ -308,18 +308,20 @@ export default function PhonemeInventory() {
               </div>
             ))}
           </div>
-           <p className="text-[12px] text-light text-gray-500">
-            Drag a diacritic onto a compatible phoneme to add it to the inventory.
-          </p>
-          </div>
-
-          <div className="flex justify-start">
+          <div className="flex items-center justify-between">
+            <p className="text-[12px] text-light text-gray-500">
+              Drag a diacritic onto a compatible phoneme to add it to the inventory.
+            </p>
             <button
               onClick={() => { clearInventory(); setDiacriticError('') }}
               className="text-[14px] font-light underline hover:text-slate-600 transition-colors"
             >
-              Clear Inventory
+              <span className="flex items-center gap-1">
+                Clear Inventory
+                <DeleteOutlinedIcon style={{ fontSize: 16 }} />
+              </span>
             </button>
+          </div>
           </div>
         </section>
       </div>

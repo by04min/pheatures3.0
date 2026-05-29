@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import CloseIcon from '@mui/icons-material/Close'
@@ -102,16 +103,37 @@ export function RuleContradictionError({ violations, title = 'Contradictory feat
        (a feature can be removed without changing which phonemes are affected).
        message — descriptive string shown to the user
 */
-export function RuleNonMinimalWarning({ message, onClose }) {
+const NON_MINIMAL_DETAILS = {
+  target: 'Removing feature(s) result in the same transformation and select a larger class of sounds. Try taking some features out for a minimal selection.',
+  changes: 'One or more feature changes are already implied and have no effect on the output. Try removing some changes and see if the result stays the same.',
+}
+
+export function RuleNonMinimalWarning({ message, variant = 'target', onClose }) {
+  const [expanded, setExpanded] = useState(false)
   if (!message) return null
   return (
-    <div className="flex items-center gap-2 p-4 rounded-[4px] border border-[#ffe58f] bg-[#fffbe6]">
-      <WarningAmberOutlinedIcon sx={{ color: '#d46b08', fontSize: 18, flexShrink: 0 }} />
-      <p className="text-[14px] flex-1">{message}</p>
-      {onClose && (
-        <button onClick={onClose} className="ml-auto text-[#d46b08] hover:opacity-70 flex-shrink-0">
-          <CloseIcon sx={{ fontSize: 16 }} />
-        </button>
+    <div className="flex flex-col gap-2 p-4 rounded-[4px] border border-[#ffe58f] bg-[#fffbe6]">
+      <div className="flex items-center gap-2">
+        <WarningAmberOutlinedIcon sx={{ color: '#d46b08', fontSize: 18, flexShrink: 0 }} />
+        <div className="text-[14px] flex-1">
+          <span>{message}</span>
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className="block sm:inline sm:ml-1.5 text-[12px] text-[#d46b08] underline hover:opacity-70"
+          >
+            {expanded ? 'see less' : 'see more'}
+          </button>
+        </div>
+        {onClose && (
+          <button onClick={onClose} className="ml-auto text-[#d46b08] hover:opacity-70 flex-shrink-0">
+            <CloseIcon sx={{ fontSize: 16 }} />
+          </button>
+        )}
+      </div>
+      {expanded && (
+        <p className="text-[13px] text-[#7c4a00]">
+          {NON_MINIMAL_DETAILS[variant]}
+        </p>
       )}
     </div>
   )
