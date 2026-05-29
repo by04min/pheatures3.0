@@ -269,7 +269,11 @@ export default function PhonemeInventory() {
         </div>
 
         {/* ERROR HANDLING: default loading and error screens*/}
-        {loading && <div className="text-sm text-slate-500">Loading phoneme API data...</div>}
+        {loading && (
+          <div className="flex items-center justify-center h-[60vh]">
+            <span className="text-sm text-slate-600">Loading phoneme data...</span>
+          </div>
+        )}
         {error && <div className="text-sm text-rose-600">{error}</div>}
         <InvalidDiacriticTarget message={diacriticError} onClose={() => setDiacriticError(null)} />
 
