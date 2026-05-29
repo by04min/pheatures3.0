@@ -1,11 +1,7 @@
 import sqlite3
 import json
 
-# establish connection to the database
-# check_same_thread=False allows Flask's worker threads to use this module-level connection
-# (by default SQLite only allows the thread that opened the connection to use it)
-connection = sqlite3.connect("pheatures.db", check_same_thread=False)
-db = connection.cursor()
+from backend.logic.phoneme_funcs import DB_PATH
 
 """
 01. APPLY DEPENDENCIES
@@ -21,9 +17,12 @@ db = connection.cursor()
     - updated: the feature bundle after all dependency rules have been applied
 """
 def apply_dependencies(feature_bundle, changed_feature):
+    con = sqlite3.connect(DB_PATH)
+    db = con.cursor()
 
     # fetch all dependency rules from the database
     rules = db.execute("SELECT condition, consequence FROM dependencies").fetchall()
+    con.close()
 
     # parse all rules into Python dictionaries upfront
     parsed_rules = []

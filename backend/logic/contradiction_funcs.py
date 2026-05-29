@@ -1,11 +1,7 @@
 import sqlite3
 import json
 
-# establish connection to the database
-# check_same_thread=False allows Flask's worker threads to use this module-level connection
-# (by default SQLite only allows the thread that opened the connection to use it)
-connection = sqlite3.connect("pheatures.db", check_same_thread=False)
-db = connection.cursor() # an object that lets you execute SQL commands
+from backend.logic.phoneme_funcs import DB_PATH
 
 """
 01. NO CONTRADICTIONS
@@ -20,9 +16,12 @@ db = connection.cursor() # an object that lets you execute SQL commands
     - (False, [violated_rule1, violated_rule2, ...]), where [] is a list of rules that were violated
 """
 def no_contradictions(feature_bundle):
-    
+    con = sqlite3.connect(DB_PATH)
+    db = con.cursor()
+
     # fetch all of the contradictions from the database
     contradictory_rules = db.execute("SELECT bundle FROM contradictions").fetchall()
+    con.close()
     
     # this keeps track of all contradiction rules that have been violated
     violated_rules = []
