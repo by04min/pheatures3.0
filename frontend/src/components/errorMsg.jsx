@@ -1,5 +1,6 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
+import CloseIcon from '@mui/icons-material/Close'
 import { FeatureValueBadge } from './badges'
 
 /* 01. INVENTORY ERRORS: error messages for diacritic application
@@ -26,7 +27,7 @@ function featureInfo({ condition, phonemeFeatures = {}}) {
   ]
 }
 
-export default function InvalidDiacriticTarget({ message }) {
+export default function InvalidDiacriticTarget({ message, onClose }) {
   if (!message) return null
 
   const title = typeof message === 'string' ? message : message.title
@@ -36,10 +37,15 @@ export default function InvalidDiacriticTarget({ message }) {
     <div className="flex flex-col gap-3 p-4 rounded-[4px] border border-[#ffccc7] bg-[#fff2f0]">
       <div className="flex items-center gap-2">
         <ErrorOutlineIcon sx={{ color: '#ad1214', fontSize: 18, flexShrink: 0 }} />
-        <p className="text-[14px]">
+        <p className="text-[14px] flex-1">
           {title}
           {<span className="font-mono ml-1">{message.phonemeSymbol}</span>}
         </p>
+        {onClose && (
+          <button onClick={onClose} className="ml-auto text-[#ad1214] hover:opacity-70 flex-shrink-0">
+            <CloseIcon sx={{ fontSize: 16 }} />
+          </button>
+        )}
       </div>
       {sections.map((section, i) => (
         <div key={i}>
@@ -65,13 +71,18 @@ export default function InvalidDiacriticTarget({ message }) {
        contradiction rule (e.g. -sonorant +approximant cannot coexist).
        violations — array of violated rule objects [{ feature: value, ... }, ...]
 */
-export function RuleContradictionError({ violations, title = 'Contradictory feature combination' }) {
+export function RuleContradictionError({ violations, title = 'Contradictory feature combination', onClose }) {
   if (!violations || violations.length === 0) return null
   return (
     <div className="flex flex-col gap-3 p-4 rounded-[4px] border border-[#ffccc7] bg-[#fff2f0]">
       <div className="flex items-center gap-2">
         <ErrorOutlineIcon sx={{ color: '#ad1214', fontSize: 18, flexShrink: 0 }} />
-        <p className="text-[14px]">{title}</p>
+        <p className="text-[14px] flex-1">{title}</p>
+        {onClose && (
+          <button onClick={onClose} className="ml-auto text-[#ad1214] hover:opacity-70 flex-shrink-0">
+            <CloseIcon sx={{ fontSize: 16 }} />
+          </button>
+        )}
       </div>
       {violations.map((rule, i) => (
         <div key={i} className="flex flex-wrap gap-x-4 gap-y-1">
@@ -91,12 +102,17 @@ export function RuleContradictionError({ violations, title = 'Contradictory feat
        (a feature can be removed without changing which phonemes are affected).
        message — descriptive string shown to the user
 */
-export function RuleNonMinimalWarning({ message }) {
+export function RuleNonMinimalWarning({ message, onClose }) {
   if (!message) return null
   return (
     <div className="flex items-center gap-2 p-4 rounded-[4px] border border-[#ffe58f] bg-[#fffbe6]">
       <WarningAmberOutlinedIcon sx={{ color: '#d46b08', fontSize: 18, flexShrink: 0 }} />
-      <p className="text-[14px]">{message}</p>
+      <p className="text-[14px] flex-1">{message}</p>
+      {onClose && (
+        <button onClick={onClose} className="ml-auto text-[#d46b08] hover:opacity-70 flex-shrink-0">
+          <CloseIcon sx={{ fontSize: 16 }} />
+        </button>
+      )}
     </div>
   )
 }

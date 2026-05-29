@@ -271,11 +271,13 @@ export default function PhonemeInventory() {
         {/* ERROR HANDLING: default loading and error screens*/}
         {loading && <div className="text-sm text-slate-500">Loading phoneme API data...</div>}
         {error && <div className="text-sm text-rose-600">{error}</div>}
-        <InvalidDiacriticTarget message={diacriticError} />
+        <InvalidDiacriticTarget message={diacriticError} onClose={() => setDiacriticError(null)} />
 
         {/* Diacritics: drag onto a phoneme to add the combined entry */}
-        <section className="space-y-[8px] font-light">
-          <h3 className="text-[16px]">Diacritics</h3>
+        <section className="space-y-[32px] font-light">
+
+          <div className="space-y-[8px]">
+          <h3 className="text-[16px] font-light">Diacritics</h3>
           <div className="flex flex-wrap gap-1.5">
             {diacritics.map((d) => (
               <div key={d.id} className="relative group">
@@ -306,14 +308,24 @@ export default function PhonemeInventory() {
               </div>
             ))}
           </div>
-          <p className="text-[12px] text-light text-gray-500">
+           <p className="text-[12px] text-light text-gray-500">
             Drag a diacritic onto a compatible phoneme to add it to the inventory.
           </p>
+          </div>
+
+          <div className="flex justify-start">
+            <button
+              onClick={() => { clearInventory(); setDiacriticError('') }}
+              className="text-[14px] font-light underline hover:text-slate-600 transition-colors"
+            >
+              Clear Inventory
+            </button>
+          </div>
         </section>
       </div>
 
       {/* ── Scrollable tables ── */}
-      <div className="flex-1 min-h-[540px] overflow-y-auto space-y-[32px]">
+      <div className="flex-1 overflow-y-auto space-y-[32px]">
 
       {/* Consonants */}
       <section className="space-y-[8px] font-light">
@@ -510,16 +522,6 @@ export default function PhonemeInventory() {
       </div>
       </div>
 
-      {/* Buttons */}
-      <div className="shrink-0 pt-8 pb-16">
-        <button onClick={() => { clearInventory(); setDiacriticError('') }} className="px-[20px] py-[16px] bg-gray-800 rounded-[4px] hover:opacity-70">
-          <div className="flex flex-row items-center gap-2 text-white">
-            <DeleteOutlinedIcon />
-            <label className="text-[16px] font-light">Clear Inventory</label>
-          </div>
-          
-          </button>
-      </div>
     </div>
   )
 }

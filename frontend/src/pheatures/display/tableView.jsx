@@ -9,7 +9,6 @@
 // clicking any phoneme or diacritic chip opens a FeaturePanel modal.
 
 import { Fragment, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { useInventoryStore } from '../../store/inventoryStore'
 import { FeaturePanel } from './featurePanel.jsx'
@@ -125,23 +124,9 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
   }
 
   if (inventory.length === 0) {
-    // rules are active but nothing matched — don't prompt user to add phonemes
-    const rulesActive = Object.keys(transforms).length > 0
-    if (rulesActive) {
-      return (
-        <div className="flex flex-col items-center justify-center h-64">
-          <span className="text-[12px] font-light text-slate-400">no phonemes match the target features.</span>
-        </div>
-      )
-    }
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <Link
-          to="/inventory"
-          className="text-[12px] px-[8px] py-[8px] border rounded-[4px] font-light hover:bg-slate-50"
-        >
-          add to inventory
-        </Link>
+      <div className="flex items-center h-24">
+        <span className="text-[14px] font-light text-slate-400">No phonemes match the target features.</span>
       </div>
     )
   }

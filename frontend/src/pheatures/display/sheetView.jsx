@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { FEATURE_NAMES } from '../../inventory/format/phonemeFeatures.js'
 
 // SHEET VIEW
@@ -10,23 +9,9 @@ import { FEATURE_NAMES } from '../../inventory/format/phonemeFeatures.js'
 
 export default function SheetView({ inventory, resolveFeatures, transforms = {} }) {
   if (inventory.length === 0) {
-    // rules are active but nothing matched — don't prompt user to add phonemes
-    const rulesActive = Object.keys(transforms).length > 0
-    if (rulesActive) {
-      return (
-        <div className="flex flex-col items-center justify-center h-64">
-          <span className="text-[14px] font-light text-slate-400">no phonemes match the target features.</span>
-        </div>
-      )
-    }
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <Link
-          to="/inventory"
-          className="text-[14px] px-[8px] py-[8px] border rounded-[4px] font-light hover:bg-slate-50"
-        >
-          add to inventory
-        </Link>
+      <div className="flex items-center h-24">
+        <span className="text-[14px] font-light text-slate-400">No phonemes match the target features.</span>
       </div>
     )
   }
