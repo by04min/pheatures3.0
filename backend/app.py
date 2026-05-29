@@ -5,10 +5,12 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask
+from flask_cors import CORS
 from routes.phonemes import phonemes_bp
 from routes.diacritics import diacritics_bp
 
 app = Flask(__name__)
+CORS(app)
 
 # all API endpoints are grouped under /api
 app.register_blueprint(phonemes_bp, url_prefix="/api")
