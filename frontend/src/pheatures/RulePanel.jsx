@@ -3,21 +3,23 @@
 // each column holds a list of {value: +/-/0, feature: <name>} rows
 // parent owns the row state; RulePanel just fires onChange callbacks
 
+import AddIcon from '@mui/icons-material/Add'
+import CloseIcon from '@mui/icons-material/Close'
 import { FEATURE_NAMES } from '../inventory/format/phonemeFeatures.js'
 import { RuleContradictionError, RuleNonMinimalWarning } from '../components/errorMsg.jsx'
 
 const VALUES = ['+', '-', '0']
 
 // a single row: value selector (small) + feature selector (wide)
-// excludeFeatures — Set of feature names already selected in sibling rows
-function FeatureRow({ row, onChange, excludeFeatures = new Set() }) {
+// excludeFeatures — Set of feature names already selected in sibling rows (i.e. if you add +voice, can't add voice again)
+function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
   return (
     <div className="flex items-center gap-2">
       {/* +/-/0 selector */}
       <select
         value={row.value}
         onChange={(e) => onChange({ ...row, value: e.target.value })}
-        className="border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[12px] font-light bg-white w-14 text-center"
+        className="border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[14px] font-light bg-white w-14 text-center"
       >
         <option value=""></option>
         {VALUES.map((v) => (
@@ -29,7 +31,7 @@ function FeatureRow({ row, onChange, excludeFeatures = new Set() }) {
       <select
         value={row.feature}
         onChange={(e) => onChange({ ...row, feature: e.target.value })}
-        className="border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[12px] font-light bg-white w-50"
+        className="border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[14px] font-light bg-white w-50"
       >
         <option value=""></option>
         {FEATURE_NAMES
@@ -38,6 +40,16 @@ function FeatureRow({ row, onChange, excludeFeatures = new Set() }) {
             <option key={f} value={f}>{f.toLowerCase()}</option>
           ))}
       </select>
+
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          className="text-slate-300 hover:text-slate-500 transition-colors leading-none"
+          aria-label="Remove row"
+        >
+          <CloseIcon sx={{ fontSize: 14 }} />
+        </button>
+      )}
     </div>
   )
 }
@@ -45,21 +57,22 @@ function FeatureRow({ row, onChange, excludeFeatures = new Set() }) {
 // a labeled column of FeatureRows; "clear" in the header resets to one empty row
 function FeatureColumn({ label, rows, onChange }) {
   const addRow    = () => onChange([...rows, { value: '', feature: '' }])
+  const removeRow = (i) => onChange(rows.filter((_, idx) => idx !== i))
   const updateRow = (i, updated) => onChange(rows.map((r, idx) => idx === i ? updated : r))
   const clearRows = () => onChange([{ value: '', feature: '' }])
 
   return (
-    <div className="flex flex-col gap-3 flex-1">
+    <div className="flex flex-col space-y-[8px] flex-1">
       <div className="flex justify-between items-center">
-        <span className="text-[12px] font-light">{label}</span>
+        <span className="text-[16px] font-light">{label}</span>
         <button
           onClick={clearRows}
-          className="text-[12px] font-light underline hover:text-slate-600 transition-colors"
+          className="text-[14px] font-light underline hover:text-slate-600 transition-colors"
         >
           clear
         </button>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         {rows.map((row, i) => {
           const excludeFeatures = new Set(
             rows.filter((_, idx) => idx !== i).map((r) => r.feature).filter(Boolean)
@@ -69,6 +82,7 @@ function FeatureColumn({ label, rows, onChange }) {
               key={i}
               row={row}
               onChange={(updated) => updateRow(i, updated)}
+              onRemove={i > 0 ? () => removeRow(i) : undefined}
               excludeFeatures={excludeFeatures}
             />
           )
@@ -76,9 +90,9 @@ function FeatureColumn({ label, rows, onChange }) {
       </div>
       <button
         onClick={addRow}
-        className="self-start border border-slate-200 rounded-[100px] px-[8px] py-[4px] text-[12px] font-light hover:bg-slate-50 transition-colors"
+        className="self-start border border-slate-200 flex items-center justify-center rounded-full w-[24px] h-[24px] hover:bg-slate-50 transition-colors"
       >
-        +
+        <AddIcon sx={{ fontSize: 14 }} />
       </button>
     </div>
   )
@@ -111,7 +125,7 @@ export default function RulePanel({ targetRows, featureChangeRows, onTargetChang
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-8 md:gap-36">
+      <div className="flex flex-col md:flex-row gap-8 md:gap-64">
         <FeatureColumn
           label="Target Features"
           rows={targetRows}

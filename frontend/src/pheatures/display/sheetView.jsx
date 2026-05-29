@@ -15,7 +15,7 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
     if (rulesActive) {
       return (
         <div className="flex flex-col items-center justify-center h-64">
-          <span className="text-[12px] font-light text-slate-400">no phonemes match the target features.</span>
+          <span className="text-[14px] font-light text-slate-400">no phonemes match the target features.</span>
         </div>
       )
     }
@@ -23,7 +23,7 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Link
           to="/inventory"
-          className="text-[12px] px-[8px] py-[8px] border rounded-[4px] font-light hover:bg-slate-50"
+          className="text-[14px] px-[8px] py-[8px] border rounded-[4px] font-light hover:bg-slate-50"
         >
           add to inventory
         </Link>

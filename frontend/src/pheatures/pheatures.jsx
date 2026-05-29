@@ -149,7 +149,15 @@ export default function Pheatures() {
     : inventory
 
   return (
-    <div className="space-y-[24px]">
+    <div className="space-y-[32px]">
+
+       <div className="space-y-[4px]">
+          <h1 className="text-[28px]">Pheatures</h1>
+          <p className="text-[16px] text-gray-500 font-light">
+            Pick out sounds by features, and apply feature rules
+          </p>
+        </div>
+
       {/* phonological rule panel */}
       <RulePanel
         targetRows={targetRows}
@@ -164,17 +172,19 @@ export default function Pheatures() {
         }}
       />
 
-      <div className="flex gap-2 justify-start items-center">
+      <div className="space-y-[20px]">
+      <div className="flex gap-2 justify-end items-center">
         {/* view toggle */}
-        <button onClick={() => setView('sheet')} className="font-light text-[14px] hover:opacity-60 transition-opacity">Sheet</button>
+        <button onClick={() => setView('sheet')} className="font-light text-[16px] hover:opacity-60 transition-opacity">Sheet</button>
         <span className="font-light text-[10px] leading-none">|</span>
-        <button onClick={() => setView('table')} className="font-light text-[14px] hover:opacity-60 transition-opacity">Table</button>
+        <button onClick={() => setView('table')} className="font-light text-[16px] hover:opacity-60 transition-opacity">Table</button>
       </div>
 
       {view === 'sheet'
         ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} />
         : <TableView inventory={visibleInventory} transforms={transforms} />
       }
+      </div>
     </div>
   )
 }
