@@ -8,14 +8,6 @@ import { FEATURE_NAMES } from '../../inventory/format/phonemeFeatures.js'
 // and feature columns reflect the transformed bundle
 
 export default function SheetView({ inventory, resolveFeatures, transforms = {} }) {
-  if (inventory.length === 0) {
-    return (
-      <div className="flex items-center h-24">
-        <span className="text-[14px] font-light text-slate-400">No phonemes match the target features.</span>
-      </div>
-    )
-  }
-
   return (
     <div className="overflow-x-auto">
       <table className="border-collapse text-[12px] font-light">

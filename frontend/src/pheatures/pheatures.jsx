@@ -174,7 +174,7 @@ export default function Pheatures() {
           }}
         />
 
-        {inventory.length > 0 && (
+        {inventory.length > 0 && visibleInventory.length > 0 && (
           <div className="flex gap-2 justify-start items-center">
             <button onClick={() => setView('sheet')} className="font-light text-[14px] hover:opacity-60 transition-opacity">Sheet</button>
             <span className="font-light text-[10px] leading-none">|</span>
@@ -185,11 +185,16 @@ export default function Pheatures() {
 
       {/* scrollable view */}
       <div className="flex-1 overflow-y-auto">
+
         {inventory.length === 0
           ? <div className="flex h-full items-center justify-center gap-1">
               <span className="text-[14px] font-light text-slate-600">The inventory is empty!</span>
               <Link to="/inventory" className="text-[14px] font-light text-slate-600 underline hover:text-slate-600">Go to inventory</Link>
             </div>
+          : visibleInventory.length === 0
+            ? <div className="flex h-full items-center justify-center gap-1">
+                <span className="text-[14px] font-light text-slate-600">No phonemes match the target features.</span>
+              </div>
           : view === 'sheet'
             ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} />
             : <TableView inventory={visibleInventory} transforms={transforms} />

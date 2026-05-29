@@ -13,7 +13,7 @@ function NavBar() {
   const location = useLocation()
 
   return (
-    <nav className="fixed top-8 left-1/2 -translate-x-1/2 z-50 flex flex-row justify-center gap-10 shadow-sm rounded-[4px] px-10 py-3">
+    <nav className="fixed top-10 left-1/2 -translate-x-1/2 z-50 flex flex-row justify-center gap-10 shadow-sm rounded-[4px] px-10 py-3">
       {NAV_LINKS.map(({ to, label, Icon }) => (
         <Link
           key={to}

@@ -123,14 +123,6 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
     )
   }
 
-  if (inventory.length === 0) {
-    return (
-      <div className="flex items-center h-24">
-        <span className="text-[14px] font-light text-slate-400">No phonemes match the target features.</span>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-[32px]">
 
