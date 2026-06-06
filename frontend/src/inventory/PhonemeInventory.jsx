@@ -8,6 +8,11 @@
  * - GET /api/diacritics: this matches every diacritic on the table to its corresponding id in the backend
  * - when a diacritic is dragged: POST /api/diacritics/applicable-phonemes returns which phoneme
  *   ids satisfy apply_diacritic; those phonemes light up as valid drop targets.
+ *
+ * DIACRITIC SUB-ROWS:
+ * Each diacritic applied to a phoneme appears in its own sub-row directly beneath
+ * that phoneme's base row. If two diacritics are applied to the same phoneme (e.g.
+ * both applied to /p/), two sub-rows are rendered, each chip aligned to /p/'s column.
  */
 
 import { Fragment, useEffect, useMemo, useState } from 'react'
@@ -382,28 +387,31 @@ export default function PhonemeInventory() {
                         />
                       ))}
                     </tr>
-                    {diacriticCols && (
-                      <tr>
-                        <td className="border border-slate-200 bg-slate-50" />
-                        {PLACES.map(place => {
-                          const cellItems = diacriticCols[place]
-                          if (!cellItems) return <td key={place} className="border border-slate-200 w-28" />
-                          return (
-                            <td key={place} className="border border-slate-200 w-28">
-                              <div className="flex">
-                                {[0, 1].map(idx => {
-                                  const items = cellItems[idx]
-                                  if (!items?.length) return <div key={idx} className="w-14 h-10" />
-                                  return items.map(item => (
-                                    <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={!!draggingDiacriticId} />
-                                  ))
-                                })}
-                              </div>
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    )}
+                    {diacriticCols && (() => {
+                      const numRows = Math.max(...PLACES.flatMap(place =>
+                        [0, 1].map(idx => diacriticCols[place]?.[idx]?.length ?? 0)
+                      ))
+                      return Array.from({ length: numRows }, (_, rowIdx) => (
+                        <tr key={rowIdx}>
+                          <td className="border border-slate-200 bg-slate-50" />
+                          {PLACES.map(place => {
+                            const cellItems = diacriticCols[place]
+                            if (!cellItems) return <td key={place} className="border border-slate-200 w-28" />
+                            return (
+                              <td key={place} className="border border-slate-200 w-28">
+                                <div className="flex">
+                                  {[0, 1].map(idx => {
+                                    const item = cellItems[idx]?.[rowIdx]
+                                    if (!item) return <div key={idx} className="w-14 h-10" />
+                                    return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={!!draggingDiacriticId} />
+                                  })}
+                                </div>
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))
+                    })()}
                   </Fragment>
                 )
               })}
@@ -451,28 +459,31 @@ export default function PhonemeInventory() {
                         />
                       ))}
                     </tr>
-                    {diacriticCols && (
-                      <tr>
-                        <td className="border border-slate-200 bg-slate-50" />
-                        {VOWEL_BACKNESS.map(backness => {
-                          const cellItems = diacriticCols[backness]
-                          if (!cellItems) return <td key={backness} className="border border-slate-200 w-28" />
-                          return (
-                            <td key={backness} className="border border-slate-200 p-0 w-28">
-                              <div className="flex justify-center">
-                                {[0, 1].map(idx => {
-                                  const items = cellItems[idx]
-                                  if (!items?.length) return <div key={idx} className="w-14 h-10" />
-                                  return items.map(item => (
-                                    <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={!!draggingDiacriticId} />
-                                  ))
-                                })}
-                              </div>
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    )}
+                    {diacriticCols && (() => {
+                      const numRows = Math.max(...VOWEL_BACKNESS.flatMap(backness =>
+                        [0, 1].map(idx => diacriticCols[backness]?.[idx]?.length ?? 0)
+                      ))
+                      return Array.from({ length: numRows }, (_, rowIdx) => (
+                        <tr key={rowIdx}>
+                          <td className="border border-slate-200 bg-slate-50" />
+                          {VOWEL_BACKNESS.map(backness => {
+                            const cellItems = diacriticCols[backness]
+                            if (!cellItems) return <td key={backness} className="border border-slate-200 w-28" />
+                            return (
+                              <td key={backness} className="border border-slate-200 p-0 w-28">
+                                <div className="flex justify-center">
+                                  {[0, 1].map(idx => {
+                                    const item = cellItems[idx]?.[rowIdx]
+                                    if (!item) return <div key={idx} className="w-14 h-10" />
+                                    return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={!!draggingDiacriticId} />
+                                  })}
+                                </div>
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))
+                    })()}
                   </Fragment>
                 )
               })}
@@ -510,27 +521,30 @@ export default function PhonemeInventory() {
                       </td>
                     ))}
                   </tr>
-                  {groups.some(g => g.label in diacriticRowsByOther) && (
-                    <tr>
-                      {groups.map(group => {
-                        const cellItems = diacriticRowsByOther[group.label]
-                        if (!cellItems) return <td key={group.label} className="border border-slate-200 w-28" />
-                        return (
-                          <td key={group.label} className="border border-slate-200 w-28">
-                            <div className="flex">
-                              {group.phonemes.map((_, idx) => {
-                                const items = cellItems[idx]
-                                if (!items?.length) return <div key={idx} className="w-14 h-10" />
-                                return items.map(item => (
-                                  <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={!!draggingDiacriticId} />
-                                ))
-                              })}
-                            </div>
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  )}
+                  {groups.some(g => g.label in diacriticRowsByOther) && (() => {
+                    const numRows = Math.max(...groups.flatMap(group =>
+                      (group.phonemes.map((_, idx) => diacriticRowsByOther[group.label]?.[idx]?.length ?? 0))
+                    ))
+                    return Array.from({ length: numRows }, (_, rowIdx) => (
+                      <tr key={rowIdx}>
+                        {groups.map(group => {
+                          const cellItems = diacriticRowsByOther[group.label]
+                          if (!cellItems) return <td key={group.label} className="border border-slate-200 w-28" />
+                          return (
+                            <td key={group.label} className="border border-slate-200 w-28">
+                              <div className="flex">
+                                {group.phonemes.map((_, idx) => {
+                                  const item = cellItems[idx]?.[rowIdx]
+                                  if (!item) return <div key={idx} className="w-14 h-10" />
+                                  return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={!!draggingDiacriticId} />
+                                })}
+                              </div>
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    ))
+                  })()}
                 </tbody>
               </table>
             ))}

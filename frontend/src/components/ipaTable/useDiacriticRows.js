@@ -20,6 +20,10 @@ import {
 //   diacriticRowsByConsonant  [manner][place][idx] → item[]
 //   diacriticRowsByVowel      [height][backness][idx] → item[]
 //   diacriticRowsByOther      [groupLabel][idx] → item[]
+//
+// item[] may contain more than one entry when multiple diacritics are applied
+// to the same base phoneme. PhonemeInventory renders one sub-row per item in
+// that array (each diacritic gets its own row under the base phoneme's row).
 
 export function useDiacriticRows(inventory) {
   const inventoryWithDiacritic = useMemo(
