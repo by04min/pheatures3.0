@@ -62,6 +62,7 @@ export default function PhonemeInventory() {
 
   /* SELECTED INVENTORY */
   const [activeSymbol, setActiveSymbol] = useState(null)
+  const [selectedPresetId, setSelectedPresetId] = useState('')
   const { inventory, toggleInventory, clearInventory } = useInventoryStore()
 
   /* DIACRITICS */
@@ -330,8 +331,8 @@ export default function PhonemeInventory() {
 
           <div className="flex items-center justify-between">
             <select
-              defaultValue=""
-              onChange={(e) => { loadPreset(e.target.value); e.target.value = '' }}
+              value={selectedPresetId}
+              onChange={(e) => { setSelectedPresetId(e.target.value); loadPreset(e.target.value) }}
               className="border border-slate-200 rounded-[4px] px-[8px] py-[6px] text-[14px] font-light bg-white"
             >
               <option value="" disabled>Select Preset</option>
@@ -340,7 +341,7 @@ export default function PhonemeInventory() {
               ))}
             </select>
             <button
-              onClick={() => { clearInventory(); setDiacriticError('') }}
+              onClick={() => { clearInventory(); setDiacriticError(''); setSelectedPresetId('') }}
               className="text-[14px] font-light underline hover:text-slate-600 transition-colors"
             >
               <span className="flex items-center gap-1">
