@@ -19,7 +19,7 @@ function App() {
   const location = useLocation()
 
   return (
-    <div className="min-h-screen bg-white px-24 pt-28 pb-12">
+    <div className="min-h-screen bg-white px-10 sm:px-24 pt-28 pb-12">
       <NavBar />
       <div className="mt-4">
         <AnimatePresence mode="wait">

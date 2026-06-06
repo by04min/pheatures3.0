@@ -15,7 +15,7 @@
  * both applied to /p/), two sub-rows are rendered, each chip aligned to /p/'s column.
  */
 
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useInventoryStore } from '../store/inventoryStore'
 import { PHONEME_FEATURES } from './format/phonemeFeatures.js'
 import {
@@ -70,6 +70,11 @@ export default function PhonemeInventory() {
   const [draggingDiacriticId, setDraggingDiacriticId] = useState(null)
   // the list of phonemes that can receive the dragged diacritic
   const [applicablePhonemeIds, setApplicablePhonemeIds] = useState(new Set())
+  // ref mirror of applicablePhonemeIds for use in touch handlers (avoids stale closures)
+  const applicableIdsRef = useRef(new Set())
+  // touch drag state
+  const [touchIndicatorPos, setTouchIndicatorPos] = useState(null)
+  const touchDraggingRef = useRef(null) // { id, displaySymbol } | null
 
   // gets phoneme symbols
   const phonemesBySymbol = useMemo(() => {
@@ -144,6 +149,7 @@ export default function PhonemeInventory() {
       })
     }
     setDraggingDiacriticId(null)
+    applicableIdsRef.current = new Set()
     setApplicablePhonemeIds(new Set())
   }
 
@@ -165,6 +171,7 @@ export default function PhonemeInventory() {
       phonemeFeatures,
     })
     setDraggingDiacriticId(null)
+    applicableIdsRef.current = new Set()
     setApplicablePhonemeIds(new Set())
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -276,6 +283,7 @@ export default function PhonemeInventory() {
   useEffect(() => {
     const evaluateCompatibility = async () => {
       if (!draggingDiacriticId) {
+        applicableIdsRef.current = new Set()
         setApplicablePhonemeIds(new Set())
         setLoadingApplicable(false)
         return
@@ -289,21 +297,43 @@ export default function PhonemeInventory() {
         })
         if (!res.ok) {
           console.error('applicable-phonemes failed', res.status)
-          setApplicablePhonemeIds(new Set(phonemes.map((p) => p.id)))
+          const fallback = new Set(phonemes.map((p) => p.id))
+          applicableIdsRef.current = fallback
+          setApplicablePhonemeIds(fallback)
           return
         }
         const data = await res.json()
         const ids = Array.isArray(data.phoneme_ids) ? data.phoneme_ids : []
-        setApplicablePhonemeIds(new Set(ids))
+        const idSet = new Set(ids)
+        applicableIdsRef.current = idSet
+        setApplicablePhonemeIds(idSet)
       } catch (e) {
         console.error(e)
-        setApplicablePhonemeIds(new Set(phonemes.map((p) => p.id)))
+        const fallback = new Set(phonemes.map((p) => p.id))
+        applicableIdsRef.current = fallback
+        setApplicablePhonemeIds(fallback)
       } finally {
         setLoadingApplicable(false)
       }
     }
     evaluateCompatibility()
   }, [phonemes, draggingDiacriticId])
+
+  /* TOUCH DRAG: prevent page scroll while a diacritic is being touch-dragged */
+  useEffect(() => {
+    if (!draggingDiacriticId) return
+    const prevent = (e) => e.preventDefault()
+    document.addEventListener('touchmove', prevent, { passive: false })
+    return () => document.removeEventListener('touchmove', prevent)
+  }, [draggingDiacriticId])
+
+  const resetTouchDrag = () => {
+    touchDraggingRef.current = null
+    setDraggingDiacriticId(null)
+    applicableIdsRef.current = new Set()
+    setApplicablePhonemeIds(new Set())
+    setTouchIndicatorPos(null)
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-160px)] w-full">
@@ -365,8 +395,38 @@ export default function PhonemeInventory() {
                   }}
                   onDragEnd={() => {
                     setDraggingDiacriticId(null)
+                    applicableIdsRef.current = new Set()
                     setApplicablePhonemeIds(new Set())
                   }}
+                  onTouchStart={(e) => {
+                    e.preventDefault()
+                    const displaySymbol = d.symbol.codePointAt(0) === 0x0320 ? '_' : d.symbol
+                    touchDraggingRef.current = { id: d.id, displaySymbol }
+                    setDraggingDiacriticId(d.id)
+                    const t = e.touches[0]
+                    setTouchIndicatorPos({ x: t.clientX, y: t.clientY })
+                  }}
+                  onTouchMove={(e) => {
+                    const t = e.touches[0]
+                    setTouchIndicatorPos({ x: t.clientX, y: t.clientY })
+                  }}
+                  onTouchEnd={(e) => {
+                    const t = e.changedTouches[0]
+                    const el = document.elementFromPoint(t.clientX, t.clientY)
+                    const target = el?.closest('[data-phoneme-symbol]')
+                    const sym = target?.dataset?.phonemeSymbol
+                    const diacriticId = touchDraggingRef.current?.id
+                    if (sym && diacriticId != null) {
+                      const phoneme = phonemesBySymbol[sym.trim()]
+                      if (phoneme && applicableIdsRef.current.has(phoneme.id)) {
+                        onDropSymbol(sym, diacriticId)
+                      } else if (phoneme) {
+                        onInvalidDropSymbol(sym, diacriticId)
+                      }
+                    }
+                    resetTouchDrag()
+                  }}
+                  onTouchCancel={resetTouchDrag}
                   className={`w-9 h-8 border rounded flex items-center justify-center text-[16px] select-none cursor-grab active:cursor-grabbing ${
                     draggingDiacriticId === d.id
                       ? 'border-blue-100 bg-blue-100'
@@ -604,6 +664,15 @@ export default function PhonemeInventory() {
       </div>
       </div>
 
+      {/* Touch drag floating indicator */}
+      {touchIndicatorPos && touchDraggingRef.current && (
+        <div
+          className="fixed z-50 pointer-events-none w-9 h-8 border border-blue-400 bg-blue-100 rounded flex items-center justify-center text-[16px] font-mono opacity-80 select-none"
+          style={{ left: touchIndicatorPos.x - 18, top: touchIndicatorPos.y - 16 }}
+        >
+          {touchDraggingRef.current.displaySymbol}
+        </div>
+      )}
     </div>
   )
 }

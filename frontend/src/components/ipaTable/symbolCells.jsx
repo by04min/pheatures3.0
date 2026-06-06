@@ -9,6 +9,7 @@ export function SymbolButton({ symbol, disabled, isActive, isInInventory, isDrag
   return (
     <button
       type="button"
+      data-phoneme-symbol={symbol}
       onClick={() => onSelect(symbol)}
       disabled={disabled && !isDragTarget}
       title={title}
