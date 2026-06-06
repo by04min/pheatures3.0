@@ -32,6 +32,7 @@ import { FeaturePanel } from '../pheatures/display/featurePanel.jsx'
 import InvalidDiacriticTarget from '../components/errorMsg.jsx'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { SymbolButton, ConsonantCell, VowelCell, DiacriticChip } from '../components/ipaTable/symbolCells.jsx'
+import { PRESETS } from './format/presetInventories.js'
 
 
 /** MAIN COMPONENT! **/
@@ -80,6 +81,12 @@ export default function PhonemeInventory() {
   const diacriticsById = useMemo(() => {
     const out = {}
     for (const diacritic of diacritics) out[diacritic.id] = diacritic
+    return out
+  }, [diacritics])
+
+  const diacriticsBySymbol = useMemo(() => {
+    const out = {}
+    for (const d of diacritics) out[d.symbol.trim()] = d
     return out
   }, [diacritics])
 
@@ -159,6 +166,37 @@ export default function PhonemeInventory() {
     setDraggingDiacriticId(null)
     setApplicablePhonemeIds(new Set())
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  /** Resolve a CSV symbol string to an inventory entry, handling base-only and base+diacritic forms. */
+  const resolvePresetSymbol = (raw) => {
+    const symbol = raw.trim().normalize('NFC')
+    const phoneme = phonemesBySymbol[symbol]
+    if (phoneme) {
+      return { key: getInventoryKey(phoneme.id, null), phoneme_id: phoneme.id, symbol: phoneme.symbol, diacritic_id: null, diacritic_symbol: null }
+    }
+    const diacriticSymbols = Object.keys(diacriticsBySymbol).sort((a, b) => b.length - a.length)
+    for (const ds of diacriticSymbols) {
+      if (ds && symbol.endsWith(ds)) {
+        const base = symbol.slice(0, -ds.length)
+        const basePhoneme = phonemesBySymbol[base]
+        const diacritic = diacriticsBySymbol[ds]
+        if (basePhoneme && diacritic) {
+          return { key: getInventoryKey(basePhoneme.id, diacritic.id), phoneme_id: basePhoneme.id, symbol: basePhoneme.symbol, diacritic_id: diacritic.id, diacritic_symbol: diacritic.symbol }
+        }
+      }
+    }
+    return null
+  }
+
+  const loadPreset = (presetId) => {
+    const preset = PRESETS.find(p => p.id === presetId)
+    if (!preset) return
+    clearInventory()
+    for (const sym of preset.symbols) {
+      const entry = resolvePresetSymbol(sym)
+      if (entry) toggleInventory(entry)
+    }
   }
 
   /** Factory passed into ConsonantCell/VowelCell so each grid slot shares gating + inventory styling. */
@@ -290,6 +328,28 @@ export default function PhonemeInventory() {
         {/* Diacritics: drag onto a phoneme to add the combined entry */}
         <section className="space-y-[32px] font-light">
 
+          <div className="flex items-center justify-between">
+            <select
+              defaultValue=""
+              onChange={(e) => { loadPreset(e.target.value); e.target.value = '' }}
+              className="border border-slate-200 rounded-[4px] px-[8px] py-[6px] text-[14px] font-light bg-white"
+            >
+              <option value="" disabled>Select Preset</option>
+              {PRESETS.map(p => (
+                <option key={p.id} value={p.id}>{p.label}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => { clearInventory(); setDiacriticError('') }}
+              className="text-[14px] font-light underline hover:text-slate-600 transition-colors"
+            >
+              <span className="flex items-center gap-1">
+                Clear Inventory
+                <DeleteOutlinedIcon style={{ fontSize: 16 }} />
+              </span>
+            </button>
+          </div>
+
           <div className="space-y-[8px]">
           <h3 className="text-[16px] font-light">Diacritics</h3>
           <div className="flex flex-wrap gap-1.5">
@@ -322,20 +382,9 @@ export default function PhonemeInventory() {
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-between">
-            <p className="text-[12px] text-light text-gray-500">
-              Drag a diacritic onto a compatible phoneme to add it to the inventory.
-            </p>
-            <button
-              onClick={() => { clearInventory(); setDiacriticError('') }}
-              className="text-[14px] font-light underline hover:text-slate-600 transition-colors"
-            >
-              <span className="flex items-center gap-1">
-                Clear Inventory
-                <DeleteOutlinedIcon style={{ fontSize: 16 }} />
-              </span>
-            </button>
-          </div>
+          <p className="text-[12px] text-light text-gray-500">
+            Drag a diacritic onto a compatible phoneme to add it to the inventory.
+          </p>
           </div>
         </section>
       </div>
