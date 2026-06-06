@@ -207,7 +207,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                                       const chipLabel = td?.matched && td.transformed
                                         ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
                                         : undefined
-                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} />
+                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
                                     })
                                   })}
                                 </div>
@@ -290,7 +290,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                                       const chipLabel = td?.matched && td.transformed
                                         ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
                                         : undefined
-                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} />
+                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
                                     })
                                   })}
                                 </div>
@@ -355,7 +355,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                                     const chipLabel = td?.matched && td.transformed
                                       ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
                                       : undefined
-                                    return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} />
+                                    return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
                                   })
                                 })}
                               </div>
