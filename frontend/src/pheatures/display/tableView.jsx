@@ -26,11 +26,11 @@ import { DiacriticChip } from '../../components/ipaTable/symbolCells.jsx'
 
 // inventory prop overrides the store when rules are active (filtered to matched phonemes)
 // transforms: { phoneme_id_str: { matched, original_symbol, result_symbol } } — drives chip labels
-export default function TableView({ inventory: inventoryProp, transforms = {}, loading = false }) {
+export default function TableView({ inventory: inventoryProp, transforms = {}, loading = false, diacriticFeatures = {} }) {
   const { inventory: storeInventory, toggleInventory } = useInventoryStore()
   // prefer the filtered prop passed from pheatures.jsx; fall back to full store inventory
   const inventory = inventoryProp ?? storeInventory
-  const [activeSymbol, setActiveSymbol] = useState(null)
+  const [activeItem, setActiveItem] = useState(null)
 
   // set of base phoneme symbols (no diacritics) that are in the (possibly filtered) inventory
   const baseSymbols = useMemo(
@@ -113,7 +113,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, l
       <button
         key={clean}
         type="button"
-        onClick={() => setActiveSymbol(clean)}
+        onClick={() => setActiveItem({ symbol: clean, feats: null })}
         className={`w-20 h-10 font-mono text-center flex items-center justify-center bg-blue-100 hover:bg-blue-200 transition-colors cursor-pointer ${
           hasArrow ? 'text-[12px] px-0.5' : 'text-[14px]'
         }`}
@@ -132,16 +132,16 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, l
       )}
 
       {/* FeaturePanel modal — portaled to document.body to escape any overflow/stacking constraints */}
-      {activeSymbol && createPortal(
+      {activeItem && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-          onClick={() => setActiveSymbol(null)}
+          onClick={() => setActiveItem(null)}
         >
           <div
             className="w-[60%]"
             onClick={(e) => e.stopPropagation()}
           >
-            <FeaturePanel symbol={activeSymbol} onClose={() => setActiveSymbol(null)} />
+            <FeaturePanel symbol={activeItem.symbol} feats={activeItem.feats} onClose={() => setActiveItem(null)} />
           </div>
         </div>,
         document.body
@@ -212,7 +212,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, l
                                       const chipLabel = td?.matched && td.transformed
                                         ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
                                         : undefined
-                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
+                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveItem({ symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`, feats: diacriticFeatures[item.key] ?? null })} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
                                     })
                                   })}
                                 </div>
@@ -295,7 +295,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, l
                                       const chipLabel = td?.matched && td.transformed
                                         ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
                                         : undefined
-                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
+                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveItem({ symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`, feats: diacriticFeatures[item.key] ?? null })} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
                                     })
                                   })}
                                 </div>
@@ -360,7 +360,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, l
                                     const chipLabel = td?.matched && td.transformed
                                       ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
                                       : undefined
-                                    return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
+                                    return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveItem({ symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`, feats: diacriticFeatures[item.key] ?? null })} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
                                   })
                                 })}
                               </div>

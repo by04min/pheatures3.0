@@ -40,8 +40,8 @@ const FEATURE_GROUPS = [
 ];
 
 // given a phoneme, provides all information about it!
-export function FeaturePanel({ symbol, onClose }) {
-  const feats = PHONEME_FEATURES[symbol];
+export function FeaturePanel({ symbol, feats: featsProp, onClose }) {
+  const feats = featsProp ?? PHONEME_FEATURES[symbol];
 
   // error handling: show an error message if we can't get the features for a symbol
   if (!feats) {

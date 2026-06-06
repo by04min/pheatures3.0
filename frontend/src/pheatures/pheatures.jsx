@@ -218,7 +218,7 @@ export default function Pheatures() {
               </div>
           : view === 'sheet'
             ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} loading={transformsLoading} />
-            : <TableView inventory={visibleInventory} transforms={transforms} loading={transformsLoading} />
+            : <TableView inventory={visibleInventory} transforms={transforms} loading={transformsLoading} diacriticFeatures={diacriticFeatures} />
         }
       </div>
     </div>
