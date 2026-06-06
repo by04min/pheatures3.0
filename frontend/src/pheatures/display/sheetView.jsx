@@ -37,7 +37,7 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
               : item.symbol.trim()
 
             // when a transform matched and actually changed the phoneme, show "original → result"
-            const t = transforms[String(item.phoneme_id)]
+            const t = transforms[item.diacritic_id != null ? item.key : String(item.phoneme_id)]
             const symbolCell = t?.matched && t.transformed
               ? `${t.original_symbol ?? baseLabel} → ${t.result_symbol ?? '?'}`
               : baseLabel

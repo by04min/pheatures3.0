@@ -61,14 +61,17 @@ export function VowelCell({ height, backness, renderSymbolButton }) {
 
 // 04. DIACRITIC CHIP: a modified phoneme shown inline in the table row beneath its base phoneme.
 //     clicking removes it from the inventory (same toggleInventory logic as SymbolButton).
-export function DiacriticChip({ item, onRemove, isDragging, onClick }) {
-  const display = `${(item.symbol ?? '').trim()}${item.diacritic_symbol ?? ''}`
+//     pass `label` to override the display text (e.g. "pː → bː" when a rule is active).
+export function DiacriticChip({ item, onRemove, isDragging, onClick, label }) {
+  const display = label ?? `${(item.symbol ?? '').trim()}${item.diacritic_symbol ?? ''}`
   return (
     <button
       type="button"
       onClick={() => onClick ? onClick(item) : onRemove(item)}
       title={`${display} — click to remove`}
-      className={`w-14 h-10 text-base font-mono text-center transition-colors ${
+      className={`w-20 h-10 font-mono text-center transition-colors ${
+        label ? 'text-[12px] px-0.5' : 'text-[14px]'
+      } ${
         isDragging ? 'text-slate-300 cursor-not-allowed' : 'bg-blue-100 cursor-pointer'
       }`}
     >

@@ -88,14 +88,26 @@ export default function Pheatures() {
       return
     }
 
+    // send all diacritic items; include the pre-fetched bundle when available so the backend
+    // can skip its own DB lookup, otherwise the backend derives it from phoneme_id + diacritic_id
+    const diacriticItems = inventory
+      .filter((item) => item.diacritic_id != null)
+      .map((item) => ({
+        key: item.key,
+        phoneme_id: item.phoneme_id,
+        diacritic_id: item.diacritic_id,
+        symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`,
+        bundle: diacriticFeatures[item.key] ?? null,
+      }))
+
     fetch(`${API_BASE}/phonemes/transform`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phoneme_ids: phonemeIds, target_features: targetFeatures, feature_changes: featureChanges }),
+      body: JSON.stringify({ phoneme_ids: phonemeIds, diacritic_items: diacriticItems, target_features: targetFeatures, feature_changes: featureChanges }),
     })
       .then((r) => r.json())
       .then(setTransforms)
-  }, [targetRows, changeRows, inventory])
+  }, [targetRows, changeRows, inventory, diacriticFeatures])
 
   // contradiction results from /api/rules/check: { target_contradictions: [...], change_contradictions: [...] }
   const [contradictions, setContradictions] = useState({ target_contradictions: [], change_contradictions: [] })
@@ -135,18 +147,22 @@ export default function Pheatures() {
 
   // resolve the feature bundle for a given inventory item, applying transforms when matched
   const resolveFeatures = (item) => {
-    const t = transforms[String(item.phoneme_id)]
+    const key = item.diacritic_id != null ? item.key : String(item.phoneme_id)
+    const t = transforms[key]
     if (t?.matched && t.result_bundle) return t.result_bundle
     return item.diacritic_id != null
       ? diacriticFeatures[item.key]
       : baseFeatures[String(item.phoneme_id)]
   }
 
-  // when transforms has results, filter the inventory to only matched phonemes;
-  // computed inline each render so it's always in sync with transforms
   const rulesActive = Object.keys(transforms).length > 0
-  const visibleInventory = rulesActive
-    ? inventory.filter((item) => transforms[String(item.phoneme_id)]?.matched)
+  // only filter when target features are set; changes-only applies to the whole inventory
+  const hasTargetFeatures = targetRows.some((r) => r.value && r.feature)
+  const visibleInventory = rulesActive && hasTargetFeatures
+    ? inventory.filter((item) => {
+        const key = item.diacritic_id != null ? item.key : String(item.phoneme_id)
+        return transforms[key]?.matched
+      })
     : inventory
 
   return (

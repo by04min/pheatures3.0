@@ -39,7 +39,7 @@ Returns the full feature bundle for each requested phoneme id, keyed by id.
 ---
 
 ### `POST /api/phonemes/transform`
-Applies a phonological rule to a set of inventory phonemes. Phonemes that match the target features are transformed by the feature changes; the result is looked up within the inventory (not the full database) to find a valid resulting symbol.
+Applies a phonological rule to a set of inventory phonemes. Phonemes that match the target features are transformed by the feature changes; the result is spelled out by searching for a matching IPA symbol (base or base+diacritic).
 
 **Request body:**
 ```json
@@ -68,7 +68,7 @@ Applies a phonological rule to a set of inventory phonemes. Phonemes that match 
 }
 ```
 
-- `result_symbol` is `null` if the resulting bundle doesn't match any phoneme in the inventory, or if the bundle contains a contradiction.
+- `result_symbol` is `null` only when the resulting feature bundle has no IPA spelling at all — no base symbol or base+diacritic combination anywhere in the IPA corresponds to it. This is when `?` is shown in the UI. A sound that is simply absent from the user's selected inventory but is a real IPA symbol will still be returned as a non-null `result_symbol`. A self-contradictory rule result also yields `null`.
 - `transformed: false` means the phoneme matched the target but no feature changes were applied.
 
 ---

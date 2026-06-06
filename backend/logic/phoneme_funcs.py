@@ -145,3 +145,28 @@ def find_phoneme_by_features(bundle):
         if get_phoneme_features(phoneme_id) == bundle:
             return symbol
     return None
+
+
+"""
+06. GET ALL PHONEME BUNDLES
+    PURPOSE:
+    - returns every phoneme in the database with its symbol and full feature bundle, in one query
+
+    RETURNS:
+    - a dict: {phoneme_id: {"symbol": str, "bundle": {feature: value, ...}}, ...}
+"""
+def get_all_phoneme_bundles():
+    con = _connect()
+    phoneme_rows = con.execute("SELECT id, phoneme_symbol FROM phonemes ORDER BY id").fetchall()
+    feature_rows = con.execute("""
+        SELECT phoneme_features.phoneme_id, features.feature_name, phoneme_features.feature_value
+        FROM phoneme_features
+        JOIN features ON phoneme_features.feature_id = features.id
+    """).fetchall()
+    con.close()
+
+    result = {pid: {"symbol": sym, "bundle": {}} for pid, sym in phoneme_rows}
+    for phoneme_id, feature_name, feature_value in feature_rows:
+        if phoneme_id in result:
+            result[phoneme_id]["bundle"][feature_name] = feature_value
+    return result

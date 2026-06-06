@@ -98,25 +98,25 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
   // otherwise a clickable button that opens the FeaturePanel.
   // when a transform is active, shows "original → result" (or "→ ?") inside the chip.
   const renderSelectedSymbol = (symbol) => {
-    if (!symbol) return <div className="w-14 h-10" />
+    if (!symbol) return <div className="w-20 h-10" />
     const clean = symbol.trim()
-    if (!baseSymbols.has(clean)) return <div className="w-14 h-10" />
+    if (!baseSymbols.has(clean)) return <div className="w-20 h-10" />
 
     const pid = symbolToPhonemeId[clean]
     const t = pid != null ? transforms[String(pid)] : null
-    const label = t?.matched && t.transformed
+    const hasArrow = t?.matched && t.transformed
+    const label = hasArrow
       ? `${t.original_symbol ?? clean} → ${t.result_symbol ?? '?'}`
       : clean
-
-    // fill the flex slot when showing the arrow label, fixed width otherwise
-    const widthClass = t?.matched && t.transformed ? 'flex-1 px-2' : 'w-14'
 
     return (
       <button
         key={clean}
         type="button"
         onClick={() => setActiveSymbol(clean)}
-        className={`${widthClass} h-10 text-[12px] font-mono text-center flex items-center justify-center bg-blue-100 hover:bg-blue-200 transition-colors cursor-pointer whitespace-nowrap`}
+        className={`w-20 h-10 font-mono text-center flex items-center justify-center bg-blue-100 hover:bg-blue-200 transition-colors cursor-pointer ${
+          hasArrow ? 'text-[12px] px-0.5' : 'text-[14px]'
+        }`}
       >
         {label}
       </button>
@@ -158,7 +158,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                   <th className="border border-slate-200 w-36 bg-slate-50" />
                   {/* place of articulation column headers */}
                   {activePlaces.map(p => (
-                    <th key={p} className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-28 bg-slate-50 text-[12px]">
+                    <th key={p} className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 bg-slate-50 text-[12px]">
                       {p}
                     </th>
                   ))}
@@ -177,9 +177,9 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                         </td>
                         {activePlaces.map(place => {
                           const phonemes = CONSONANT_CELLS[manner]?.[place]
-                          if (!phonemes) return <td key={place} className="border border-slate-200 w-28" />
+                          if (!phonemes) return <td key={place} className="border border-slate-200 w-40" />
                           return (
-                            <td key={place} className="border border-slate-200 w-28">
+                            <td key={place} className="border border-slate-200 w-40">
                               <div className="flex">
                                 {/* [0] = voiceless, [1] = voiced */}
                                 {renderSelectedSymbol(phonemes[0])}
@@ -195,16 +195,20 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                           <td className="border border-slate-200 bg-slate-50" />
                           {activePlaces.map(place => {
                             const cellItems = diacriticCols[place]
-                            if (!cellItems) return <td key={place} className="border border-slate-200 w-28" />
+                            if (!cellItems) return <td key={place} className="border border-slate-200 w-40" />
                             return (
-                              <td key={place} className="border border-slate-200 w-28">
+                              <td key={place} className="border border-slate-200 w-40">
                                 <div className="flex">
                                   {[0, 1].map(idx => {
                                     const items = cellItems[idx]
-                                    if (!items?.length) return <div key={idx} className="w-14 h-10" />
-                                    return items.map(item => (
-                                      <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} />
-                                    ))
+                                    if (!items?.length) return <div key={idx} className="w-20 h-10" />
+                                    return items.map(item => {
+                                      const td = transforms[item.key]
+                                      const chipLabel = td?.matched && td.transformed
+                                        ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
+                                        : undefined
+                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} />
+                                    })
                                   })}
                                 </div>
                               </td>
@@ -234,10 +238,10 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
               <thead>
                 <tr>
                   {/* corner cell */}
-                  <th className="border border-slate-200 w-32 bg-slate-50" />
+                  <th className="border border-slate-200 w-40 bg-slate-50" />
                   {/* backness column headers */}
                   {activeVowelBackness.map(b => (
-                    <th key={b} className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-28 bg-slate-50 text-[12px]">
+                    <th key={b} className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 bg-slate-50 text-[12px]">
                       {b}
                     </th>
                   ))}
@@ -256,9 +260,9 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                         </td>
                         {activeVowelBackness.map(backness => {
                           const phonemes = VOWEL_CELLS[height]?.[backness]
-                          if (!phonemes) return <td key={backness} className="border border-slate-200 w-28" />
+                          if (!phonemes) return <td key={backness} className="border border-slate-200 w-40" />
                           return (
-                            <td key={backness} className="border border-slate-200 w-28">
+                            <td key={backness} className="border border-slate-200 w-40">
                               <div className="flex justify-center">
                                 {/* [0] = unrounded, [1] = rounded */}
                                 {renderSelectedSymbol(phonemes[0])}
@@ -274,16 +278,20 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                           <td className="border border-slate-200 bg-slate-50" />
                           {activeVowelBackness.map(backness => {
                             const cellItems = diacriticCols[backness]
-                            if (!cellItems) return <td key={backness} className="border border-slate-200 w-28" />
+                            if (!cellItems) return <td key={backness} className="border border-slate-200 w-40" />
                             return (
-                              <td key={backness} className="border border-slate-200 p-0 w-28">
+                              <td key={backness} className="border border-slate-200 p-0 w-40">
                                 <div className="flex justify-center">
                                   {[0, 1].map(idx => {
                                     const items = cellItems[idx]
-                                    if (!items?.length) return <div key={idx} className="w-14 h-10" />
-                                    return items.map(item => (
-                                      <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} />
-                                    ))
+                                    if (!items?.length) return <div key={idx} className="w-20 h-10" />
+                                    return items.map(item => {
+                                      const td = transforms[item.key]
+                                      const chipLabel = td?.matched && td.transformed
+                                        ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
+                                        : undefined
+                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} />
+                                    })
                                   })}
                                 </div>
                               </td>
@@ -313,7 +321,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                     <tr>
                       {/* group label column headers */}
                       {groups.map(group => (
-                        <th key={group.label} className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-28 bg-slate-50 text-[12px]">
+                        <th key={group.label} className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 bg-slate-50 text-[12px]">
                           {group.label}
                         </th>
                       ))}
@@ -323,7 +331,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                     {/* base phoneme row */}
                     <tr>
                       {groups.map(group => (
-                        <td key={group.label} className="border border-slate-200 w-28">
+                        <td key={group.label} className="border border-slate-200 w-40">
                           <div className="flex">
                             {group.phonemes.map(s => renderSelectedSymbol(s))}
                           </div>
@@ -335,16 +343,20 @@ export default function TableView({ inventory: inventoryProp, transforms = {} })
                       <tr>
                         {groups.map(group => {
                           const cellItems = diacriticRowsByOther[group.label]
-                          if (!cellItems) return <td key={group.label} className="border border-slate-200 w-28" />
+                          if (!cellItems) return <td key={group.label} className="border border-slate-200 w-40" />
                           return (
-                            <td key={group.label} className="border border-slate-200 w-28">
+                            <td key={group.label} className="border border-slate-200 w-40">
                               <div className="flex">
                                 {group.phonemes.map((_, idx) => {
                                   const items = cellItems[idx]
-                                  if (!items?.length) return <div key={idx} className="w-14 h-10" />
-                                  return items.map(item => (
-                                    <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} />
-                                  ))
+                                  if (!items?.length) return <div key={idx} className="w-20 h-10" />
+                                  return items.map(item => {
+                                    const td = transforms[item.key]
+                                    const chipLabel = td?.matched && td.transformed
+                                      ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
+                                      : undefined
+                                    return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveSymbol(item.symbol.trim())} label={chipLabel} />
+                                  })
                                 })}
                               </div>
                             </td>

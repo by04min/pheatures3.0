@@ -14,6 +14,7 @@ Core lookups for phonemes and their feature bundles.
 | `get_phoneme(phoneme_id)` | Returns the symbol string for a given id, or `None` |
 | `get_phoneme_features(phoneme_id)` | Returns the full feature bundle for a phoneme as `{"voice": "+", "nasal": "-", ...}` |
 | `find_phoneme_by_features(bundle)` | Searches all phonemes and returns the symbol whose feature bundle exactly matches `bundle`, or `None` |
+| `get_all_phoneme_bundles()` | Returns every phoneme in the DB as `{phoneme_id: {"symbol": str, "bundle": dict}}` in a single query — used during rule application to check if a result maps to any IPA symbol |
 | `query_segments(feature_list)` | Given a list of `{"feature", "value"}` dicts, returns the ids of all phonemes that satisfy every condition |
 
 Most other logic modules depend on `get_phoneme_features` from this file.
@@ -69,8 +70,10 @@ Handles applying diacritics to base phonemes.
 
 | Function | Purpose |
 |---|---|
-| `apply_diacritic(base_sound, diacritic)` | Checks if a diacritic can be applied to a phoneme and returns the modified feature bundle, or `None` if incompatible |
-| `get_all_diacritics()` | Returns every diacritic as a list of `{"id", "name", "symbol", "condition"}` dicts |
+| `apply_diacritic(base_sound, diacritic)` | Checks if a diacritic can be applied to a phoneme (by ID) and returns the modified feature bundle, or `None` if incompatible |
+| `apply_diacritic_to_bundle(bundle, diacritic)` | Same as `apply_diacritic`, but takes a pre-computed feature bundle instead of a phoneme ID |
+| `get_all_diacritic_rules()` | Returns all diacritics with their `condition` and `consequence` — used for in-memory matching during rule application |
+| `get_all_diacritics()` | Returns every diacritic as a list of `{"id", "name", "symbol", "condition"}` dicts — used to populate the UI |
 
 **How `apply_diacritic` works:**
 1. Fetches the diacritic's `condition` and `consequence` from the DB
@@ -84,6 +87,10 @@ result = apply_diacritic(phoneme_id=5, diacritic=3)
 # None  → diacritic conditions not met by this phoneme
 # {...} → new feature bundle with diacritic applied
 ```
+
+**`apply_diacritic_to_bundle`** is used during rule application (`POST /phonemes/transform`). After a phonological rule mutates a base phoneme's features, there's no DB entry to look up anymore — only the modified in-memory bundle. This function lets the route re-apply the original diacritic to that bundle to check whether the diacritized form still holds (e.g. if /p/ → /b/ under a rule, does /pː/ → /bː/?).
+
+**`get_all_diacritic_rules`** is fetched once per transform request and held in memory. The route uses it to reverse-look up result symbols: for each inventory phoneme, it tries applying every diacritic to see if the result matches the transformation output. This is how the route can return a symbol like /bː/ even if only /b/ and /pː/ are in the user's inventory.
 
 ---
 

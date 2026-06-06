@@ -48,7 +48,60 @@ def apply_diacritic(base_sound, diacritic):
     return updated_features
 
 """
-02. GET ALL DIACRITICS
+01b. APPLY DIACRITIC TO BUNDLE
+    Like apply_diacritic, but accepts a pre-computed feature bundle instead of a phoneme ID.
+    Used during rule application to re-apply a diacritic after transforming the base phoneme.
+
+    RETURNS:
+    - None: diacritic conditions not met by the bundle
+    - updated bundle with consequence applied
+"""
+def apply_diacritic_to_bundle(bundle, diacritic):
+    con = _connect()
+    result = con.execute(
+        "SELECT condition, consequence FROM diacritics WHERE id = ?", (diacritic,)
+    ).fetchone()
+    con.close()
+
+    if not result:
+        return None
+
+    condition = json.loads(result[0])
+    consequence = json.loads(result[1])
+
+    for feature, value in condition.items():
+        if bundle.get(feature) != value:
+            return None
+
+    updated = dict(bundle)
+    for feature, value in consequence.items():
+        updated[feature] = value
+
+    return updated
+
+"""
+02. GET ALL DIACRITIC RULES
+    Returns every diacritic with id, symbol, condition, and consequence.
+    Used for in-memory matching when searching for a result bundle.
+"""
+def get_all_diacritic_rules():
+    con = _connect()
+    rows = con.execute(
+        "SELECT id, diacritic_symbol, condition, consequence FROM diacritics ORDER BY id"
+    ).fetchall()
+    con.close()
+    return [
+        {
+            "id": row[0],
+            "symbol": row[1],
+            "condition": json.loads(row[2]),
+            "consequence": json.loads(row[3]),
+        }
+        for row in rows
+    ]
+
+"""
+03. GET ALL DIACRITICS
     PURPOSE:
     - returns every diacritic in the database as a list of {id, name, symbol} dicts
 
