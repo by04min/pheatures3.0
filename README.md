@@ -21,8 +21,8 @@ git clone
 cd pheatures3.0
 '''
 
-## Frontend Setup (Reacy + Vite)
-The frontend is build with React, and uses Vite as the build tool.
+## Frontend Setup (React + Vite)
+The frontend is built with React, and uses Vite as the build tool.
 Vite is just a modern, fast alternative to Create React App.
 
 Make sure to `cd` into the frontend folder, which is where all the user interface code lives!
