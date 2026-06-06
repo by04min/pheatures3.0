@@ -52,6 +52,7 @@ export default function PhonemeInventory() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [diacriticError, setDiacriticError] = useState('')
+  const [loadingApplicable, setLoadingApplicable] = useState(false)
 
   /* SELECTED INVENTORY */
   const [activeSymbol, setActiveSymbol] = useState(null)
@@ -232,8 +233,10 @@ export default function PhonemeInventory() {
     const evaluateCompatibility = async () => {
       if (!draggingDiacriticId) {
         setApplicablePhonemeIds(new Set())
+        setLoadingApplicable(false)
         return
       }
+      setLoadingApplicable(true)
       try {
         const res = await fetch(`${API_BASE}/diacritics/applicable-phonemes`, {
           method: 'POST',
@@ -251,6 +254,8 @@ export default function PhonemeInventory() {
       } catch (e) {
         console.error(e)
         setApplicablePhonemeIds(new Set(phonemes.map((p) => p.id)))
+      } finally {
+        setLoadingApplicable(false)
       }
     }
     evaluateCompatibility()
@@ -331,7 +336,12 @@ export default function PhonemeInventory() {
       </div>
 
       {/* ── Scrollable tables ── */}
-      <div className="flex-1 overflow-y-auto space-y-[32px]">
+      <div className="relative flex-1 overflow-y-auto space-y-[32px]">
+        {loadingApplicable && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+            <span className="text-sm text-slate-600">Loading valid targets...</span>
+          </div>
+        )}
 
       {/* Consonants */}
       <section className="space-y-[8px] font-light">

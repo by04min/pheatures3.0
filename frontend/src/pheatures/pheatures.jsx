@@ -26,6 +26,7 @@ export default function Pheatures() {
 
   // transform results from /api/phonemes/transform: { phoneme_id_str: { matched, original_symbol, result_symbol, result_bundle, valid } }
   const [transforms, setTransforms] = useState({})
+  const [transformsLoading, setTransformsLoading] = useState(false)
 
   // fetch base feature bundles whenever inventory changes
   useEffect(() => {
@@ -79,12 +80,14 @@ export default function Pheatures() {
     // - changes only → apply to all inventory phonemes (empty target matches everything)
     if (Object.keys(targetFeatures).length === 0 && Object.keys(featureChanges).length === 0) {
       setTransforms({})
+      setTransformsLoading(false)
       return
     }
 
     const phonemeIds = [...new Set(inventory.map((item) => item.phoneme_id))]
     if (phonemeIds.length === 0) {
       setTransforms({})
+      setTransformsLoading(false)
       return
     }
 
@@ -100,13 +103,15 @@ export default function Pheatures() {
         bundle: diacriticFeatures[item.key] ?? null,
       }))
 
+    setTransformsLoading(true)
     fetch(`${API_BASE}/phonemes/transform`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phoneme_ids: phonemeIds, diacritic_items: diacriticItems, target_features: targetFeatures, feature_changes: featureChanges }),
     })
       .then((r) => r.json())
-      .then(setTransforms)
+      .then((data) => { setTransforms(data); setTransformsLoading(false) })
+      .catch(() => setTransformsLoading(false))
   }, [targetRows, changeRows, inventory, diacriticFeatures])
 
   // contradiction results from /api/rules/check: { target_contradictions: [...], change_contradictions: [...] }
@@ -212,8 +217,8 @@ export default function Pheatures() {
                 <span className="text-[14px] font-light text-slate-600">No phonemes match the target features.</span>
               </div>
           : view === 'sheet'
-            ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} />
-            : <TableView inventory={visibleInventory} transforms={transforms} />
+            ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} loading={transformsLoading} />
+            : <TableView inventory={visibleInventory} transforms={transforms} loading={transformsLoading} />
         }
       </div>
     </div>

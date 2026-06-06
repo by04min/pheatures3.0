@@ -7,9 +7,14 @@ import { FEATURE_NAMES } from '../../inventory/format/phonemeFeatures.js'
 // when transforms are active, the symbol column shows "original → result" (or "original → ?")
 // and feature columns reflect the transformed bundle
 
-export default function SheetView({ inventory, resolveFeatures, transforms = {} }) {
+export default function SheetView({ inventory, resolveFeatures, transforms = {}, loading = false }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
+      {loading && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+          <span className="text-sm text-slate-600">Loading...</span>
+        </div>
+      )}
       <table className="border-collapse text-[12px] font-light">
         <thead>
           <tr>
