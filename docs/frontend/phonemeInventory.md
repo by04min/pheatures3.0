@@ -21,6 +21,8 @@ The Phoneme Inventory page is the interactive IPA chart where users build their 
 |---|---|
 | `phonemes` | All phonemes fetched from the backend (`GET /api/phonemes`) |
 | `diacritics` | All diacritics fetched from the backend (`GET /api/diacritics`) |
+| `loading` | True while the initial phoneme/diacritic data is being fetched |
+| `loadingApplicable` | True while the applicable-phonemes fetch is in flight after a drag starts; shows a viewport-centered overlay over the tables |
 | `draggingDiacriticId` | The id of the diacritic currently being dragged, or `null` |
 | `applicablePhonemeIds` | Set of phoneme ids that the dragged diacritic can legally apply to |
 | `activeSymbol` | The most recently clicked phoneme symbol (used for visual feedback) |

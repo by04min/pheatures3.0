@@ -127,7 +127,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, l
     <div className="relative space-y-[32px]">
       {loading && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
-          <span className="text-sm text-slate-600">Loading...</span>
+          <span className="text-sm text-slate-600">Applying Rules...</span>
         </div>
       )}
 

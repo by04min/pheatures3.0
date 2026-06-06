@@ -12,7 +12,7 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {},
     <div className="relative overflow-x-auto">
       {loading && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
-          <span className="text-sm text-slate-600">Loading...</span>
+          <span className="text-sm text-slate-600">Applying rules...</span>
         </div>
       )}
       <table className="border-collapse text-[12px] font-light">

@@ -336,12 +336,13 @@ export default function PhonemeInventory() {
       </div>
 
       {/* ── Scrollable tables ── */}
-      <div className="relative flex-1 overflow-y-auto space-y-[32px]">
+      <div className="relative flex-1">
         {loadingApplicable && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
             <span className="text-sm text-slate-600">Loading valid targets...</span>
           </div>
         )}
+      <div className="absolute inset-0 overflow-y-auto space-y-[32px]">
 
       {/* Consonants */}
       <section className="space-y-[8px] font-light">
@@ -535,6 +536,7 @@ export default function PhonemeInventory() {
             ))}
           </div>
         </section>
+      </div>
       </div>
       </div>
 
