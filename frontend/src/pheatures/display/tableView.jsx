@@ -26,7 +26,7 @@ import { DiacriticChip } from '../../components/ipaTable/symbolCells.jsx'
 
 // inventory prop overrides the store when rules are active (filtered to matched phonemes)
 // transforms: { phoneme_id_str: { matched, original_symbol, result_symbol } } — drives chip labels
-export default function TableView({ inventory: inventoryProp, transforms = {}, loading = false, diacriticFeatures = {} }) {
+export default function TableView({ inventory: inventoryProp, transforms = {}, diacriticFeatures = {} }) {
   const { inventory: storeInventory, toggleInventory } = useInventoryStore()
   // prefer the filtered prop passed from pheatures.jsx; fall back to full store inventory
   const inventory = inventoryProp ?? storeInventory
@@ -125,12 +125,6 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, l
 
   return (
     <div className="relative space-y-[32px]">
-      {loading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
-          <span className="text-sm text-slate-600">Applying Rules...</span>
-        </div>
-      )}
-
       {/* FeaturePanel modal — portaled to document.body to escape any overflow/stacking constraints */}
       {activeItem && createPortal(
         <div

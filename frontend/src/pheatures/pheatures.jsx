@@ -205,21 +205,27 @@ export default function Pheatures() {
       </div>
 
       {/* scrollable view */}
-      <div className="flex-1 overflow-y-auto">
-
-        {inventory.length === 0
-          ? <div className="flex h-full items-center justify-center gap-1">
-              <span className="text-[14px] font-light text-slate-600">The inventory is empty!</span>
-              <Link to="/inventory" className="text-[14px] font-light text-slate-600 underline hover:text-slate-600">Go to inventory</Link>
-            </div>
-          : visibleInventory.length === 0
+      <div className="relative flex-1">
+        {transformsLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+            <span className="text-sm text-slate-600">Applying rules...</span>
+          </div>
+        )}
+        <div className="absolute inset-0 overflow-y-auto">
+          {inventory.length === 0
             ? <div className="flex h-full items-center justify-center gap-1">
-                <span className="text-[14px] font-light text-slate-600">No phonemes match the target features.</span>
+                <span className="text-[14px] font-light text-slate-600">The inventory is empty!</span>
+                <Link to="/inventory" className="text-[14px] font-light text-slate-600 underline hover:text-slate-600">Go to inventory</Link>
               </div>
-          : view === 'sheet'
-            ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} loading={transformsLoading} />
-            : <TableView inventory={visibleInventory} transforms={transforms} loading={transformsLoading} diacriticFeatures={diacriticFeatures} />
-        }
+            : visibleInventory.length === 0
+              ? <div className="flex h-full items-center justify-center gap-1">
+                  <span className="text-[14px] font-light text-slate-600">No phonemes match the target features.</span>
+                </div>
+            : view === 'sheet'
+              ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} />
+              : <TableView inventory={visibleInventory} transforms={transforms} diacriticFeatures={diacriticFeatures} />
+          }
+        </div>
       </div>
     </div>
   )
