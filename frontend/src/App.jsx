@@ -18,6 +18,8 @@ const pageVariants = {
 function App() {
   const location = useLocation()
 
+  // test
+
   return (
     <div className="min-h-screen bg-white px-10 sm:px-24 pt-28 pb-12">
       <NavBar />
