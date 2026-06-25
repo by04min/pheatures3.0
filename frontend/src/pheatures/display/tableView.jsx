@@ -11,6 +11,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useInventoryStore } from '../../store/inventoryStore'
+import { useThemeStore } from '../../store/themeStore'
 import { FeaturePanel } from './featurePanel.jsx'
 import {
   CONSONANT_CELLS,
@@ -28,6 +29,7 @@ import { DiacriticChip } from '../../components/ipaTable/symbolCells.jsx'
 // transforms: { phoneme_id_str: { matched, original_symbol, result_symbol } } — drives chip labels
 export default function TableView({ inventory: inventoryProp, transforms = {}, diacriticFeatures = {} }) {
   const { inventory: storeInventory, toggleInventory } = useInventoryStore()
+  const { isDark } = useThemeStore()
   // prefer the filtered prop passed from pheatures.jsx; fall back to full store inventory
   const inventory = inventoryProp ?? storeInventory
   const [activeItem, setActiveItem] = useState(null)
@@ -150,14 +152,14 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, d
         <section className="space-y-[8px] font-light">
           <h3 className="text-[16px]">Consonants</h3>
           <div className="overflow-x-auto">
-            <table className="border-collapse text-xs">
+            <table className={`border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
               <thead>
                 <tr>
                   {/* corner cell */}
-                  <th className="border border-slate-200 w-36 bg-slate-50" />
+                  <th className={`border border-slate-200 w-36 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
                   {/* place of articulation column headers */}
                   {activePlaces.map(p => (
-                    <th key={p} className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 bg-slate-50 text-[12px]">
+                    <th key={p} className={`border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`}>
                       {p}
                     </th>
                   ))}
@@ -171,7 +173,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, d
                       {/* base phoneme row */}
                       <tr>
                         {/* manner of articulation row header */}
-                        <td className="border border-slate-200 px-[8px] py-[12px] text-[12px] bg-slate-50 font-light whitespace-nowrap">
+                        <td className={`border border-slate-200 px-[8px] py-[12px] text-[12px] ${isDark ? 'bg-gray-100' : 'bg-slate-50'} font-light whitespace-nowrap`}>
                           {manner}
                         </td>
                         {activePlaces.map(place => {
@@ -191,7 +193,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, d
                       {/* diacritic sub-row: only rendered when this manner has diacritic items */}
                       {diacriticCols && (
                         <tr>
-                          <td className="border border-slate-200 bg-slate-50" />
+                          <td className={`border border-slate-200 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
                           {activePlaces.map(place => {
                             const cellItems = diacriticCols[place]
                             if (!cellItems) return <td key={place} className="border border-slate-200 w-40" />
@@ -233,14 +235,14 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, d
         {activeVowelHeights.length > 0 && (
           <section className="space-y-[8px] font-light">
             <h3 className="text-[16px]">Vowels</h3>
-            <table className="border-collapse text-xs">
+            <table className={`border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
               <thead>
                 <tr>
                   {/* corner cell */}
-                  <th className="border border-slate-200 w-40 bg-slate-50" />
+                  <th className={`border border-slate-200 w-40 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
                   {/* backness column headers */}
                   {activeVowelBackness.map(b => (
-                    <th key={b} className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 bg-slate-50 text-[12px]">
+                    <th key={b} className={`border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`}>
                       {b}
                     </th>
                   ))}
@@ -254,7 +256,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, d
                       {/* base phoneme row */}
                       <tr>
                         {/* vowel height row header */}
-                        <td className="border border-slate-200 px-[8px] py-[12px] text-[12px] bg-slate-50 font-light whitespace-nowrap">
+                        <td className={`border border-slate-200 px-[8px] py-[12px] text-[12px] ${isDark ? 'bg-gray-100' : 'bg-slate-50'} font-light whitespace-nowrap`}>
                           {height}
                         </td>
                         {activeVowelBackness.map(backness => {
@@ -274,7 +276,7 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, d
                       {/* diacritic sub-row: only rendered when this height has diacritic items */}
                       {diacriticCols && (
                         <tr>
-                          <td className="border border-slate-200 bg-slate-50" />
+                          <td className={`border border-slate-200 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
                           {activeVowelBackness.map(backness => {
                             const cellItems = diacriticCols[backness]
                             if (!cellItems) return <td key={backness} className="border border-slate-200 w-40" />
@@ -315,12 +317,12 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, d
             <h3 className="text-[16px]">Other Phonemes</h3>
             <div className="flex flex-col gap-2">
               {[activeOtherGroups.slice(0, 4), activeOtherGroups.slice(4)].filter(g => g.length > 0).map((groups, i) => (
-                <table key={i} className="border-collapse text-xs">
+                <table key={i} className={`border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
                   <thead>
                     <tr>
                       {/* group label column headers */}
                       {groups.map(group => (
-                        <th key={group.label} className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 bg-slate-50 text-[12px]">
+                        <th key={group.label} className={`border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`}>
                           {group.label}
                         </th>
                       ))}

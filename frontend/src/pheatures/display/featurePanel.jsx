@@ -55,7 +55,7 @@ export function FeaturePanel({ symbol, feats: featsProp, onClose }) {
 
   // this is the actual view!
   return (
-    <div className="rounded-[8px] border border-indigo-100 bg-white p-12 space-y-[36px] max-h-[90vh] overflow-y-auto">
+    <div className="rounded-[8px] border border-indigo-100 bg-white text-black p-12 space-y-[36px] max-h-[90vh] overflow-y-auto">
 
       {/* phoneme symbol + close button */}
       <div className="flex flex-row justify-between items-center">

@@ -4,6 +4,7 @@
 // parent owns the row state; RulePanel just fires onChange callbacks
 
 import { useEffect, useState } from 'react'
+import { useThemeStore } from '../store/themeStore'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
@@ -14,14 +15,14 @@ const VALUES = ['+', '-', '0']
 
 // a single row: value selector (small) + feature selector (wide)
 // excludeFeatures — Set of feature names already selected in sibling rows (i.e. if you add +voice, can't add voice again)
-function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
+function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set(), isDark }) {
   return (
     <div className="flex items-center gap-2">
       {/* +/-/0 selector */}
       <select
         value={row.value}
         onChange={(e) => onChange({ ...row, value: e.target.value })}
-        className="border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[14px] font-light bg-white w-14 text-center"
+        className={`border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[14px] font-light w-14 text-center text-black ${isDark ? 'bg-gray-100' : 'bg-white'}`}
       >
         <option value=""></option>
         {VALUES.map((v) => (
@@ -33,7 +34,7 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
       <select
         value={row.feature}
         onChange={(e) => onChange({ ...row, feature: e.target.value })}
-        className="border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[14px] font-light bg-white w-50"
+        className={`border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[14px] font-light w-50 text-black ${isDark ? 'bg-gray-100' : 'bg-white'}`}
       >
         <option value=""></option>
         {FEATURE_NAMES
@@ -57,7 +58,7 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
 }
 
 // a labeled column of FeatureRows; "clear" in the header resets to one empty row
-function FeatureColumn({ label, rows, onChange }) {
+function FeatureColumn({ label, rows, onChange, isDark }) {
   const addRow    = () => onChange([...rows, { value: '', feature: '' }])
   const removeRow = (i) => onChange(rows.filter((_, idx) => idx !== i))
   const updateRow = (i, updated) => onChange(rows.map((r, idx) => idx === i ? updated : r))
@@ -69,7 +70,7 @@ function FeatureColumn({ label, rows, onChange }) {
         <span className="text-[16px] font-light">{label}</span>
         <button
           onClick={clearRows}
-          className="text-[14px] font-light underline hover:text-slate-600 transition-colors"
+          className={`text-[14px] font-light underline transition-colors ${isDark ? 'hover:text-gray-300' : 'hover:text-slate-600'}`}
         >
            <span className="flex items-center gap-1">
                 Clear
@@ -89,13 +90,14 @@ function FeatureColumn({ label, rows, onChange }) {
               onChange={(updated) => updateRow(i, updated)}
               onRemove={i > 0 ? () => removeRow(i) : undefined}
               excludeFeatures={excludeFeatures}
+              isDark={isDark}
             />
           )
         })}
       </div>
       <button
         onClick={addRow}
-        className="self-start border border-slate-200 flex items-center justify-center rounded-full w-[24px] h-[24px] hover:bg-slate-50 transition-colors"
+        className={`self-start border border-slate-200 flex items-center justify-center rounded-full w-[24px] h-[24px] bg-white transition-colors text-black ${isDark ? 'hover:bg-gray-300' : 'hover:bg-slate-50'}`}
       >
         <AddIcon sx={{ fontSize: 14 }} />
       </button>
@@ -104,6 +106,7 @@ function FeatureColumn({ label, rows, onChange }) {
 }
 
 export default function RulePanel({ targetRows, featureChangeRows, onTargetChange, onChangesChange, validation = {} }) {
+  const { isDark } = useThemeStore()
   const {
     targetContradictions = [],
     changeContradictions = [],
@@ -152,11 +155,13 @@ export default function RulePanel({ targetRows, featureChangeRows, onTargetChang
           label="Target Features"
           rows={targetRows}
           onChange={onTargetChange}
+          isDark={isDark}
         />
         <FeatureColumn
           label="Feature Changes"
           rows={featureChangeRows}
           onChange={onChangesChange}
+          isDark={isDark}
         />
       </div>
     </div>

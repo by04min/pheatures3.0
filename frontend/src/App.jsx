@@ -4,6 +4,7 @@ import NavBar from './navigation/NavBar.jsx'
 import PhonemeInventory from './inventory/PhonemeInventory.jsx'
 import Pheatures from './pheatures/pheatures.jsx'
 import About from './pages/About.jsx'
+import { useThemeStore } from './store/themeStore'
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -17,11 +18,10 @@ const pageVariants = {
 
 function App() {
   const location = useLocation()
-
-  // test
+  const { isDark } = useThemeStore()
 
   return (
-    <div className="min-h-screen bg-white px-10 sm:px-24 pt-28 pb-12">
+    <div className={`min-h-screen px-10 sm:px-24 pt-28 pb-12 transition-colors duration-300 ${isDark ? 'bg-[#0E1116] text-white' : 'bg-white text-gray-900'}`}>
       <NavBar />
       <div className="mt-4">
         <AnimatePresence mode="wait">

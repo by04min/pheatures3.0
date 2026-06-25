@@ -17,6 +17,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useInventoryStore } from '../store/inventoryStore'
+import { useThemeStore } from '../store/themeStore'
 import { PHONEME_FEATURES } from './format/phonemeFeatures.js'
 import {
   CONSONANT_CELLS,
@@ -48,6 +49,7 @@ const isCombining = (symbol) => {
 }
 
 export default function PhonemeInventory() {
+  const { isDark } = useThemeStore()
 
   /* SETUP */
   // the phonemes and diacrtics for display! (using the GET endpoints)
@@ -343,11 +345,11 @@ export default function PhonemeInventory() {
   return (
     <div className="flex flex-col h-[calc(100vh-160px)] w-full">
       {/* ── Sticky top: title, errors, diacritics ── */}
-      <div className="shrink-0 space-y-[32px] pb-8 bg-white">
+      <div className={`shrink-0 space-y-[32px] pb-8 transition-colors duration-300 ${isDark ? 'bg-[#0E1116]' : 'bg-white'}`}>
         {/* Title + load / API error banners */}
         <div className="space-y-[4px]">
           <h1 className="text-[28px]">Phoneme Inventory</h1>
-          <p className="text-[16px] text-gray-500 font-light">
+          <p className={`text-[16px] font-light ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             Click phonemes to add or remove from the inventory
           </p>
         </div>
@@ -363,7 +365,7 @@ export default function PhonemeInventory() {
             <select
               value={selectedPresetId}
               onChange={(e) => { setSelectedPresetId(e.target.value); loadPreset(e.target.value) }}
-              className="border border-slate-200 rounded-[4px] px-[8px] py-[6px] text-[14px] font-light bg-white"
+              className={`border border-slate-200 rounded-[4px] px-[8px] py-[6px] text-[14px] font-light text-black ${isDark ? 'bg-gray-100' : 'bg-white'}`}
             >
               <option value="" disabled>Select Preset</option>
               {PRESETS.map(p => (
@@ -372,7 +374,7 @@ export default function PhonemeInventory() {
             </select>
             <button
               onClick={() => { clearInventory(); setDiacriticError(''); setSelectedPresetId('') }}
-              className="text-[14px] font-light underline hover:text-slate-600 transition-colors"
+              className={`text-[14px] font-light underline transition-colors ${isDark ? 'hover:text-gray-300' : 'hover:text-slate-600'}`}
             >
               <span className="flex items-center gap-1">
                 Clear Inventory
@@ -440,6 +442,8 @@ export default function PhonemeInventory() {
                   className={`w-9 h-8 border rounded flex items-center justify-center text-[16px] select-none cursor-grab active:cursor-grabbing ${
                     draggingDiacriticId === d.id
                       ? 'border-blue-100 bg-blue-100'
+                      : isDark
+                      ? 'border-slate-200 text-black bg-white hover:bg-gray-300'
                       : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100'
                   }`}
                 >
@@ -453,7 +457,7 @@ export default function PhonemeInventory() {
               </div>
             ))}
           </div>
-          <p className="text-[12px] text-light text-gray-500">
+          <p className={`text-[12px] font-light ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             Drag a diacritic onto a compatible phoneme to add it to the inventory.
           </p>
           </div>
@@ -463,7 +467,7 @@ export default function PhonemeInventory() {
       {/* ── Scrollable tables ── */}
       <div className="relative flex-1">
         {loadingApplicable && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+          <div className={`absolute inset-0 z-10 flex items-center justify-center ${isDark ? 'bg-[#0E1116]/60' : 'bg-white/60'}`}>
             <span className="text-sm text-slate-600">Loading valid targets...</span>
           </div>
         )}
@@ -475,14 +479,14 @@ export default function PhonemeInventory() {
           Consonants
         </h3>
         <div className="overflow-x-auto">
-          <table className="border-collapse text-xs">
+          <table className={`border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
             <thead>
               <tr>
-                <th className="border border-slate-200 w-36 bg-slate-50" />
+                <th className={`border border-slate-200 w-36 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
                 {PLACES.map(p => (
                   <th
                     key={p}
-                    className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-28 bg-slate-50 text-[12px]"
+                    className={`border border-slate-200 text-center font-light px-[8px] py-[12px] w-28 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`}
                   >
                     {p}
                   </th>
@@ -495,7 +499,7 @@ export default function PhonemeInventory() {
                 return (
                   <Fragment key={manner}>
                     <tr>
-                      <td className="border border-slate-200 px-[8px] py-[12px] text-[12px] bg-slate-50 font-light whitespace-nowrap">
+                      <td className={`border border-slate-200 px-[8px] py-[12px] text-[12px] ${isDark ? 'bg-gray-100' : 'bg-slate-50'} font-light whitespace-nowrap`}>
                         {manner}
                       </td>
                       {PLACES.map(place => (
@@ -513,7 +517,7 @@ export default function PhonemeInventory() {
                       ))
                       return Array.from({ length: numRows }, (_, rowIdx) => (
                         <tr key={rowIdx}>
-                          <td className="border border-slate-200 bg-slate-50" />
+                          <td className={`border border-slate-200 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
                           {PLACES.map(place => {
                             const cellItems = diacriticCols[place]
                             if (!cellItems) return <td key={place} className="border border-slate-200 w-28" />
@@ -547,14 +551,14 @@ export default function PhonemeInventory() {
         <h3 className="text-[16px]">
           Vowels
         </h3>
-          <table className="border-collapse text-xs">
+          <table className={`border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
             <thead>
               <tr>
-                <th className="border border-slate-200 w-32 bg-slate-50" />
+                <th className={`border border-slate-200 w-32 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
                 {VOWEL_BACKNESS.map(b => (
                   <th
                     key={b}
-                    className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-28 bg-slate-50 text-[12px]"
+                    className={`border border-slate-200 text-center font-light px-[8px] py-[12px] w-28 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`}
                   >
                     {b}
                   </th>
@@ -567,7 +571,7 @@ export default function PhonemeInventory() {
                 return (
                   <Fragment key={height}>
                     <tr>
-                      <td className="border border-slate-200 px-[8px] py-[12px] text-[12px] bg-slate-50 font-light whitespace-nowrap">
+                      <td className={`border border-slate-200 px-[8px] py-[12px] text-[12px] ${isDark ? 'bg-gray-100' : 'bg-slate-50'} font-light whitespace-nowrap`}>
                         {height}
                       </td>
                       {VOWEL_BACKNESS.map(backness => (
@@ -585,7 +589,7 @@ export default function PhonemeInventory() {
                       ))
                       return Array.from({ length: numRows }, (_, rowIdx) => (
                         <tr key={rowIdx}>
-                          <td className="border border-slate-200 bg-slate-50" />
+                          <td className={`border border-slate-200 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
                           {VOWEL_BACKNESS.map(backness => {
                             const cellItems = diacriticCols[backness]
                             if (!cellItems) return <td key={backness} className="border border-slate-200 w-28" />
@@ -618,13 +622,13 @@ export default function PhonemeInventory() {
         </h3>
           <div className="flex flex-col gap-2">
             {[OTHER_PHONEME_GROUPS.slice(0, 4), OTHER_PHONEME_GROUPS.slice(4)].map((groups, i) => (
-              <table key={i} className="border-collapse text-xs">
+              <table key={i} className={`border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
                 <thead>
                   <tr>
                     {groups.map(group => (
                       <th
                         key={group.label}
-                        className="border border-slate-200 text-center font-light px-[8px] py-[12px] w-28 bg-slate-50 text-[12px]"
+                        className={`border border-slate-200 text-center font-light px-[8px] py-[12px] w-28 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`}
                       >
                         {group.label}
                       </th>

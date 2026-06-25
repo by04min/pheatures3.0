@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useInventoryStore } from '../store/inventoryStore'
+import { useThemeStore } from '../store/themeStore'
 import SheetView from './display/sheetView.jsx'
 import TableView from './display/tableView.jsx'
 import RulePanel from './RulePanel.jsx'
@@ -12,6 +13,7 @@ const API_BASE =
 
 export default function Pheatures() {
   const { inventory } = useInventoryStore()
+  const { isDark } = useThemeStore()
   const [view, setView] = useState('sheet')
 
   // { phoneme_id: { feature: value, ... } }
@@ -174,10 +176,10 @@ export default function Pheatures() {
     <div className="flex flex-col h-[calc(100vh-160px)] w-full">
 
       {/* fixed top: title + rule panel + view toggle */}
-      <div className="shrink-0 space-y-[32px] pb-6 bg-white">
+      <div className={`shrink-0 space-y-[32px] pb-6 transition-colors duration-300 ${isDark ? 'bg-[#0E1116]' : 'bg-white'}`}>
         <div className="space-y-[4px]">
           <h1 className="text-[28px]">Rule Application</h1>
-          <p className="text-[16px] text-gray-500 font-light">
+          <p className={`text-[16px] font-light ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             Pick out sounds by features, and apply feature rules
           </p>
         </div>
@@ -207,7 +209,7 @@ export default function Pheatures() {
       {/* scrollable view */}
       <div className="relative flex-1">
         {transformsLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+          <div className={`absolute inset-0 z-10 flex items-center justify-center ${isDark ? 'bg-[#0E1116]/60' : 'bg-white/60'}`}>
             <span className="text-sm text-slate-600">Applying rules...</span>
           </div>
         )}

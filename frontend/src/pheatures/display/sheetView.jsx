@@ -1,4 +1,5 @@
 import { FEATURE_NAMES } from '../../inventory/format/phonemeFeatures.js'
+import { useThemeStore } from '../../store/themeStore'
 
 // SHEET VIEW
 // rows    → one per inventory item (base phoneme or base+diacritic pair)
@@ -8,19 +9,20 @@ import { FEATURE_NAMES } from '../../inventory/format/phonemeFeatures.js'
 // and feature columns reflect the transformed bundle
 
 export default function SheetView({ inventory, resolveFeatures, transforms = {} }) {
+  const { isDark } = useThemeStore()
   return (
     <div className="relative overflow-x-auto">
-      <table className="border-collapse text-[12px] font-light">
+      <table className={`border-collapse text-[12px] font-light text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
         <thead>
           <tr>
             {/* top-left corner: empty cell above the symbol column */}
-            <th className="border border-slate-200 px-3 py-2 bg-slate-50 text-left sticky left-0 z-10 whitespace-nowrap" />
+            <th className={`border border-slate-200 px-3 py-2 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-left sticky left-0 z-10 whitespace-nowrap`} />
 
             {/* header row: one column per feature name */}
             {FEATURE_NAMES.map((f) => (
               <th
                 key={f}
-                className="border border-slate-200 px-3 py-2 bg-slate-50 whitespace-nowrap font-light"
+                className={`border border-slate-200 px-3 py-2 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} whitespace-nowrap font-light`}
               >
                 {f.toLowerCase()}
               </th>
@@ -45,7 +47,7 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
             return (
               <tr key={item.key}>
                 {/* symbol column: sticky; shows transform arrow when rules are active */}
-                <td className="border border-slate-200 px-5 py-2 bg-slate-50 sticky left-0 text-center text-[14px] font-mono whitespace-nowrap">
+                <td className={`border border-slate-200 px-5 py-2 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} sticky left-0 text-center text-[14px] font-mono whitespace-nowrap`}>
                   {symbolCell}
                 </td>
 
