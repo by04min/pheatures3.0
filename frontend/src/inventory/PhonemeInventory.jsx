@@ -56,6 +56,7 @@ export default function PhonemeInventory() {
 
   // loading and error state handling
   const [loading, setLoading] = useState(true)
+  const [loadingSlow, setLoadingSlow] = useState(false)
   const [error, setError] = useState('')
   const [diacriticError, setDiacriticError] = useState('')
   const [loadingApplicable, setLoadingApplicable] = useState(false)
@@ -248,9 +249,11 @@ export default function PhonemeInventory() {
 
   /* GET PHONEMES AND DIACRITICS */
   useEffect(() => {
+    const slowTimer = setTimeout(() => setLoadingSlow(true), 5000)
     const load = async () => {
       try {
         setLoading(true)
+        setLoadingSlow(false)
         setError('')
         const [phonemeRes, diacriticRes] = await Promise.all([
           fetch(`${API_BASE}/phonemes`),
@@ -274,9 +277,11 @@ export default function PhonemeInventory() {
         )
       } finally {
         setLoading(false)
+        setLoadingSlow(false)
       }
     }
     load()
+    return () => clearTimeout(slowTimer)
   }, [])
 
   /* DIACRITIC TARGETS: fetch which phonemes are valid drop targets */
@@ -347,12 +352,7 @@ export default function PhonemeInventory() {
           </p>
         </div>
 
-        {/* ERROR HANDLING: default loading and error screens*/}
-        {loading && (
-          <div className="flex items-center justify-center h-[60vh]">
-            <span className="text-sm text-slate-600">Loading phoneme data...</span>
-          </div>
-        )}
+        {/* ERROR HANDLING: error messages */}
         {error && <div className="text-sm text-rose-600">{error}</div>}
         <InvalidDiacriticTarget message={diacriticError} onClose={() => setDiacriticError(null)} />
 
@@ -380,6 +380,16 @@ export default function PhonemeInventory() {
               </span>
             </button>
           </div>
+
+          {/* loading message  */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center h-[60vh] gap-2">
+              <span className="text-sm text-slate-600">Loading phoneme data...</span>
+              {loadingSlow && (
+                <span className="text-sm text-slate-600 italic text-center">Just a biiiiiit more...<br />This is the wrath of free tiers &lt;/3</span>
+              )}
+            </div>
+          )}
 
           <div className="space-y-[8px]">
           <h3 className="text-[16px] font-light">Diacritics</h3>
