@@ -210,18 +210,18 @@ export default function Pheatures() {
       <div className="relative flex-1">
         {transformsLoading && (
           <div className={`absolute inset-0 z-10 flex items-center justify-center ${isDark ? 'bg-[#0E1116]/60' : 'bg-white/60'}`}>
-            <span className="text-sm text-slate-600">Applying rules...</span>
+            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Applying rules...</span>
           </div>
         )}
         <div className="absolute inset-0 overflow-y-auto">
           {inventory.length === 0
             ? <div className="flex h-full items-center justify-center gap-1">
-                <span className="text-[14px] font-light text-slate-600">The inventory is empty!</span>
-                <Link to="/inventory" className="text-[14px] font-light text-slate-600 underline hover:text-slate-600">Go to inventory</Link>
+                <span className={`text-[14px] font-light ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>The inventory is empty!</span>
+                <Link to="/inventory" className={`text-[14px] font-light underline ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-slate-600 hover:text-slate-600'}`}>Go to inventory</Link>
               </div>
             : visibleInventory.length === 0
               ? <div className="flex h-full items-center justify-center gap-1">
-                  <span className="text-[14px] font-light text-slate-600">No phonemes match the target features.</span>
+                  <span className={`text-[14px] font-light ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>No phonemes match the target features.</span>
                 </div>
             : view === 'sheet'
               ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} />
