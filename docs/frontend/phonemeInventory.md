@@ -60,10 +60,35 @@ The selected inventory itself lives in the **Zustand store** (`useInventoryStore
 
 ### `renderSymbolButton(symbol)`
 
-A factory function passed into each table cell component. Given a symbol string, it:
+A factory function passed into the `IpaTableGrid`. Given a symbol string, it:
 - Returns an empty placeholder `<div>` if the symbol is null/missing
 - Resolves the phoneme and determines whether it is clickable, in the inventory, a valid drag target, or an invalid drag target
 - Returns a `<SymbolButton>` with the appropriate props and drag/drop handlers
+
+---
+
+## Shared Table Layout: `src/components/ipaTable/IpaTableGrid.jsx`
+
+`IpaTableGrid` owns the IPA chart skeleton — consonants, vowels, other phonemes — and is used by both `PhonemeInventory` and `TableView`. It handles:
+- Rendering three sections (Consonants, Vowels, Other Phonemes) with correct row/column headers
+- Diacritic sub-rows: one `<tr>` per diacritic stacked beneath its base phoneme's row (computed via `numDiacriticRows = max item-array length across all cells)
+- Dark/light theming (`isDark` read from `useThemeStore` internally)
+
+The caller controls cell content through two render props:
+
+| Prop | Type | Used by |
+|---|---|---|
+| `renderSymbol(symbol)` | `(string) => ReactNode` | Called for every phoneme slot in base rows |
+| `renderDiacriticChip(item)` | `(item) => ReactNode` | Called for each diacritic item in sub-rows |
+
+Sizing props (`cellWidth`, `slotWidth`) accept Tailwind width classes and let each consumer set its own column widths:
+
+| Consumer | `cellWidth` | `slotWidth` |
+|---|---|---|
+| `PhonemeInventory` | `w-28` | `w-14` |
+| `TableView` | `w-40` | `w-20` |
+
+Row/column filtering is the caller's responsibility — pass the full `MANNERS`/`PLACES`/etc. arrays for the full chart, or filtered arrays for the compact view.
 
 ---
 

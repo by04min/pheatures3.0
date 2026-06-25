@@ -8,10 +8,9 @@
 // diacritic items appear in a sub-row directly below their base phoneme's row.
 // clicking any phoneme or diacritic chip opens a FeaturePanel modal.
 
-import { Fragment, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useInventoryStore } from '../../store/inventoryStore'
-import { useThemeStore } from '../../store/themeStore'
 import { FeaturePanel } from './featurePanel.jsx'
 import {
   CONSONANT_CELLS,
@@ -23,13 +22,13 @@ import {
   VOWEL_HEIGHTS,
 } from '../../inventory/format/phonemeLayout.js'
 import { useDiacriticRows } from '../../components/ipaTable/useDiacriticRows.js'
+import { IpaTableGrid } from '../../components/ipaTable/IpaTableGrid.jsx'
 import { DiacriticChip } from '../../components/ipaTable/symbolCells.jsx'
 
 // inventory prop overrides the store when rules are active (filtered to matched phonemes)
 // transforms: { phoneme_id_str: { matched, original_symbol, result_symbol } } — drives chip labels
 export default function TableView({ inventory: inventoryProp, transforms = {}, diacriticFeatures = {} }) {
   const { inventory: storeInventory, toggleInventory } = useInventoryStore()
-  const { isDark } = useThemeStore()
   // prefer the filtered prop passed from pheatures.jsx; fall back to full store inventory
   const inventory = inventoryProp ?? storeInventory
   const [activeItem, setActiveItem] = useState(null)
@@ -143,235 +142,37 @@ export default function TableView({ inventory: inventoryProp, transforms = {}, d
         document.body
       )}
 
-      {/* CONSONANTS
-          rows    = manner of articulation (activeManners)
-          columns = place of articulation (activePlaces)
-          each cell: [voiceless slot, voiced slot]
-          sub-row: diacritic items grouped under their base phoneme's manner row */}
-      {activeManners.length > 0 && (
-        <section className="space-y-[8px] font-light">
-          <h3 className="text-[16px]">Consonants</h3>
-          <div className="overflow-x-auto">
-            <table className={`border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
-              <thead>
-                <tr>
-                  {/* corner cell */}
-                  <th className={`border border-slate-200 w-36 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
-                  {/* place of articulation column headers */}
-                  {activePlaces.map(p => (
-                    <th key={p} className={`border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`}>
-                      {p}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {activeManners.map(manner => {
-                  const diacriticCols = diacriticRowsByConsonant[manner]
-                  return (
-                    <Fragment key={manner}>
-                      {/* base phoneme row */}
-                      <tr>
-                        {/* manner of articulation row header */}
-                        <td className={`border border-slate-200 px-[8px] py-[12px] text-[12px] ${isDark ? 'bg-gray-100' : 'bg-slate-50'} font-light whitespace-nowrap`}>
-                          {manner}
-                        </td>
-                        {activePlaces.map(place => {
-                          const phonemes = CONSONANT_CELLS[manner]?.[place]
-                          if (!phonemes) return <td key={place} className="border border-slate-200 w-40" />
-                          return (
-                            <td key={place} className="border border-slate-200 w-40">
-                              <div className="flex">
-                                {/* [0] = voiceless, [1] = voiced */}
-                                {renderSelectedSymbol(phonemes[0])}
-                                {renderSelectedSymbol(phonemes[1] ?? null)}
-                              </div>
-                            </td>
-                          )
-                        })}
-                      </tr>
-                      {/* diacritic sub-row: only rendered when this manner has diacritic items */}
-                      {diacriticCols && (
-                        <tr>
-                          <td className={`border border-slate-200 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
-                          {activePlaces.map(place => {
-                            const cellItems = diacriticCols[place]
-                            if (!cellItems) return <td key={place} className="border border-slate-200 w-40" />
-                            return (
-                              <td key={place} className="border border-slate-200 w-40">
-                                <div className="flex">
-                                  {[0, 1].map(idx => {
-                                    const items = cellItems[idx]
-                                    if (!items?.length) return <div key={idx} className="w-20 h-10" />
-                                    return items.map(item => {
-                                      const td = transforms[item.key]
-                                      const chipLabel = td?.matched && td.transformed
-                                        ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
-                                        : undefined
-                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveItem({ symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`, feats: diacriticFeatures[item.key] ?? null })} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
-                                    })
-                                  })}
-                                </div>
-                              </td>
-                            )
-                          })}
-                        </tr>
-                      )}
-                    </Fragment>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-
-      <div className="flex flex-wrap gap-12">
-        {/* VOWELS
-            rows    = vowel height (activeVowelHeights)
-            columns = backness (activeVowelBackness)
-            each cell: [unrounded slot, rounded slot]
-            sub-row: diacritic items grouped under their base phoneme's height row */}
-        {activeVowelHeights.length > 0 && (
-          <section className="space-y-[8px] font-light">
-            <h3 className="text-[16px]">Vowels</h3>
-            <table className={`border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
-              <thead>
-                <tr>
-                  {/* corner cell */}
-                  <th className={`border border-slate-200 w-40 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
-                  {/* backness column headers */}
-                  {activeVowelBackness.map(b => (
-                    <th key={b} className={`border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`}>
-                      {b}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {activeVowelHeights.map(height => {
-                  const diacriticCols = diacriticRowsByVowel[height]
-                  return (
-                    <Fragment key={height}>
-                      {/* base phoneme row */}
-                      <tr>
-                        {/* vowel height row header */}
-                        <td className={`border border-slate-200 px-[8px] py-[12px] text-[12px] ${isDark ? 'bg-gray-100' : 'bg-slate-50'} font-light whitespace-nowrap`}>
-                          {height}
-                        </td>
-                        {activeVowelBackness.map(backness => {
-                          const phonemes = VOWEL_CELLS[height]?.[backness]
-                          if (!phonemes) return <td key={backness} className="border border-slate-200 w-40" />
-                          return (
-                            <td key={backness} className="border border-slate-200 w-40">
-                              <div className="flex justify-center">
-                                {/* [0] = unrounded, [1] = rounded */}
-                                {renderSelectedSymbol(phonemes[0])}
-                                {renderSelectedSymbol(phonemes[1] ?? null)}
-                              </div>
-                            </td>
-                          )
-                        })}
-                      </tr>
-                      {/* diacritic sub-row: only rendered when this height has diacritic items */}
-                      {diacriticCols && (
-                        <tr>
-                          <td className={`border border-slate-200 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
-                          {activeVowelBackness.map(backness => {
-                            const cellItems = diacriticCols[backness]
-                            if (!cellItems) return <td key={backness} className="border border-slate-200 w-40" />
-                            return (
-                              <td key={backness} className="border border-slate-200 p-0 w-40">
-                                <div className="flex justify-center">
-                                  {[0, 1].map(idx => {
-                                    const items = cellItems[idx]
-                                    if (!items?.length) return <div key={idx} className="w-20 h-10" />
-                                    return items.map(item => {
-                                      const td = transforms[item.key]
-                                      const chipLabel = td?.matched && td.transformed
-                                        ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
-                                        : undefined
-                                      return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveItem({ symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`, feats: diacriticFeatures[item.key] ?? null })} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
-                                    })
-                                  })}
-                                </div>
-                              </td>
-                            )
-                          })}
-                        </tr>
-                      )}
-                    </Fragment>
-                  )
-                })}
-              </tbody>
-            </table>
-          </section>
-        )}
-
-        {/* OTHER PHONEMES
-            columns = phoneme group label (e.g. "lab-velar approx")
-            rows    = base phoneme row + optional diacritic sub-row
-            split into two sub-tables (groups 0–3 and 4+) to match the inventory layout */}
-        {activeOtherGroups.length > 0 && (
-          <section className="space-y-[8px] font-light">
-            <h3 className="text-[16px]">Other Phonemes</h3>
-            <div className="flex flex-col gap-2">
-              {[activeOtherGroups.slice(0, 4), activeOtherGroups.slice(4)].filter(g => g.length > 0).map((groups, i) => (
-                <table key={i} className={`border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`}>
-                  <thead>
-                    <tr>
-                      {/* group label column headers */}
-                      {groups.map(group => (
-                        <th key={group.label} className={`border border-slate-200 text-center font-light px-[8px] py-[12px] w-40 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`}>
-                          {group.label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* base phoneme row */}
-                    <tr>
-                      {groups.map(group => (
-                        <td key={group.label} className="border border-slate-200 w-40">
-                          <div className="flex">
-                            {group.phonemes.map(s => renderSelectedSymbol(s))}
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-                    {/* diacritic sub-row: only rendered when any group in this table has diacritic items */}
-                    {groups.some(g => g.label in diacriticRowsByOther) && (
-                      <tr>
-                        {groups.map(group => {
-                          const cellItems = diacriticRowsByOther[group.label]
-                          if (!cellItems) return <td key={group.label} className="border border-slate-200 w-40" />
-                          return (
-                            <td key={group.label} className="border border-slate-200 w-40">
-                              <div className="flex">
-                                {group.phonemes.map((_, idx) => {
-                                  const items = cellItems[idx]
-                                  if (!items?.length) return <div key={idx} className="w-20 h-10" />
-                                  return items.map(item => {
-                                    const td = transforms[item.key]
-                                    const chipLabel = td?.matched && td.transformed
-                                      ? `${td.original_symbol ?? item.symbol.trim()} → ${td.result_symbol ?? '?'}`
-                                      : undefined
-                                    return <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={false} onClick={(item) => setActiveItem({ symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`, feats: diacriticFeatures[item.key] ?? null })} label={chipLabel} widthClass="w-20" textClass="text-[14px]" />
-                                  })
-                                })}
-                              </div>
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
+      <IpaTableGrid
+        activeManners={activeManners}
+        activePlaces={activePlaces}
+        activeVowelHeights={activeVowelHeights}
+        activeVowelBackness={activeVowelBackness}
+        activeOtherGroups={activeOtherGroups}
+        diacriticRowsByConsonant={diacriticRowsByConsonant}
+        diacriticRowsByVowel={diacriticRowsByVowel}
+        diacriticRowsByOther={diacriticRowsByOther}
+        renderSymbol={renderSelectedSymbol}
+        renderDiacriticChip={(item) => {
+          const t = transforms[item.key]
+          const chipLabel = t?.matched && t.transformed
+            ? `${t.original_symbol ?? item.symbol.trim()} → ${t.result_symbol ?? '?'}`
+            : undefined
+          return (
+            <DiacriticChip
+              key={item.key}
+              item={item}
+              onRemove={toggleInventory}
+              isDragging={false}
+              onClick={(item) => setActiveItem({ symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`, feats: diacriticFeatures[item.key] ?? null })}
+              label={chipLabel}
+              widthClass="w-20"
+              textClass="text-[14px]"
+            />
+          )
+        }}
+        cellWidth="w-40"
+        slotWidth="w-20"
+      />
     </div>
   )
 }
