@@ -20,7 +20,11 @@ function NavBar() {
   const inactiveClass = isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
 
   return (
-    <nav className="fixed top-10 left-1/2 -translate-x-1/2 z-50 flex flex-row items-center justify-center gap-10 rounded-[4px] px-10 py-3">
+    <nav
+      className={`fixed top-10 left-1/2 -translate-x-1/2 z-50 flex flex-row items-center justify-center gap-10 rounded-[4px] px-10 py-3 transition-colors duration-300 ${
+        isDark ? 'bg-[#0E1116]' : 'bg-white'
+      }`}
+    >
       {NAV_LINKS.map(({ to, label, Icon }) => (
         <Link
           key={to}
