@@ -16,7 +16,7 @@ function About() {
   const inactiveClass = isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-500'
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-12">
       <div className="flex flex-row items-center justify-between gap-3 lg:block lg:space-y-4">
         <p className={`inline-block w-fit text-center text-[14px] rounded-[20px] px-3 py-1 ${isDark ? 'bg-white text-black' : 'bg-gray-100'}`}>Guide</p>
       <nav className="flex flex-row items-center gap-3 lg:shrink-0 lg:w-40 lg:flex-col lg:items-start lg:gap-4 lg:space-y-3 lg:pl-1">
@@ -37,7 +37,14 @@ function About() {
         ))}
       </nav>
       </div>
-      <div className="flex-1">
+       
+      <div className="flex-1 space-y-[32px]">
+        <div className="space-y-[4px]">
+          <h1 className="text-[28px]">Tutorials</h1>
+          <p className={`text-[16px] font-light ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            Click dropdown to view tutorials
+          </p>
+        </div>
         {(() => {
           const ActiveComponent = SECTIONS.find((s) => s.id === activeId)?.Component
           return ActiveComponent ? <ActiveComponent /> : null

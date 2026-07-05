@@ -387,7 +387,7 @@ export default function PhonemeInventory() {
             <div className="flex flex-col items-center justify-center h-[60vh] gap-2">
               <span className="text-sm text-slate-600">Loading phoneme data...</span>
               {loadingSlow && (
-                <span className="text-sm text-slate-600 italic text-center">Just a biiiiiit more...<br />This is the wrath of free tiers &lt;/3</span>
+                <span className="text-sm text-slate-600 italic text-center">Please don't leave!<br />Loading only takes a bit the first time (Free tiers am I right...)</span>
               )}
             </div>
           )}
