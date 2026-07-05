@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import NavBar from './navigation/NavBar.jsx'
 import PhonemeInventory from './inventory/PhonemeInventory.jsx'
 import Pheatures from './pheatures/pheatures.jsx'
-import About from './pages/About.jsx'
+import About from './about/About.jsx'
 import { useThemeStore } from './store/themeStore'
 
 const pageVariants = {
