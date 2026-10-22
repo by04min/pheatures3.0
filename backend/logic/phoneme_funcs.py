@@ -10,7 +10,7 @@ def _connect():
 """
 01. QUERY SEGMENTS
     PURPOSE:
-    - given some features, get all sounds from the database that having matching values for those features!
+    - given some features, get all sounds from the database that have matching values for those features!
 
     PARAMS:
     - feature_list: a list of feature/value pairs
