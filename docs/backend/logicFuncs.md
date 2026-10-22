@@ -11,12 +11,9 @@ Core lookups for phonemes and their feature bundles.
 | Function | Purpose |
 |---|---|
 | `get_all_phonemes()` | Returns every phoneme as a list of `{"id", "symbol"}` dicts |
-| `get_phoneme(phoneme_id)` | Returns the symbol string for a given id, or `None` |
 | `get_phoneme_features(phoneme_id)` | Returns the full feature bundle for a phoneme as `{"voice": "+", "nasal": "-", ...}` |
 | `find_phoneme_by_features(bundle)` | Searches all phonemes and returns the symbol whose feature bundle exactly matches `bundle`, or `None` |
 | `get_all_phoneme_bundles()` | Returns every phoneme in the DB as `{phoneme_id: {"symbol": str, "bundle": dict}}` in a single query — used during rule application to check if a result maps to any IPA symbol |
-| `query_segments(feature_list)` | Given a list of `{"feature", "value"}` dicts, returns the ids of all phonemes that satisfy every condition |
-
 Most other logic modules depend on `get_phoneme_features` from this file.
 
 ---
@@ -100,7 +97,6 @@ Each logic module has a corresponding test file. These are plain Python scripts 
 
 | File | Tests |
 |---|---|
-| `phoneme_tests.py` | `query_segments`, `get_phoneme` |
 | `dependency_tests.py` | `apply_dependencies` |
 | `contradiction_tests.py` | `no_contradictions` |
 | `diacritic_tests.py` | `apply_diacritic` |
@@ -117,7 +113,6 @@ source venv/bin/activate
 Run an individual test file with pytest:
 
 ```bash
-pytest testing/phoneme_tests.py
 pytest testing/dependency_tests.py
 pytest testing/contradiction_tests.py
 pytest testing/diacritic_tests.py
@@ -134,11 +129,11 @@ pytest testing/
 Each test is a function named `test_*`. Add assertions for the expected output:
 
 ```python
-from logic.phoneme_funcs import get_phoneme
+from logic.phoneme_funcs import get_phoneme_features
 
-def test_get_phoneme():
-    assert get_phoneme(1) == "p"
-    assert get_phoneme(99999) is None  # invalid id returns None
+def test_get_phoneme_features():
+    assert get_phoneme_features(74)["voice"] == "-"  # id 74 is k, which is voiceless
+    assert get_phoneme_features(99999) == {}  # invalid id returns an empty bundle
 ```
 
 pytest picks up any function whose name starts with `test_` automatically.

@@ -10,7 +10,12 @@ frontend/node_modules/
 frontend/dist/
 
 # SQLite
+# pheatures.db at the repo root is committed on purpose (it is the deployed database),
+# but SQLite's temporary files next to any database are not
 backend/pheatures.db*
+*.db-wal
+*.db-shm
+*.db-journal
 
 # Environment variables
 .env
