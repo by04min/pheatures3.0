@@ -11,8 +11,7 @@ const headers = lines[0]
 const features = {};
 for (let i = 1; i < lines.length; i++) {
   const parts = lines[i].split(",");
-  // normalize to NFC so lookups match phonemes returned by the API
-  // (the CSV stores some symbols in NFD decomposed form)
+  // normalize so lookups match phonemes returned by the API
   const symbol = parts[0].trim().normalize("NFC");
   if (!symbol) continue;
   features[symbol] = {};

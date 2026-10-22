@@ -27,15 +27,15 @@ const FEATURE_GROUPS = [
   },
   {
     label: "Labial",
-    features: ["LABIAL", "round", "labiodental"],
+    features: ["labial", "round", "labiodental"],
   },
   {
     label: "Coronal",
-    features: ["CORONAL", "anterior", "distributed", "strident"],
+    features: ["coronal", "anterior", "distributed", "strident"],
   },
   {
     label: "Dorsal",
-    features: ["DORSAL", "high", "low", "front", "back"],
+    features: ["dorsal", "high", "low", "front", "back"],
   },
 ];
 
