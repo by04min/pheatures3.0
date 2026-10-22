@@ -6,12 +6,14 @@ const lines = rawCSV.trim().split("\n");
 const headers = lines[0]
   .split(",")
   .slice(1)
-  .map((h) => h.trim());
+  // lowercase to match the backend, which stores feature names in lowercase
+  .map((h) => h.trim().toLowerCase());
 
 const features = {};
 for (let i = 1; i < lines.length; i++) {
   const parts = lines[i].split(",");
-  // normalize so lookups match phonemes returned by the API
+  // normalize to NFC so lookups match phonemes returned by the API
+  // (the CSV stores some symbols in NFD decomposed form)
   const symbol = parts[0].trim().normalize("NFC");
   if (!symbol) continue;
   features[symbol] = {};
