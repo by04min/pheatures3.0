@@ -26,7 +26,9 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
       >
         <option value=""></option>
         {VALUES.map((v) => (
-          <option key={v} value={v}>{v}</option>
+          <option key={v} value={v}>
+            {v}
+          </option>
         ))}
       </select>
 
@@ -37,11 +39,11 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
         className={`border border-slate-200 rounded-[4px] px-[6px] py-[4px] text-[14px] font-light w-50 text-black bg-white dark:bg-gray-100`}
       >
         <option value=""></option>
-        {FEATURE_NAMES
-          .filter((f) => !excludeFeatures.has(f) || f === row.feature)
-          .map((f) => (
-            <option key={f} value={f}>{f}</option>
-          ))}
+        {FEATURE_NAMES.filter((f) => !excludeFeatures.has(f) || f === row.feature).map((f) => (
+          <option key={f} value={f}>
+            {f}
+          </option>
+        ))}
       </select>
 
       {onRemove && (
@@ -59,9 +61,9 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
 
 // a labeled column of FeatureRows; "clear" in the header resets to one empty row
 function FeatureColumn({ label, rows, onChange }) {
-  const addRow    = () => onChange([...rows, newRow()])
+  const addRow = () => onChange([...rows, newRow()])
   const removeRow = (i) => onChange(rows.filter((_, idx) => idx !== i))
-  const updateRow = (i, updated) => onChange(rows.map((r, idx) => idx === i ? updated : r))
+  const updateRow = (i, updated) => onChange(rows.map((r, idx) => (idx === i ? updated : r)))
   const clearRows = () => onChange([newRow()])
 
   return (
@@ -72,16 +74,19 @@ function FeatureColumn({ label, rows, onChange }) {
           onClick={clearRows}
           className={`text-[14px] font-light underline transition-colors hover:text-slate-600 dark:hover:text-gray-300`}
         >
-           <span className="flex items-center gap-1">
-                Clear
-                <DeleteOutlinedIcon style={{ fontSize: 14 }} />
-              </span>
+          <span className="flex items-center gap-1">
+            Clear
+            <DeleteOutlinedIcon style={{ fontSize: 14 }} />
+          </span>
         </button>
       </div>
       <div className="flex flex-col gap-4">
         {rows.map((row, i) => {
           const excludeFeatures = new Set(
-            rows.filter((_, idx) => idx !== i).map((r) => r.feature).filter(Boolean)
+            rows
+              .filter((_, idx) => idx !== i)
+              .map((r) => r.feature)
+              .filter(Boolean),
           )
           return (
             <FeatureRow
@@ -128,7 +133,13 @@ export default function RulePanel({ targetRows, featureChangeRows, onTargetChang
             {(close) => <RuleContradictionError violations={targetContradictions} onClose={close} />}
           </Dismissible>
           <Dismissible key={`tn-${redundantTarget}`}>
-            {(close) => <RuleNonMinimalWarning message={redundantTarget ? 'Target features are non-minimal' : null} variant="target" onClose={close} />}
+            {(close) => (
+              <RuleNonMinimalWarning
+                message={redundantTarget ? 'Target features are non-minimal' : null}
+                variant="target"
+                onClose={close}
+              />
+            )}
           </Dismissible>
         </div>
         <div className="flex flex-col gap-2 flex-1">
@@ -136,22 +147,20 @@ export default function RulePanel({ targetRows, featureChangeRows, onTargetChang
             {(close) => <RuleContradictionError violations={changeContradictions} onClose={close} />}
           </Dismissible>
           <Dismissible key={`cn-${redundantChanges}`}>
-            {(close) => <RuleNonMinimalWarning message={redundantChanges ? 'Feature changes are redundant' : null} variant="changes" onClose={close} />}
+            {(close) => (
+              <RuleNonMinimalWarning
+                message={redundantChanges ? 'Feature changes are redundant' : null}
+                variant="changes"
+                onClose={close}
+              />
+            )}
           </Dismissible>
         </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-8 md:gap-64">
-        <FeatureColumn
-          label="Target Features"
-          rows={targetRows}
-          onChange={onTargetChange}
-        />
-        <FeatureColumn
-          label="Feature Changes"
-          rows={featureChangeRows}
-          onChange={onChangesChange}
-        />
+        <FeatureColumn label="Target Features" rows={targetRows} onChange={onTargetChange} />
+        <FeatureColumn label="Feature Changes" rows={featureChangeRows} onChange={onChangesChange} />
       </div>
     </div>
   )

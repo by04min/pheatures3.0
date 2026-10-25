@@ -10,8 +10,8 @@ export const useThemeStore = create(
     {
       name: 'theme-preference',
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 )
 
 // mirror isDark onto <html> so Tailwind's dark: variants apply (see @custom-variant in index.css)

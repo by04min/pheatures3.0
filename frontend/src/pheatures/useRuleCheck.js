@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { isAbort, postJson } from '../api.js'
+import { checkRules, isAbort } from '../api.js'
 
 const NO_CONTRADICTIONS = { target_contradictions: [], change_contradictions: [] }
 
@@ -16,7 +16,7 @@ export function useRuleCheck(targetFeatures, featureChanges) {
     if (idle) return
 
     const controller = new AbortController()
-    postJson('/rules/check', { target_features: targetFeatures, feature_changes: featureChanges }, { signal: controller.signal })
+    checkRules(targetFeatures, featureChanges, { signal: controller.signal })
       .then((contradictions) => setResult({ contradictions, error: null }))
       .catch((err) => {
         if (isAbort(err)) return

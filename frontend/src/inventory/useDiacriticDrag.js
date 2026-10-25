@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { isAbort, postJson } from '../api.js'
+import { fetchApplicablePhonemes, isAbort } from '../api.js'
 
 // postalv / backed-velar diacritics render incorrectly on their own because the unicode
 // symbol needs a base char, so show _ instead (the real symbol is still used when applying)
@@ -50,8 +50,7 @@ export function useDiacriticDrag({ phonemes, phonemesBySymbol }) {
       }
       setLoadingApplicable(true)
       try {
-        const data = await postJson('/diacritics/applicable-phonemes', { diacritic_id: draggingDiacriticId }, { signal })
-        setApplicable(new Set(Array.isArray(data.phoneme_ids) ? data.phoneme_ids : []))
+        setApplicable(new Set(await fetchApplicablePhonemes(draggingDiacriticId, { signal })))
       } catch (e) {
         if (isAbort(e)) return
         console.error(e)

@@ -12,11 +12,7 @@ function Section({ title, children }) {
         onClick={() => setIsOpen((v) => !v)}
         className="flex w-full items-center justify-start gap-2 text-left cursor-pointer"
       >
-        {isOpen ? (
-          <ExpandLessOutlinedIcon fontSize="small" />
-        ) : (
-          <ExpandMoreOutlinedIcon fontSize="small" />
-        )}
+        {isOpen ? <ExpandLessOutlinedIcon fontSize="small" /> : <ExpandMoreOutlinedIcon fontSize="small" />}
         <h2 className="font-light text-[20px]">{title}</h2>
       </button>
       {isOpen && <div className="mt-4 space-y-6">{children}</div>}

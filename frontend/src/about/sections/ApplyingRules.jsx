@@ -9,10 +9,7 @@ const SECTIONS = [
     title: '01. Selecting Views',
     steps: [
       {
-        lines: [
-          'Updating inventory populates the Rules tab',
-          'Toggle between sheet or table view',
-        ],
+        lines: ['Updating inventory populates the Rules tab', 'Toggle between sheet or table view'],
         src: rulePageInventory,
         alt: 'Rule page inventory view',
       },
@@ -27,10 +24,7 @@ const SECTIONS = [
     title: '02. Isolating Target Sounds',
     steps: [
       {
-        lines: [
-          'Target features are the left hand side of a rule',
-          'Choose feature value(s) and feature(s)',
-        ],
+        lines: ['Target features are the left hand side of a rule', 'Choose feature value(s) and feature(s)'],
         src: addTargetFeature,
         alt: 'Adding a target feature',
       },

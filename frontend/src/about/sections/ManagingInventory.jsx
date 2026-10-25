@@ -40,10 +40,7 @@ const SECTIONS = [
     title: '03. Load Presets',
     steps: [
       {
-        lines: [
-          'Select a preset to auto-populate the inventory',
-          'Add or remove phonemes as needed',
-        ],
+        lines: ['Select a preset to auto-populate the inventory', 'Add or remove phonemes as needed'],
         src: presets,
         alt: 'Loading presets',
       },

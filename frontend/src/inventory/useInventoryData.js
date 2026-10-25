@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { API_BASE, isAbort } from '../api.js'
+import { getDiacritics, getPhonemes, isAbort } from '../api.js'
 
 // Loads every phoneme and diacritic from the backend (GET /phonemes, GET /diacritics) and
 // indexes them for lookup.
@@ -20,26 +20,16 @@ export function useInventoryData() {
         setLoading(true)
         setLoadingSlow(false)
         setError('')
-        const [phonemeRes, diacriticRes] = await Promise.all([
-          fetch(`${API_BASE}/phonemes`, { signal }),
-          fetch(`${API_BASE}/diacritics`, { signal }),
-        ])
-        if (!phonemeRes.ok || !diacriticRes.ok) {
-          throw new Error('Failed to load phoneme or diacritic data.')
-        }
-        const [phonemeData, diacriticData] = await Promise.all([
-          phonemeRes.json(),
-          diacriticRes.json(),
-        ])
+        const [phonemeData, diacriticData] = await Promise.all([getPhonemes({ signal }), getDiacritics({ signal })])
         setPhonemes(phonemeData)
         setDiacritics(diacriticData)
       } catch (err) {
         if (isAbort(err)) return
-        const msg = err.message ?? 'Failed to load API data.'
+        console.error(err)
         setError(
-          msg === 'Failed to fetch'
-            ? `${msg} — start the Flask app from the backend folder (or ensure it is reachable). With Vite dev, API calls use the /api proxy.`
-            : msg
+          err.message === 'Failed to fetch'
+            ? `${err.message} — start the Flask app from the backend folder (or ensure it is reachable). With Vite dev, API calls use the /api proxy.`
+            : 'Failed to load phoneme or diacritic data.',
         )
       } finally {
         // an aborted load was superseded (unmount / StrictMode remount); the new one owns these flags

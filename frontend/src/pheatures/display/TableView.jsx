@@ -29,11 +29,10 @@ import { DiacriticChip } from '../../components/ipaTable/SymbolCells.jsx'
 // rows and cols that hold at least one selected base phoneme or diacritic item.
 function activeAxes(rows, cols, cells, baseSymbols, diacriticRows) {
   const isFilled = (row, col) =>
-    cells[row]?.[col]?.some(s => s && baseSymbols.has(s.trim())) ||
-    diacriticRows[row]?.[col] != null
+    cells[row]?.[col]?.some((s) => s && baseSymbols.has(s.trim())) || diacriticRows[row]?.[col] != null
   return {
-    rows: rows.filter(row => cols.some(col => isFilled(row, col))),
-    cols: cols.filter(col => rows.some(row => isFilled(row, col))),
+    rows: rows.filter((row) => cols.some((col) => isFilled(row, col))),
+    cols: cols.filter((col) => rows.some((row) => isFilled(row, col))),
   }
 }
 
@@ -46,14 +45,10 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
   // set of base phoneme symbols (no diacritics) that are in the (possibly filtered) inventory
   const baseSymbols = useMemo(
     () => new Set(inventory.filter((i) => i.diacritic_id == null).map((i) => i.symbol.trim())),
-    [inventory]
+    [inventory],
   )
 
-  const {
-    diacriticRowsByConsonant,
-    diacriticRowsByVowel,
-    diacriticRowsByOther,
-  } = useDiacriticRows(inventory)
+  const { diacriticRowsByConsonant, diacriticRowsByVowel, diacriticRowsByOther } = useDiacriticRows(inventory)
 
   /* ACTIVE ROW/COLUMN FILTERS
    * Only render rows and columns that have at least one selected phoneme
@@ -61,18 +56,19 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
    */
   const { rows: activeManners, cols: activePlaces } = useMemo(
     () => activeAxes(MANNERS, PLACES, CONSONANT_CELLS, baseSymbols, diacriticRowsByConsonant),
-    [baseSymbols, diacriticRowsByConsonant]
+    [baseSymbols, diacriticRowsByConsonant],
   )
   const { rows: activeVowelHeights, cols: activeVowelBackness } = useMemo(
     () => activeAxes(VOWEL_HEIGHTS, VOWEL_BACKNESS, VOWEL_CELLS, baseSymbols, diacriticRowsByVowel),
-    [baseSymbols, diacriticRowsByVowel]
+    [baseSymbols, diacriticRowsByVowel],
   )
 
   const activeOtherGroups = useMemo(
-    () => OTHER_PHONEME_GROUPS.filter(g =>
-      g.phonemes.some(s => s && baseSymbols.has(s.trim())) || (g.label in diacriticRowsByOther)
-    ),
-    [baseSymbols, diacriticRowsByOther]
+    () =>
+      OTHER_PHONEME_GROUPS.filter(
+        (g) => g.phonemes.some((s) => s && baseSymbols.has(s.trim())) || g.label in diacriticRowsByOther,
+      ),
+    [baseSymbols, diacriticRowsByOther],
   )
 
   // map symbol → phoneme_id so renderSelectedSymbol can look up transforms
@@ -95,9 +91,7 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
     const pid = symbolToPhonemeId[clean]
     const t = pid != null ? transforms[String(pid)] : null
     const hasArrow = t?.matched && t.transformed
-    const label = hasArrow
-      ? `${t.original_symbol ?? clean} → ${t.result_symbol ?? '?'}`
-      : clean
+    const label = hasArrow ? `${t.original_symbol ?? clean} → ${t.result_symbol ?? '?'}` : clean
 
     return (
       <button
@@ -116,20 +110,18 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
   return (
     <div className="relative space-y-[32px]">
       {/* FeaturePanel modal — portaled to document.body to escape any overflow/stacking constraints */}
-      {activeItem && createPortal(
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-          onClick={() => setActiveItem(null)}
-        >
+      {activeItem &&
+        createPortal(
           <div
-            className="w-[60%]"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setActiveItem(null)}
           >
-            <FeaturePanel symbol={activeItem.symbol} feats={activeItem.feats} onClose={() => setActiveItem(null)} />
-          </div>
-        </div>,
-        document.body
-      )}
+            <div className="w-[60%]" onClick={(e) => e.stopPropagation()}>
+              <FeaturePanel symbol={activeItem.symbol} feats={activeItem.feats} onClose={() => setActiveItem(null)} />
+            </div>
+          </div>,
+          document.body,
+        )}
 
       <IpaTableGrid
         activeManners={activeManners}
@@ -143,16 +135,22 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
         renderSymbol={renderSelectedSymbol}
         renderDiacriticChip={(item) => {
           const t = transforms[item.key]
-          const chipLabel = t?.matched && t.transformed
-            ? `${t.original_symbol ?? item.symbol.trim()} → ${t.result_symbol ?? '?'}`
-            : undefined
+          const chipLabel =
+            t?.matched && t.transformed
+              ? `${t.original_symbol ?? item.symbol.trim()} → ${t.result_symbol ?? '?'}`
+              : undefined
           return (
             <DiacriticChip
               key={item.key}
               item={item}
               onRemove={toggleInventory}
               isDragging={false}
-              onClick={(item) => setActiveItem({ symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`, feats: diacriticFeatures[item.key] ?? null })}
+              onClick={(item) =>
+                setActiveItem({
+                  symbol: `${item.symbol.trim()}${item.diacritic_symbol ?? ''}`,
+                  feats: diacriticFeatures[item.key] ?? null,
+                })
+              }
               label={chipLabel}
               widthClass="w-20"
               textClass="text-[14px]"

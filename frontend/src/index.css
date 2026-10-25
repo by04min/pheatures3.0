@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* dark: variants follow the .dark class on <html> (toggled by themeStore), not the OS setting */
 @custom-variant dark (&:where(.dark, .dark *));

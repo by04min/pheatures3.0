@@ -14,9 +14,7 @@ export function newRow() {
 
 // [{value, feature}, ...] -> { feature: value }, skipping rows that aren't fully filled in
 export function rowsToSpec(rows) {
-  return Object.fromEntries(
-    rows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
-  )
+  return Object.fromEntries(rows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value]))
 }
 
 /*
@@ -106,6 +104,6 @@ export function hasRedundantChangeFeatures(changeRows, targetRows, inventory, bu
     matched.every((item) => {
       const bundle = getBundle(item, bundles)
       return bundle != null && bundle[feat] === val
-    })
+    }),
   )
 }

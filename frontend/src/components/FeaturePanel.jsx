@@ -1,72 +1,64 @@
-import { PHONEME_FEATURES } from "../inventory/data/phonemeFeatures";
-import { FeatureValueBadge } from "./Badges";
+import { PHONEME_FEATURES } from '../inventory/data/phonemeFeatures'
+import { FeatureValueBadge } from './Badges'
 
 const FEATURE_GROUPS = [
   {
-    label: "Prosodic",
-    features: ["syllabic", "stress", "long", "tense"],
+    label: 'Prosodic',
+    features: ['syllabic', 'stress', 'long', 'tense'],
   },
   {
-    label: "Manner",
+    label: 'Manner',
     cols: 2,
     features: [
-      "consonantal",
-      "sonorant",
-      "continuant",
-      "delayed release",
-      "approximant",
-      "tap",
-      "trill",
-      "nasal",
-      "lateral",
+      'consonantal',
+      'sonorant',
+      'continuant',
+      'delayed release',
+      'approximant',
+      'tap',
+      'trill',
+      'nasal',
+      'lateral',
     ],
   },
   {
-    label: "Laryngeal",
-    features: ["voice", "spread gl", "constr gl"],
+    label: 'Laryngeal',
+    features: ['voice', 'spread gl', 'constr gl'],
   },
   {
-    label: "Labial",
-    features: ["labial", "round", "labiodental"],
+    label: 'Labial',
+    features: ['labial', 'round', 'labiodental'],
   },
   {
-    label: "Coronal",
-    features: ["coronal", "anterior", "distributed", "strident"],
+    label: 'Coronal',
+    features: ['coronal', 'anterior', 'distributed', 'strident'],
   },
   {
-    label: "Dorsal",
-    features: ["dorsal", "high", "low", "front", "back"],
+    label: 'Dorsal',
+    features: ['dorsal', 'high', 'low', 'front', 'back'],
   },
-];
+]
 
 // given a phoneme, provides all information about it!
 export function FeaturePanel({ symbol, feats: featsProp, onClose }) {
-  const feats = featsProp ?? PHONEME_FEATURES[symbol];
+  const feats = featsProp ?? PHONEME_FEATURES[symbol]
 
   // error handling: show an error message if we can't get the features for a symbol
   if (!feats) {
     return (
       <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-        No feature data found for{" "}
-        <span className="font-mono text-slate-700">{symbol}</span>.
+        No feature data found for <span className="font-mono text-slate-700">{symbol}</span>.
       </div>
-    );
+    )
   }
 
   // this is the actual view!
   return (
     <div className="rounded-[8px] border border-indigo-100 bg-white text-black p-12 space-y-[36px] max-h-[90vh] overflow-y-auto">
-
       {/* phoneme symbol + close button */}
       <div className="flex flex-row justify-between items-center">
-          <h2 className="text-[48px] font-mono">
-            {symbol}
-          </h2>
-        <button
-          onClick={onClose}
-          className="hover:text-slate-400 text-[20px]"
-          aria-label="close"
-        >
+        <h2 className="text-[48px] font-mono">{symbol}</h2>
+        <button onClick={onClose} className="hover:text-slate-400 text-[20px]" aria-label="close">
           ×
         </button>
       </div>
@@ -75,9 +67,7 @@ export function FeaturePanel({ symbol, feats: featsProp, onClose }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-[36px]">
         {FEATURE_GROUPS.map((group) => (
           <div key={group.label} className={group.cols === 2 ? 'col-span-2' : ''}>
-            <h4 className="text-[12px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
-              {group.label}
-            </h4>
+            <h4 className="text-[12px] font-semibold text-slate-400 uppercase tracking-widest mb-2">{group.label}</h4>
             {group.cols === 2 ? (
               <div className="grid grid-cols-2 gap-x-[36px] gap-y-[8px]">
                 {group.features.map((feat) => (
@@ -101,5 +91,5 @@ export function FeaturePanel({ symbol, feats: featsProp, onClose }) {
         ))}
       </div>
     </div>
-  );
+  )
 }

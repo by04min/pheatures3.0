@@ -23,9 +23,11 @@ export default function Pheatures() {
   const featureChanges = useMemo(() => rowsToSpec(changeRows), [changeRows])
 
   const { bundles, diacriticFeatures, ready: bundlesReady, error: bundlesError } = useFeatureBundles(inventory)
-  const { transforms, transformsLoading, error: transformsError } = useTransforms(
-    inventory, targetFeatures, featureChanges, diacriticFeatures, bundlesReady
-  )
+  const {
+    transforms,
+    transformsLoading,
+    error: transformsError,
+  } = useTransforms(inventory, targetFeatures, featureChanges, diacriticFeatures, bundlesReady)
   // contradictions: { target_contradictions: [...], change_contradictions: [...] }
   const { contradictions, error: ruleCheckError } = useRuleCheck(targetFeatures, featureChanges)
   const error = bundlesError ?? transformsError ?? ruleCheckError
@@ -33,11 +35,11 @@ export default function Pheatures() {
   // minimality checks computed from the already-loaded feature bundles
   const redundantTarget = useMemo(
     () => hasRedundantTargetFeatures(targetRows, changeRows, inventory, bundles),
-    [targetRows, changeRows, inventory, bundles]
+    [targetRows, changeRows, inventory, bundles],
   )
   const redundantChanges = useMemo(
     () => hasRedundantChangeFeatures(changeRows, targetRows, inventory, bundles),
-    [changeRows, targetRows, inventory, bundles]
+    [changeRows, targetRows, inventory, bundles],
   )
 
   // resolve the feature bundle for a given inventory item, applying transforms when matched
@@ -50,13 +52,11 @@ export default function Pheatures() {
   const rulesActive = Object.keys(transforms).length > 0
   // only filter when target features are set; changes-only applies to the whole inventory
   const hasTargetFeatures = Object.keys(targetFeatures).length > 0
-  const visibleInventory = rulesActive && hasTargetFeatures
-    ? inventory.filter((item) => transforms[item.key]?.matched)
-    : inventory
+  const visibleInventory =
+    rulesActive && hasTargetFeatures ? inventory.filter((item) => transforms[item.key]?.matched) : inventory
 
   return (
     <div className="flex flex-col h-[calc(100vh-160px)] w-full">
-
       {/* fixed top: title + rule panel + view toggle */}
       <div className={`shrink-0 space-y-[32px] pb-6 transition-colors duration-300 bg-white dark:bg-[#0E1116]`}>
         <div className="space-y-[4px]">
@@ -83,9 +83,19 @@ export default function Pheatures() {
 
         {inventory.length > 0 && visibleInventory.length > 0 && (
           <div className="flex gap-2 justify-start items-center">
-            <button onClick={() => setView('sheet')} className="font-light text-[14px] hover:opacity-60 transition-opacity">Sheet</button>
+            <button
+              onClick={() => setView('sheet')}
+              className="font-light text-[14px] hover:opacity-60 transition-opacity"
+            >
+              Sheet
+            </button>
             <span className="font-light text-[10px] leading-none">|</span>
-            <button onClick={() => setView('table')} className="font-light text-[14px] hover:opacity-60 transition-opacity">Table</button>
+            <button
+              onClick={() => setView('table')}
+              className="font-light text-[14px] hover:opacity-60 transition-opacity"
+            >
+              Table
+            </button>
           </div>
         )}
       </div>
@@ -98,19 +108,29 @@ export default function Pheatures() {
           </div>
         )}
         <div className="absolute inset-0 overflow-y-auto">
-          {inventory.length === 0
-            ? <div className="flex h-full items-center justify-center gap-1">
-                <span className={`text-[14px] font-light text-slate-600 dark:text-gray-400`}>The inventory is empty!</span>
-                <Link to="/inventory" className={`text-[14px] font-light underline text-slate-600 hover:text-slate-600 dark:text-gray-400 dark:hover:text-gray-300`}>Go to inventory</Link>
-              </div>
-            : visibleInventory.length === 0
-              ? <div className="flex h-full items-center justify-center gap-1">
-                  <span className={`text-[14px] font-light text-slate-600 dark:text-gray-400`}>No phonemes match the target features.</span>
-                </div>
-            : view === 'sheet'
-              ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} />
-              : <TableView inventory={visibleInventory} transforms={transforms} diacriticFeatures={diacriticFeatures} />
-          }
+          {inventory.length === 0 ? (
+            <div className="flex h-full items-center justify-center gap-1">
+              <span className={`text-[14px] font-light text-slate-600 dark:text-gray-400`}>
+                The inventory is empty!
+              </span>
+              <Link
+                to="/inventory"
+                className={`text-[14px] font-light underline text-slate-600 hover:text-slate-600 dark:text-gray-400 dark:hover:text-gray-300`}
+              >
+                Go to inventory
+              </Link>
+            </div>
+          ) : visibleInventory.length === 0 ? (
+            <div className="flex h-full items-center justify-center gap-1">
+              <span className={`text-[14px] font-light text-slate-600 dark:text-gray-400`}>
+                No phonemes match the target features.
+              </span>
+            </div>
+          ) : view === 'sheet' ? (
+            <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} />
+          ) : (
+            <TableView inventory={visibleInventory} transforms={transforms} diacriticFeatures={diacriticFeatures} />
+          )}
         </div>
       </div>
     </div>

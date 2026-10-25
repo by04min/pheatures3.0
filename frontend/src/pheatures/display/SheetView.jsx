@@ -14,7 +14,9 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
         <thead>
           <tr>
             {/* top-left corner: empty cell above the symbol column */}
-            <th className={`border border-slate-200 px-3 py-2 bg-slate-50 dark:bg-gray-100 text-left sticky left-0 z-10 whitespace-nowrap`} />
+            <th
+              className={`border border-slate-200 px-3 py-2 bg-slate-50 dark:bg-gray-100 text-left sticky left-0 z-10 whitespace-nowrap`}
+            />
 
             {/* header row: one column per feature name */}
             {FEATURE_NAMES.map((f) => (
@@ -38,14 +40,15 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
 
             // when a transform matched and actually changed the phoneme, show "original → result"
             const t = transforms[item.key]
-            const symbolCell = t?.matched && t.transformed
-              ? `${t.original_symbol ?? baseLabel} → ${t.result_symbol ?? '?'}`
-              : baseLabel
+            const symbolCell =
+              t?.matched && t.transformed ? `${t.original_symbol ?? baseLabel} → ${t.result_symbol ?? '?'}` : baseLabel
 
             return (
               <tr key={item.key}>
                 {/* symbol column: sticky; shows transform arrow when rules are active */}
-                <td className={`border border-slate-200 px-5 py-2 bg-slate-50 dark:bg-gray-100 sticky left-0 text-center text-[14px] font-mono whitespace-nowrap`}>
+                <td
+                  className={`border border-slate-200 px-5 py-2 bg-slate-50 dark:bg-gray-100 sticky left-0 text-center text-[14px] font-mono whitespace-nowrap`}
+                >
                   {symbolCell}
                 </td>
 

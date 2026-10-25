@@ -25,6 +25,6 @@ export const useInventoryStore = create(
     {
       name: 'phoneme-inventory',
       storage: createJSONStorage(() => sessionStorage),
-    }
-  )
+    },
+  ),
 )

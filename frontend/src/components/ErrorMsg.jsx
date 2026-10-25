@@ -60,7 +60,7 @@ function FeatureList({ features }) {
 */
 
 // 1.1 HELPER: formats details of invalid diacritic application
-function featureInfo({ condition, phonemeFeatures = {}}) {
+function featureInfo({ condition, phonemeFeatures = {} }) {
   if (!condition) return []
   return [
     {
@@ -96,16 +96,13 @@ export default function InvalidDiacriticTarget({ message, onClose }) {
     >
       {sections.map((section, i) => (
         <div key={i}>
-          <p className="text-[11px] uppercase tracking-widest mb-1.5">
-            {section.label}
-          </p>
+          <p className="text-[11px] uppercase tracking-widest mb-1.5">{section.label}</p>
           <FeatureList features={section.features} />
         </div>
       ))}
     </Banner>
   )
 }
-
 
 /* 02. RULE CONTRADICTION ERROR: shown when a feature spec violates a phonological
        contradiction rule (e.g. -sonorant +approximant cannot coexist).
@@ -116,10 +113,7 @@ export function RuleContradictionError({ violations, title = 'Contradictory feat
   return (
     <Banner variant="error" onClose={onClose} title={<p>{title}</p>}>
       {violations.map((rule, i) => (
-        <FeatureList
-          key={i}
-          features={Object.entries(rule).map(([feat, val]) => ({ val, feat }))}
-        />
+        <FeatureList key={i} features={Object.entries(rule).map(([feat, val]) => ({ val, feat }))} />
       ))}
     </Banner>
   )
@@ -130,8 +124,10 @@ export function RuleContradictionError({ violations, title = 'Contradictory feat
        message — descriptive string shown to the user
 */
 const NON_MINIMAL_DETAILS = {
-  target: 'Removing feature(s) result in the same transformation and select a larger class of sounds. Try taking some features out for a minimal selection.',
-  changes: 'One or more feature changes are already implied and have no effect on the output. Try removing some changes and see if the result stays the same.',
+  target:
+    'Removing feature(s) result in the same transformation and select a larger class of sounds. Try taking some features out for a minimal selection.',
+  changes:
+    'One or more feature changes are already implied and have no effect on the output. Try removing some changes and see if the result stays the same.',
 }
 
 export function RuleNonMinimalWarning({ message, variant = 'target', onClose }) {
@@ -145,7 +141,7 @@ export function RuleNonMinimalWarning({ message, variant = 'target', onClose }) 
         <>
           <span>{message}</span>
           <button
-            onClick={() => setExpanded(v => !v)}
+            onClick={() => setExpanded((v) => !v)}
             className="block sm:inline sm:ml-1.5 text-[12px] text-[#d46b08] underline hover:opacity-70"
           >
             {expanded ? 'see less' : 'see more'}
@@ -153,11 +149,7 @@ export function RuleNonMinimalWarning({ message, variant = 'target', onClose }) 
         </>
       }
     >
-      {expanded && (
-        <p className="text-[13px] text-[#7c4a00]">
-          {NON_MINIMAL_DETAILS[variant]}
-        </p>
-      )}
+      {expanded && <p className="text-[13px] text-[#7c4a00]">{NON_MINIMAL_DETAILS[variant]}</p>}
     </Banner>
   )
 }

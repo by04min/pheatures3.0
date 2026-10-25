@@ -19,17 +19,13 @@ function App() {
   const location = useLocation()
 
   return (
-    <div className={`min-h-screen px-10 sm:px-24 pt-28 pb-12 transition-colors duration-300 bg-white text-gray-900 dark:bg-[#0E1116] dark:text-white`}>
+    <div
+      className={`min-h-screen px-10 sm:px-24 pt-28 pb-12 transition-colors duration-300 bg-white text-gray-900 dark:bg-[#0E1116] dark:text-white`}
+    >
       <NavBar />
       <div className="mt-4">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={location.key}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
+          <motion.div key={location.key} variants={pageVariants} initial="initial" animate="animate" exit="exit">
             <Routes location={location}>
               <Route path="/" element={<Pheatures />} />
               <Route path="/inventory" element={<PhonemeInventory />} />

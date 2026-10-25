@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { isAbort, postJson } from '../api.js'
+import { isAbort, transformInventory } from '../api.js'
 
 const NO_TRANSFORMS = {}
 
@@ -14,7 +14,7 @@ export function useTransforms(inventory, targetFeatures, featureChanges, diacrit
   // the request inputs; `result.inputs` records which inputs a result belongs to
   const inputs = useMemo(
     () => ({ inventory, targetFeatures, featureChanges, diacriticFeatures }),
-    [inventory, targetFeatures, featureChanges, diacriticFeatures]
+    [inventory, targetFeatures, featureChanges, diacriticFeatures],
   )
   const [result, setResult] = useState({ inputs: null, transforms: NO_TRANSFORMS, error: null })
 
@@ -23,8 +23,7 @@ export function useTransforms(inventory, targetFeatures, featureChanges, diacrit
   // - changes only → apply to all inventory phonemes, since an empty target matches everything)
   // or when the inventory is empty
   const idle =
-    inventory.length === 0 ||
-    (Object.keys(targetFeatures).length === 0 && Object.keys(featureChanges).length === 0)
+    inventory.length === 0 || (Object.keys(targetFeatures).length === 0 && Object.keys(featureChanges).length === 0)
 
   useEffect(() => {
     if (idle || !ready) return
@@ -44,11 +43,7 @@ export function useTransforms(inventory, targetFeatures, featureChanges, diacrit
         bundle: diacriticFeatures[item.key] ?? null,
       }))
 
-    postJson(
-      '/phonemes/transform',
-      { phoneme_ids: phonemeIds, diacritic_items: diacriticItems, target_features: targetFeatures, feature_changes: featureChanges },
-      { signal: controller.signal }
-    )
+    transformInventory({ phonemeIds, diacriticItems, targetFeatures, featureChanges }, { signal: controller.signal })
       .then((data) => setResult({ inputs, transforms: data, error: null }))
       .catch((err) => {
         if (isAbort(err)) return

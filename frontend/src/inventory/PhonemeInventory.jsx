@@ -19,13 +19,7 @@
 import { useMemo, useState } from 'react'
 import { useInventoryStore } from '../store/inventoryStore'
 import { PHONEME_FEATURES } from './data/phonemeFeatures.js'
-import {
-  MANNERS,
-  OTHER_PHONEME_GROUPS,
-  PLACES,
-  VOWEL_BACKNESS,
-  VOWEL_HEIGHTS,
-} from './data/phonemeLayout.js'
+import { MANNERS, OTHER_PHONEME_GROUPS, PLACES, VOWEL_BACKNESS, VOWEL_HEIGHTS } from './data/phonemeLayout.js'
 import { PRESETS } from './data/presetInventories.js'
 import { getInventoryKey, makeInventoryItem } from './inventoryItems.js'
 import { useInventoryData } from './useInventoryData.js'
@@ -34,42 +28,23 @@ import { usePresets } from './usePresets.js'
 import { useDiacriticRows } from '../components/ipaTable/useDiacriticRows.js'
 import { IpaTableGrid } from '../components/ipaTable/IpaTableGrid.jsx'
 import InvalidDiacriticTarget from '../components/ErrorMsg.jsx'
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import { SymbolButton, DiacriticChip } from '../components/ipaTable/SymbolCells.jsx'
-
 
 /** MAIN COMPONENT! **/
 
 export default function PhonemeInventory() {
   const { inventory, toggleInventory, clearInventory } = useInventoryStore()
-  const {
-    phonemes,
-    diacritics,
-    phonemesBySymbol,
-    diacriticsById,
-    diacriticsBySymbol,
-    loading,
-    loadingSlow,
-    error,
-  } = useInventoryData()
+  const { phonemes, diacritics, phonemesBySymbol, diacriticsById, diacriticsBySymbol, loading, loadingSlow, error } =
+    useInventoryData()
   const { selectedPresetId, selectPreset, resetPreset } = usePresets({ phonemesBySymbol, diacriticsBySymbol })
-  const {
-    draggingDiacriticId,
-    applicablePhonemeIds,
-    loadingApplicable,
-    touchIndicator,
-    endDrag,
-    dragHandlers,
-  } = useDiacriticDrag({ phonemes, phonemesBySymbol })
+  const { draggingDiacriticId, applicablePhonemeIds, loadingApplicable, touchIndicator, endDrag, dragHandlers } =
+    useDiacriticDrag({ phonemes, phonemesBySymbol })
 
   // null | { title, phonemeSymbol?, condition?, phonemeFeatures? }
   const [diacriticError, setDiacriticError] = useState(null)
 
-  const {
-    diacriticRowsByConsonant,
-    diacriticRowsByVowel,
-    diacriticRowsByOther,
-  } = useDiacriticRows(inventory)
+  const { diacriticRowsByConsonant, diacriticRowsByVowel, diacriticRowsByOther } = useDiacriticRows(inventory)
 
   const inventoryKeys = useMemo(() => new Set(inventory.map((item) => item.key)), [inventory])
 
@@ -180,20 +155,27 @@ export default function PhonemeInventory() {
 
         {/* Diacritics: drag onto a phoneme to add the combined entry */}
         <section className="space-y-[32px] font-light">
-
           <div className="flex items-center justify-between">
             <select
               value={selectedPresetId}
               onChange={(e) => selectPreset(e.target.value)}
               className={`border border-slate-200 rounded-[4px] px-[8px] py-[6px] text-[14px] font-light text-black bg-white dark:bg-gray-100`}
             >
-              <option value="" disabled>Select Preset</option>
-              {PRESETS.map(p => (
-                <option key={p.id} value={p.id}>{p.label}</option>
+              <option value="" disabled>
+                Select Preset
+              </option>
+              {PRESETS.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
               ))}
             </select>
             <button
-              onClick={() => { clearInventory(); setDiacriticError(null); resetPreset() }}
+              onClick={() => {
+                clearInventory()
+                setDiacriticError(null)
+                resetPreset()
+              }}
               className={`text-[14px] font-light underline transition-colors hover:text-slate-600 dark:hover:text-gray-300`}
             >
               <span className="flex items-center gap-1">
@@ -208,35 +190,39 @@ export default function PhonemeInventory() {
             <div className="flex flex-col items-center justify-center h-[60vh] gap-2">
               <span className="text-sm text-slate-600">Loading phoneme data...</span>
               {loadingSlow && (
-                <span className="text-sm text-slate-600 italic text-center">Please don't leave!<br />Loading only takes a bit the first time (Free tiers am I right...)</span>
+                <span className="text-sm text-slate-600 italic text-center">
+                  Please don't leave!
+                  <br />
+                  Loading only takes a bit the first time (Free tiers am I right...)
+                </span>
               )}
             </div>
           )}
 
           <div className="space-y-[8px]">
-          <h3 className="text-[16px] font-light">Diacritics</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {diacritics.map((d) => (
-              <div key={d.id} className="relative group">
-                <div
-                  {...dragHandlers(d, { onDrop: onDropSymbol, onInvalidDrop: onInvalidDropSymbol })}
-                  className={`w-9 h-8 border rounded flex items-center justify-center text-[16px] select-none cursor-grab active:cursor-grabbing ${
-                    draggingDiacriticId === d.id
-                      ? 'border-blue-100 bg-blue-100'
-                      : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 dark:text-black dark:bg-white dark:hover:bg-gray-300'
-                  }`}
-                >
-                  {diacriticDisplaySymbol(d)}
+            <h3 className="text-[16px] font-light">Diacritics</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {diacritics.map((d) => (
+                <div key={d.id} className="relative group">
+                  <div
+                    {...dragHandlers(d, { onDrop: onDropSymbol, onInvalidDrop: onInvalidDropSymbol })}
+                    className={`w-9 h-8 border rounded flex items-center justify-center text-[16px] select-none cursor-grab active:cursor-grabbing ${
+                      draggingDiacriticId === d.id
+                        ? 'border-blue-100 bg-blue-100'
+                        : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 dark:text-black dark:bg-white dark:hover:bg-gray-300'
+                    }`}
+                  >
+                    {diacriticDisplaySymbol(d)}
+                  </div>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded bg-slate-800 text-white text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10">
+                    {d.name}
+                  </div>
                 </div>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded bg-slate-800 text-white text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10">
-                  {d.name}
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className={`text-[12px] font-light text-gray-500 dark:text-gray-400`}>
-            Drag a diacritic onto a compatible phoneme to add it to the inventory.
-          </p>
+              ))}
+            </div>
+            <p className={`text-[12px] font-light text-gray-500 dark:text-gray-400`}>
+              Drag a diacritic onto a compatible phoneme to add it to the inventory.
+            </p>
           </div>
         </section>
       </div>
@@ -248,25 +234,24 @@ export default function PhonemeInventory() {
             <span className="text-sm text-slate-600">Loading valid targets...</span>
           </div>
         )}
-      <div className="absolute inset-0 overflow-y-auto space-y-[32px]">
-
-      <IpaTableGrid
-        activeManners={MANNERS}
-        activePlaces={PLACES}
-        activeVowelHeights={VOWEL_HEIGHTS}
-        activeVowelBackness={VOWEL_BACKNESS}
-        activeOtherGroups={OTHER_PHONEME_GROUPS}
-        diacriticRowsByConsonant={diacriticRowsByConsonant}
-        diacriticRowsByVowel={diacriticRowsByVowel}
-        diacriticRowsByOther={diacriticRowsByOther}
-        renderSymbol={renderSymbolButton}
-        renderDiacriticChip={(item) => (
-          <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={!!draggingDiacriticId} />
-        )}
-        cellWidth="w-28"
-        slotWidth="w-14"
-      />
-      </div>
+        <div className="absolute inset-0 overflow-y-auto space-y-[32px]">
+          <IpaTableGrid
+            activeManners={MANNERS}
+            activePlaces={PLACES}
+            activeVowelHeights={VOWEL_HEIGHTS}
+            activeVowelBackness={VOWEL_BACKNESS}
+            activeOtherGroups={OTHER_PHONEME_GROUPS}
+            diacriticRowsByConsonant={diacriticRowsByConsonant}
+            diacriticRowsByVowel={diacriticRowsByVowel}
+            diacriticRowsByOther={diacriticRowsByOther}
+            renderSymbol={renderSymbolButton}
+            renderDiacriticChip={(item) => (
+              <DiacriticChip key={item.key} item={item} onRemove={toggleInventory} isDragging={!!draggingDiacriticId} />
+            )}
+            cellWidth="w-28"
+            slotWidth="w-14"
+          />
+        </div>
       </div>
 
       {/* Touch drag floating indicator */}

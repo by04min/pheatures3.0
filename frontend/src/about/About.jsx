@@ -16,32 +16,32 @@ function About() {
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-12">
       <div className="flex flex-row items-center justify-between gap-3 lg:block lg:space-y-4">
-        <p className={`inline-block w-fit text-center text-[14px] rounded-[20px] px-3 py-1 bg-gray-100 dark:bg-white dark:text-black`}>Guide</p>
-      <nav className="flex flex-row items-center gap-3 lg:shrink-0 lg:w-40 lg:flex-col lg:items-start lg:gap-4 lg:space-y-3 lg:pl-1">
-        {SECTIONS.map(({ id, label }, i) => (
-          <div key={id} className="flex items-center gap-3 lg:contents">
-            <button
-              onClick={() => setActiveId(id)}
-              className={`block text-left text-[15px] font-light transition-colors cursor-pointer ${
-                activeId === id ? activeClass : inactiveClass
-              }`}
-            >
-              {label}
-            </button>
-            {i < SECTIONS.length - 1 && (
-              <span className={`lg:hidden text-gray-300 dark:text-gray-600`}>|</span>
-            )}
-          </div>
-        ))}
-      </nav>
+        <p
+          className={`inline-block w-fit text-center text-[14px] rounded-[20px] px-3 py-1 bg-gray-100 dark:bg-white dark:text-black`}
+        >
+          Guide
+        </p>
+        <nav className="flex flex-row items-center gap-3 lg:shrink-0 lg:w-40 lg:flex-col lg:items-start lg:gap-4 lg:space-y-3 lg:pl-1">
+          {SECTIONS.map(({ id, label }, i) => (
+            <div key={id} className="flex items-center gap-3 lg:contents">
+              <button
+                onClick={() => setActiveId(id)}
+                className={`block text-left text-[15px] font-light transition-colors cursor-pointer ${
+                  activeId === id ? activeClass : inactiveClass
+                }`}
+              >
+                {label}
+              </button>
+              {i < SECTIONS.length - 1 && <span className={`lg:hidden text-gray-300 dark:text-gray-600`}>|</span>}
+            </div>
+          ))}
+        </nav>
       </div>
-       
+
       <div className="flex-1 space-y-[32px]">
         <div className="space-y-[4px]">
           <h1 className="text-[28px]">Tutorials</h1>
-          <p className={`text-[16px] font-light text-gray-500 dark:text-gray-400`}>
-            Click dropdown to view tutorials
-          </p>
+          <p className={`text-[16px] font-light text-gray-500 dark:text-gray-400`}>Click dropdown to view tutorials</p>
         </div>
         {(() => {
           const ActiveComponent = SECTIONS.find((s) => s.id === activeId)?.Component

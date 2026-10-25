@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { isAbort, postJson } from '../api.js'
+import { applyDiacritic, fetchFeatures, isAbort } from '../api.js'
 
 // Fetches the feature bundle of every inventory item, caching by item.key so that a change to the
 // inventory only requests the items it hasn't seen yet:
@@ -26,13 +26,9 @@ export function useFeatureBundles(inventory) {
     const missingDiacritic = missing.filter((item) => item.diacritic_id != null)
     const baseIds = [...new Set(missingBase.map((item) => item.phoneme_id))]
 
-    const fetchBase = baseIds.length > 0
-      ? postJson('/phonemes/features', { phoneme_ids: baseIds }, { signal })
-      : Promise.resolve({})
+    const fetchBase = baseIds.length > 0 ? fetchFeatures(baseIds, { signal }) : Promise.resolve({})
     const fetchDiacritics = Promise.all(
-      missingDiacritic.map((item) =>
-        postJson('/diacritics/apply', { phoneme_id: item.phoneme_id, diacritic_id: item.diacritic_id }, { signal })
-      )
+      missingDiacritic.map((item) => applyDiacritic(item.phoneme_id, item.diacritic_id, { signal })),
     )
 
     Promise.all([fetchBase, fetchDiacritics])
@@ -40,7 +36,9 @@ export function useFeatureBundles(inventory) {
         const fetched = {}
         // base bundles are keyed by phoneme id, which is exactly item.key for non-diacritic items
         for (const item of missingBase) fetched[item.key] = base[item.key] ?? null
-        missingDiacritic.forEach((item, i) => { fetched[item.key] = diacritics[i] ?? null })
+        missingDiacritic.forEach((item, i) => {
+          fetched[item.key] = diacritics[i] ?? null
+        })
         setState((prev) => ({ cache: { ...prev.cache, ...fetched }, error: null, failedInventory: null }))
       })
       .catch((err) => {

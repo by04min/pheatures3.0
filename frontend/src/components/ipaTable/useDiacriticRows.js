@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo } from 'react'
 import {
   CONSONANT_CELLS,
   MANNERS,
@@ -7,31 +7,31 @@ import {
   VOWEL_BACKNESS,
   VOWEL_CELLS,
   VOWEL_HEIGHTS,
-} from "../../inventory/data/phonemeLayout.js";
+} from '../../inventory/data/phonemeLayout.js'
 
 // position lookup maps (layout constants never change → built once at module load)
 //   consonantPositionOf   symbol → { manner, place, idx }
 //   vowelPositionOf       symbol → { height, backness, idx }
 //   otherPositionOf       symbol → { label, idx }
-const consonantPositionOf = {};
+const consonantPositionOf = {}
 for (const manner of MANNERS)
   for (const place of PLACES)
     CONSONANT_CELLS[manner]?.[place]?.forEach((sym, idx) => {
-      if (sym) consonantPositionOf[sym.trim()] = { manner, place, idx };
-    });
+      if (sym) consonantPositionOf[sym.trim()] = { manner, place, idx }
+    })
 
-const vowelPositionOf = {};
+const vowelPositionOf = {}
 for (const height of VOWEL_HEIGHTS)
   for (const backness of VOWEL_BACKNESS)
     VOWEL_CELLS[height]?.[backness]?.forEach((sym, idx) => {
-      if (sym) vowelPositionOf[sym.trim()] = { height, backness, idx };
-    });
+      if (sym) vowelPositionOf[sym.trim()] = { height, backness, idx }
+    })
 
-const otherPositionOf = {};
+const otherPositionOf = {}
 for (const group of OTHER_PHONEME_GROUPS)
   group.phonemes.forEach((sym, idx) => {
-    if (sym) otherPositionOf[sym.trim()] = { label: group.label, idx };
-  });
+    if (sym) otherPositionOf[sym.trim()] = { label: group.label, idx }
+  })
 
 // Shared hook used by PhonemeInventory and TableView.
 //
@@ -47,47 +47,44 @@ for (const group of OTHER_PHONEME_GROUPS)
 // that array (each diacritic gets its own row under the base phoneme's row).
 
 export function useDiacriticRows(inventory) {
-  const inventoryWithDiacritic = useMemo(
-    () => inventory.filter((i) => i.diacritic_id != null),
-    [inventory],
-  );
+  const inventoryWithDiacritic = useMemo(() => inventory.filter((i) => i.diacritic_id != null), [inventory])
 
   // diacritic grouping maps — keyed by base phoneme grid position
   const diacriticRowsByConsonant = useMemo(() => {
-    const out = {};
+    const out = {}
     for (const item of inventoryWithDiacritic) {
-      const pos = consonantPositionOf[item.symbol.trim()];
-      if (!pos) continue;
-      const cell = ((out[pos.manner] ??= {})[pos.place] ??= {});
-      (cell[pos.idx] ??= []).push(item);
+      const pos = consonantPositionOf[item.symbol.trim()]
+      if (!pos) continue
+      const cell = ((out[pos.manner] ??= {})[pos.place] ??= {})
+      ;(cell[pos.idx] ??= []).push(item)
     }
-    return out;
-  }, [inventoryWithDiacritic]);
+    return out
+  }, [inventoryWithDiacritic])
 
   const diacriticRowsByVowel = useMemo(() => {
-    const out = {};
+    const out = {}
     for (const item of inventoryWithDiacritic) {
-      const pos = vowelPositionOf[item.symbol.trim()];
-      if (!pos) continue;
-      const cell = ((out[pos.height] ??= {})[pos.backness] ??= {});
-      (cell[pos.idx] ??= []).push(item);
+      const pos = vowelPositionOf[item.symbol.trim()]
+      if (!pos) continue
+      const cell = ((out[pos.height] ??= {})[pos.backness] ??= {})
+      ;(cell[pos.idx] ??= []).push(item)
     }
-    return out;
-  }, [inventoryWithDiacritic]);
+    return out
+  }, [inventoryWithDiacritic])
 
   const diacriticRowsByOther = useMemo(() => {
-    const out = {};
+    const out = {}
     for (const item of inventoryWithDiacritic) {
-      const pos = otherPositionOf[item.symbol.trim()];
-      if (!pos) continue;
-      ((out[pos.label] ??= {})[pos.idx] ??= []).push(item);
+      const pos = otherPositionOf[item.symbol.trim()]
+      if (!pos) continue
+      ;((out[pos.label] ??= {})[pos.idx] ??= []).push(item)
     }
-    return out;
-  }, [inventoryWithDiacritic]);
+    return out
+  }, [inventoryWithDiacritic])
 
   return {
     diacriticRowsByConsonant,
     diacriticRowsByVowel,
     diacriticRowsByOther,
-  };
+  }
 }
