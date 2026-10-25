@@ -16,14 +16,12 @@ function NavBar() {
   const location = useLocation()
   const { isDark, toggleTheme } = useThemeStore()
 
-  const activeClass = isDark ? 'text-white' : 'text-gray-800'
-  const inactiveClass = isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
+  const activeClass = 'text-gray-800 dark:text-white'
+  const inactiveClass = 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
 
   return (
     <nav
-      className={`fixed top-10 left-1/2 -translate-x-1/2 z-50 flex flex-row items-center justify-center gap-10 rounded-[4px] px-10 py-3 transition-colors duration-300 ${
-        isDark ? 'bg-[#0E1116]' : 'bg-white'
-      }`}
+      className={`fixed top-10 left-1/2 -translate-x-1/2 z-50 flex flex-row items-center justify-center gap-10 rounded-[4px] px-10 py-3 transition-colors duration-300 bg-white dark:bg-[#0E1116]`}
     >
       {NAV_LINKS.map(({ to, label, Icon }) => (
         <Link

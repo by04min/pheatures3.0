@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useThemeStore } from '../store/themeStore'
 import ManagingInventory from './sections/ManagingInventory.jsx'
 import ApplyingRules from './sections/ApplyingRules.jsx'
 
@@ -9,16 +8,15 @@ const SECTIONS = [
 ]
 
 function About() {
-  const { isDark } = useThemeStore()
   const [activeId, setActiveId] = useState(SECTIONS[0].id)
 
-  const activeClass = isDark ? 'text-white' : 'text-gray-900'
-  const inactiveClass = isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-500'
+  const activeClass = 'text-gray-900 dark:text-white'
+  const inactiveClass = 'text-gray-400 hover:text-gray-500 dark:hover:text-gray-200'
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-12">
       <div className="flex flex-row items-center justify-between gap-3 lg:block lg:space-y-4">
-        <p className={`inline-block w-fit text-center text-[14px] rounded-[20px] px-3 py-1 ${isDark ? 'bg-white text-black' : 'bg-gray-100'}`}>Guide</p>
+        <p className={`inline-block w-fit text-center text-[14px] rounded-[20px] px-3 py-1 bg-gray-100 dark:bg-white dark:text-black`}>Guide</p>
       <nav className="flex flex-row items-center gap-3 lg:shrink-0 lg:w-40 lg:flex-col lg:items-start lg:gap-4 lg:space-y-3 lg:pl-1">
         {SECTIONS.map(({ id, label }, i) => (
           <div key={id} className="flex items-center gap-3 lg:contents">
@@ -31,7 +29,7 @@ function About() {
               {label}
             </button>
             {i < SECTIONS.length - 1 && (
-              <span className={`lg:hidden ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
+              <span className={`lg:hidden text-gray-300 dark:text-gray-600`}>|</span>
             )}
           </div>
         ))}
@@ -41,7 +39,7 @@ function About() {
       <div className="flex-1 space-y-[32px]">
         <div className="space-y-[4px]">
           <h1 className="text-[28px]">Tutorials</h1>
-          <p className={`text-[16px] font-light ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          <p className={`text-[16px] font-light text-gray-500 dark:text-gray-400`}>
             Click dropdown to view tutorials
           </p>
         </div>

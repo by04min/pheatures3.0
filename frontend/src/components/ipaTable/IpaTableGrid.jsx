@@ -14,7 +14,6 @@
  */
 
 import { Fragment } from 'react'
-import { useThemeStore } from '../../store/themeStore'
 import {
   CONSONANT_CELLS,
   VOWEL_CELLS,
@@ -39,12 +38,11 @@ export function IpaTableGrid({
   cellWidth = 'w-28',
   slotWidth = 'w-14',
 }) {
-  const { isDark } = useThemeStore()
 
-  const tableCls = `border-collapse text-xs text-black ${isDark ? 'bg-slate-50' : 'bg-white'}`
-  const headerCellCls = `border border-slate-200 text-center font-light px-[8px] py-[12px] ${cellWidth} ${isDark ? 'bg-gray-100' : 'bg-slate-50'} text-[12px]`
-  const rowHeaderCls = `border border-slate-200 px-[8px] py-[12px] text-[12px] ${isDark ? 'bg-gray-100' : 'bg-slate-50'} font-light whitespace-nowrap`
-  const subRowHeaderCls = `border border-slate-200 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`
+  const tableCls = `border-collapse text-xs text-black bg-white dark:bg-slate-50`
+  const headerCellCls = `border border-slate-200 text-center font-light px-[8px] py-[12px] ${cellWidth} bg-slate-50 dark:bg-gray-100 text-[12px]`
+  const rowHeaderCls = `border border-slate-200 px-[8px] py-[12px] text-[12px] bg-slate-50 dark:bg-gray-100 font-light whitespace-nowrap`
+  const subRowHeaderCls = `border border-slate-200 bg-slate-50 dark:bg-gray-100`
   const dataCellCls = `border border-slate-200 ${cellWidth}`
 
   return (
@@ -59,7 +57,7 @@ export function IpaTableGrid({
               <thead>
                 <tr>
                   {/* corner cell — w-36 gives enough room for manner labels */}
-                  <th className={`border border-slate-200 w-36 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
+                  <th className={`border border-slate-200 w-36 bg-slate-50 dark:bg-gray-100`} />
                   {activePlaces.map(p => (
                     <th key={p} className={headerCellCls}>{p}</th>
                   ))}
@@ -132,7 +130,7 @@ export function IpaTableGrid({
               <thead>
                 <tr>
                   {/* corner cell — w-32 gives enough room for height labels */}
-                  <th className={`border border-slate-200 w-32 ${isDark ? 'bg-gray-100' : 'bg-slate-50'}`} />
+                  <th className={`border border-slate-200 w-32 bg-slate-50 dark:bg-gray-100`} />
                   {activeVowelBackness.map(b => (
                     <th key={b} className={headerCellCls}>{b}</th>
                   ))}

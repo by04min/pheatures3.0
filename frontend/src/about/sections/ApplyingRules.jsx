@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
-import { useThemeStore } from '../../store/themeStore'
 import rulePageInventory from '../media/rule page inventory.gif'
 import tableViewClick from '../media/table view click.gif'
 import addTargetFeature from '../media/add target feature.gif'
@@ -29,13 +28,12 @@ function Section({ title, children }) {
 }
 
 function ApplyingRules() {
-  const { isDark } = useThemeStore()
 
   return (
     <div className="space-y-[24px]">
       <Section title="01. Selecting Views" className="space-y-4">
         <div className="ml-7 space-y-[12px]">
-         <p className={`text-[16px] font-light ${isDark ? 'text-white' : 'text-gray-600'}`}>
+         <p className={`text-[16px] font-light text-gray-600 dark:text-white`}>
             Updating inventory populates the Rules tab
             <br/>
             Toggle between sheet or table view
@@ -47,7 +45,7 @@ function ApplyingRules() {
         />
         </div>
         <div className="ml-7 mt-6 space-y-[12px]">
-         <p className={`text-[16px] font-light ${isDark ? 'text-white' : 'text-gray-600'}`}>
+         <p className={`text-[16px] font-light text-gray-600 dark:text-white`}>
             In sheet view, click a phoneme to view feature values
           </p>
         <img
@@ -59,7 +57,7 @@ function ApplyingRules() {
       </Section>
       <Section title="02. Isolating Target Sounds">
          <div className="ml-7 mt-6 space-y-[12px]">
-         <p className={`text-[16px] font-light ${isDark ? 'text-white' : 'text-gray-600'}`}>
+         <p className={`text-[16px] font-light text-gray-600 dark:text-white`}>
             Target features are the left hand side of a rule
             <br/>
             Choose feature value(s) and feature(s)
@@ -73,7 +71,7 @@ function ApplyingRules() {
       </Section>
       <Section title="03. Forming Phonetic Rules">
         <div className="ml-7 space-y-[12px]">
-         <p className={`text-[16px] font-light ${isDark ? 'text-white' : 'text-gray-600'}`}>
+         <p className={`text-[16px] font-light text-gray-600 dark:text-white`}>
             Feature changes are the right hand side of a rule 
             <br/>
             Warning and error messages appear above the respective side of the rule

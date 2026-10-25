@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useInventoryStore } from '../store/inventoryStore'
-import { useThemeStore } from '../store/themeStore'
 import SheetView from './display/sheetView.jsx'
 import TableView from './display/tableView.jsx'
 import RulePanel from './RulePanel.jsx'
@@ -10,7 +9,6 @@ import { hasRedundantTargetFeatures, hasRedundantChangeFeatures, rowsToSpec } fr
 
 export default function Pheatures() {
   const { inventory } = useInventoryStore()
-  const { isDark } = useThemeStore()
   const [view, setView] = useState('sheet')
 
   // { phoneme_id: { feature: value, ... } }
@@ -140,10 +138,10 @@ export default function Pheatures() {
     <div className="flex flex-col h-[calc(100vh-160px)] w-full">
 
       {/* fixed top: title + rule panel + view toggle */}
-      <div className={`shrink-0 space-y-[32px] pb-6 transition-colors duration-300 ${isDark ? 'bg-[#0E1116]' : 'bg-white'}`}>
+      <div className={`shrink-0 space-y-[32px] pb-6 transition-colors duration-300 bg-white dark:bg-[#0E1116]`}>
         <div className="space-y-[4px]">
           <h1 className="text-[28px]">Rule Application</h1>
-          <p className={`text-[16px] font-light ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          <p className={`text-[16px] font-light text-gray-500 dark:text-gray-400`}>
             Pick out sounds by features, and apply feature rules
           </p>
         </div>
@@ -173,19 +171,19 @@ export default function Pheatures() {
       {/* scrollable view */}
       <div className="relative flex-1">
         {transformsLoading && (
-          <div className={`absolute inset-0 z-10 flex items-center justify-center ${isDark ? 'bg-[#0E1116]/60' : 'bg-white/60'}`}>
-            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Applying rules...</span>
+          <div className={`absolute inset-0 z-10 flex items-center justify-center bg-white/60 dark:bg-[#0E1116]/60`}>
+            <span className={`text-sm text-slate-600 dark:text-gray-400`}>Applying rules...</span>
           </div>
         )}
         <div className="absolute inset-0 overflow-y-auto">
           {inventory.length === 0
             ? <div className="flex h-full items-center justify-center gap-1">
-                <span className={`text-[14px] font-light ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>The inventory is empty!</span>
-                <Link to="/inventory" className={`text-[14px] font-light underline ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-slate-600 hover:text-slate-600'}`}>Go to inventory</Link>
+                <span className={`text-[14px] font-light text-slate-600 dark:text-gray-400`}>The inventory is empty!</span>
+                <Link to="/inventory" className={`text-[14px] font-light underline text-slate-600 hover:text-slate-600 dark:text-gray-400 dark:hover:text-gray-300`}>Go to inventory</Link>
               </div>
             : visibleInventory.length === 0
               ? <div className="flex h-full items-center justify-center gap-1">
-                  <span className={`text-[14px] font-light ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>No phonemes match the target features.</span>
+                  <span className={`text-[14px] font-light text-slate-600 dark:text-gray-400`}>No phonemes match the target features.</span>
                 </div>
             : view === 'sheet'
               ? <SheetView inventory={visibleInventory} resolveFeatures={resolveFeatures} transforms={transforms} />

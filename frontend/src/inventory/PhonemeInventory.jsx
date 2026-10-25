@@ -18,7 +18,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { API_BASE, postJson } from '../api.js'
 import { useInventoryStore } from '../store/inventoryStore'
-import { useThemeStore } from '../store/themeStore'
 import { PHONEME_FEATURES } from './format/phonemeFeatures.js'
 import {
   MANNERS,
@@ -38,7 +37,6 @@ import { PRESETS } from './format/presetInventories.js'
 /** MAIN COMPONENT! **/
 
 export default function PhonemeInventory() {
-  const { isDark } = useThemeStore()
 
   /* SETUP */
   // the phonemes and diacrtics for display! (using the GET endpoints)
@@ -328,11 +326,11 @@ export default function PhonemeInventory() {
   return (
     <div className="flex flex-col h-[calc(100vh-160px)] w-full">
       {/* ── Sticky top: title, errors, diacritics ── */}
-      <div className={`shrink-0 space-y-[32px] pb-8 transition-colors duration-300 ${isDark ? 'bg-[#0E1116]' : 'bg-white'}`}>
+      <div className={`shrink-0 space-y-[32px] pb-8 transition-colors duration-300 bg-white dark:bg-[#0E1116]`}>
         {/* Title + load / API error banners */}
         <div className="space-y-[4px]">
           <h1 className="text-[28px]">Phoneme Inventory</h1>
-          <p className={`text-[16px] font-light ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          <p className={`text-[16px] font-light text-gray-500 dark:text-gray-400`}>
             Click phonemes to add or remove from the inventory
           </p>
         </div>
@@ -348,7 +346,7 @@ export default function PhonemeInventory() {
             <select
               value={selectedPresetId}
               onChange={(e) => { setSelectedPresetId(e.target.value); loadPreset(e.target.value) }}
-              className={`border border-slate-200 rounded-[4px] px-[8px] py-[6px] text-[14px] font-light text-black ${isDark ? 'bg-gray-100' : 'bg-white'}`}
+              className={`border border-slate-200 rounded-[4px] px-[8px] py-[6px] text-[14px] font-light text-black bg-white dark:bg-gray-100`}
             >
               <option value="" disabled>Select Preset</option>
               {PRESETS.map(p => (
@@ -357,7 +355,7 @@ export default function PhonemeInventory() {
             </select>
             <button
               onClick={() => { clearInventory(); setDiacriticError(null); setSelectedPresetId('') }}
-              className={`text-[14px] font-light underline transition-colors ${isDark ? 'hover:text-gray-300' : 'hover:text-slate-600'}`}
+              className={`text-[14px] font-light underline transition-colors hover:text-slate-600 dark:hover:text-gray-300`}
             >
               <span className="flex items-center gap-1">
                 Clear Inventory
@@ -421,9 +419,7 @@ export default function PhonemeInventory() {
                   className={`w-9 h-8 border rounded flex items-center justify-center text-[16px] select-none cursor-grab active:cursor-grabbing ${
                     draggingDiacriticId === d.id
                       ? 'border-blue-100 bg-blue-100'
-                      : isDark
-                      ? 'border-slate-200 text-black bg-white hover:bg-gray-300'
-                      : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100'
+                      : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 dark:text-black dark:bg-white dark:hover:bg-gray-300'
                   }`}
                 >
                   {/* temp fix: postalv, backed velar diacritics render incorrectly because the unicode symbol requires a base char */}
@@ -436,7 +432,7 @@ export default function PhonemeInventory() {
               </div>
             ))}
           </div>
-          <p className={`text-[12px] font-light ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          <p className={`text-[12px] font-light text-gray-500 dark:text-gray-400`}>
             Drag a diacritic onto a compatible phoneme to add it to the inventory.
           </p>
           </div>
@@ -446,7 +442,7 @@ export default function PhonemeInventory() {
       {/* ── Scrollable tables ── */}
       <div className="relative flex-1">
         {loadingApplicable && (
-          <div className={`absolute inset-0 z-10 flex items-center justify-center ${isDark ? 'bg-[#0E1116]/60' : 'bg-white/60'}`}>
+          <div className={`absolute inset-0 z-10 flex items-center justify-center bg-white/60 dark:bg-[#0E1116]/60`}>
             <span className="text-sm text-slate-600">Loading valid targets...</span>
           </div>
         )}

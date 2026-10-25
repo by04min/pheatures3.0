@@ -13,3 +13,8 @@ export const useThemeStore = create(
     }
   )
 )
+
+// mirror isDark onto <html> so Tailwind's dark: variants apply (see @custom-variant in index.css)
+const applyTheme = (isDark) => document.documentElement.classList.toggle('dark', isDark)
+applyTheme(useThemeStore.getState().isDark)
+useThemeStore.subscribe((state) => applyTheme(state.isDark))
