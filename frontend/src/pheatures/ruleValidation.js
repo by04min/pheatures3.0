@@ -6,6 +6,12 @@ function getBundle(item, bundles) {
   return bundles[item.key]
 }
 
+// a blank rule row; id is a stable React key, since rows can be removed from the middle of a list
+let nextRowId = 0
+export function newRow() {
+  return { id: nextRowId++, value: '', feature: '' }
+}
+
 // [{value, feature}, ...] -> { feature: value }, skipping rows that aren't fully filled in
 export function rowsToSpec(rows) {
   return Object.fromEntries(

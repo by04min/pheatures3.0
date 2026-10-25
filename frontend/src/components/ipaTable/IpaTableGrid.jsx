@@ -19,6 +19,38 @@ import {
   VOWEL_CELLS,
 } from '../../inventory/format/phonemeLayout.js'
 
+// Diacritic sub-rows stacked under a base row: one <tr> per diacritic applied to a base phoneme.
+//   columns: [{ key, items, slots }] — items is { slotIdx: item[] } (or undefined), slots is the
+//            number of phoneme slots in that column's cell (2 for consonants/vowels, group size for "other")
+//   hasHeader: whether the table has a leading row-header column that needs an empty cell
+function DiacriticSubRows({ columns, hasHeader, justify = '', cellCls, headerCls, slotWidth, renderDiacriticChip }) {
+  const numRows = Math.max(
+    0,
+    ...columns.flatMap(({ items, slots }) =>
+      Array.from({ length: slots }, (_, idx) => items?.[idx]?.length ?? 0)
+    )
+  )
+  return Array.from({ length: numRows }, (_, rowIdx) => (
+    <tr key={rowIdx}>
+      {hasHeader && <td className={headerCls} />}
+      {columns.map(({ key, items, slots }) => {
+        if (!items) return <td key={key} className={cellCls} />
+        return (
+          <td key={key} className={cellCls}>
+            <div className={`flex ${justify}`}>
+              {Array.from({ length: slots }, (_, idx) => {
+                const item = items[idx]?.[rowIdx]
+                if (!item) return <div key={idx} className={`${slotWidth} h-10`} />
+                return renderDiacriticChip(item)
+              })}
+            </div>
+          </td>
+        )
+      })}
+    </tr>
+  ))
+}
+
 export function IpaTableGrid({
   // rows / columns to render (pass full MANNERS/PLACES/etc. for PhonemeInventory;
   // filtered arrays for TableView)
@@ -44,6 +76,7 @@ export function IpaTableGrid({
   const rowHeaderCls = `border border-slate-200 px-[8px] py-[12px] text-[12px] bg-slate-50 dark:bg-gray-100 font-light whitespace-nowrap`
   const subRowHeaderCls = `border border-slate-200 bg-slate-50 dark:bg-gray-100`
   const dataCellCls = `border border-slate-200 ${cellWidth}`
+  const subRowProps = { cellCls: dataCellCls, headerCls: subRowHeaderCls, slotWidth, renderDiacriticChip }
 
   return (
     <div className="space-y-[32px]">
@@ -64,55 +97,36 @@ export function IpaTableGrid({
                 </tr>
               </thead>
               <tbody>
-                {activeManners.map(manner => {
-                  const diacriticCols = diacriticRowsByConsonant[manner]
-                  const numDiacriticRows = diacriticCols
-                    ? Math.max(...activePlaces.flatMap(place =>
-                        [0, 1].map(idx => diacriticCols[place]?.[idx]?.length ?? 0)
-                      ))
-                    : 0
-                  return (
-                    <Fragment key={manner}>
-                      {/* base phoneme row */}
-                      <tr>
-                        <td className={rowHeaderCls}>{manner}</td>
-                        {activePlaces.map(place => {
-                          const phonemes = CONSONANT_CELLS[manner]?.[place]
-                          if (!phonemes) return <td key={place} className={dataCellCls} />
-                          return (
-                            <td key={place} className={dataCellCls}>
-                              <div className="flex">
-                                {renderSymbol(phonemes[0])}
-                                {renderSymbol(phonemes[1] ?? null)}
-                              </div>
-                            </td>
-                          )
-                        })}
-                      </tr>
-                      {/* one sub-row per diacritic stacked under this manner */}
-                      {Array.from({ length: numDiacriticRows }, (_, rowIdx) => (
-                        <tr key={rowIdx}>
-                          <td className={subRowHeaderCls} />
-                          {activePlaces.map(place => {
-                            const cellItems = diacriticCols[place]
-                            if (!cellItems) return <td key={place} className={dataCellCls} />
-                            return (
-                              <td key={place} className={dataCellCls}>
-                                <div className="flex">
-                                  {[0, 1].map(idx => {
-                                    const item = cellItems[idx]?.[rowIdx]
-                                    if (!item) return <div key={idx} className={`${slotWidth} h-10`} />
-                                    return renderDiacriticChip(item)
-                                  })}
-                                </div>
-                              </td>
-                            )
-                          })}
-                        </tr>
-                      ))}
-                    </Fragment>
-                  )
-                })}
+                {activeManners.map(manner => (
+                  <Fragment key={manner}>
+                    {/* base phoneme row */}
+                    <tr>
+                      <td className={rowHeaderCls}>{manner}</td>
+                      {activePlaces.map(place => {
+                        const phonemes = CONSONANT_CELLS[manner]?.[place]
+                        if (!phonemes) return <td key={place} className={dataCellCls} />
+                        return (
+                          <td key={place} className={dataCellCls}>
+                            <div className="flex">
+                              {renderSymbol(phonemes[0])}
+                              {renderSymbol(phonemes[1] ?? null)}
+                            </div>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                    {/* one sub-row per diacritic stacked under this manner */}
+                    <DiacriticSubRows
+                      {...subRowProps}
+                      hasHeader
+                      columns={activePlaces.map(place => ({
+                        key: place,
+                        items: diacriticRowsByConsonant[manner]?.[place],
+                        slots: 2,
+                      }))}
+                    />
+                  </Fragment>
+                ))}
               </tbody>
             </table>
           </div>
@@ -137,55 +151,37 @@ export function IpaTableGrid({
                 </tr>
               </thead>
               <tbody>
-                {activeVowelHeights.map(height => {
-                  const diacriticCols = diacriticRowsByVowel[height]
-                  const numDiacriticRows = diacriticCols
-                    ? Math.max(...activeVowelBackness.flatMap(backness =>
-                        [0, 1].map(idx => diacriticCols[backness]?.[idx]?.length ?? 0)
-                      ))
-                    : 0
-                  return (
-                    <Fragment key={height}>
-                      {/* base phoneme row */}
-                      <tr>
-                        <td className={rowHeaderCls}>{height}</td>
-                        {activeVowelBackness.map(backness => {
-                          const phonemes = VOWEL_CELLS[height]?.[backness]
-                          if (!phonemes) return <td key={backness} className={dataCellCls} />
-                          return (
-                            <td key={backness} className={dataCellCls}>
-                              <div className="flex justify-center">
-                                {renderSymbol(phonemes[0])}
-                                {renderSymbol(phonemes[1] ?? null)}
-                              </div>
-                            </td>
-                          )
-                        })}
-                      </tr>
-                      {/* one sub-row per diacritic stacked under this height */}
-                      {Array.from({ length: numDiacriticRows }, (_, rowIdx) => (
-                        <tr key={rowIdx}>
-                          <td className={subRowHeaderCls} />
-                          {activeVowelBackness.map(backness => {
-                            const cellItems = diacriticCols[backness]
-                            if (!cellItems) return <td key={backness} className={dataCellCls} />
-                            return (
-                              <td key={backness} className={`border border-slate-200 p-0 ${cellWidth}`}>
-                                <div className="flex justify-center">
-                                  {[0, 1].map(idx => {
-                                    const item = cellItems[idx]?.[rowIdx]
-                                    if (!item) return <div key={idx} className={`${slotWidth} h-10`} />
-                                    return renderDiacriticChip(item)
-                                  })}
-                                </div>
-                              </td>
-                            )
-                          })}
-                        </tr>
-                      ))}
-                    </Fragment>
-                  )
-                })}
+                {activeVowelHeights.map(height => (
+                  <Fragment key={height}>
+                    {/* base phoneme row */}
+                    <tr>
+                      <td className={rowHeaderCls}>{height}</td>
+                      {activeVowelBackness.map(backness => {
+                        const phonemes = VOWEL_CELLS[height]?.[backness]
+                        if (!phonemes) return <td key={backness} className={dataCellCls} />
+                        return (
+                          <td key={backness} className={dataCellCls}>
+                            <div className="flex justify-center">
+                              {renderSymbol(phonemes[0])}
+                              {renderSymbol(phonemes[1] ?? null)}
+                            </div>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                    {/* one sub-row per diacritic stacked under this height */}
+                    <DiacriticSubRows
+                      {...subRowProps}
+                      hasHeader
+                      justify="justify-center"
+                      columns={activeVowelBackness.map(backness => ({
+                        key: backness,
+                        items: diacriticRowsByVowel[height]?.[backness],
+                        slots: 2,
+                      }))}
+                    />
+                  </Fragment>
+                ))}
               </tbody>
             </table>
           </section>
@@ -198,56 +194,38 @@ export function IpaTableGrid({
             <div className="flex flex-col gap-2">
               {[activeOtherGroups.slice(0, 4), activeOtherGroups.slice(4)]
                 .filter(g => g.length > 0)
-                .map((groups, i) => {
-                  const numDiacriticRows = groups.some(g => g.label in diacriticRowsByOther)
-                    ? Math.max(...groups.flatMap(group =>
-                        group.phonemes.map((_, idx) => diacriticRowsByOther[group.label]?.[idx]?.length ?? 0)
-                      ))
-                    : 0
-                  return (
-                    <table key={i} className={tableCls}>
-                      <thead>
-                        <tr>
-                          {groups.map(group => (
-                            <th key={group.label} className={headerCellCls}>{group.label}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {/* base phoneme row */}
-                        <tr>
-                          {groups.map(group => (
-                            <td key={group.label} className={dataCellCls}>
-                              <div className="flex">
-                                {group.phonemes.map(s => renderSymbol(s))}
-                              </div>
-                            </td>
-                          ))}
-                        </tr>
-                        {/* one sub-row per diacritic stacked under each group */}
-                        {Array.from({ length: numDiacriticRows }, (_, rowIdx) => (
-                          <tr key={rowIdx}>
-                            {groups.map(group => {
-                              const cellItems = diacriticRowsByOther[group.label]
-                              if (!cellItems) return <td key={group.label} className={dataCellCls} />
-                              return (
-                                <td key={group.label} className={dataCellCls}>
-                                  <div className="flex">
-                                    {group.phonemes.map((_, idx) => {
-                                      const item = cellItems[idx]?.[rowIdx]
-                                      if (!item) return <div key={idx} className={`${slotWidth} h-10`} />
-                                      return renderDiacriticChip(item)
-                                    })}
-                                  </div>
-                                </td>
-                              )
-                            })}
-                          </tr>
+                .map((groups, i) => (
+                  <table key={i} className={tableCls}>
+                    <thead>
+                      <tr>
+                        {groups.map(group => (
+                          <th key={group.label} className={headerCellCls}>{group.label}</th>
                         ))}
-                      </tbody>
-                    </table>
-                  )
-                })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* base phoneme row */}
+                      <tr>
+                        {groups.map(group => (
+                          <td key={group.label} className={dataCellCls}>
+                            <div className="flex">
+                              {group.phonemes.map(s => renderSymbol(s))}
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                      {/* one sub-row per diacritic stacked under each group */}
+                      <DiacriticSubRows
+                        {...subRowProps}
+                        columns={groups.map(group => ({
+                          key: group.label,
+                          items: diacriticRowsByOther[group.label],
+                          slots: group.phonemes.length,
+                        }))}
+                      />
+                    </tbody>
+                  </table>
+                ))}
             </div>
           </section>
         )}

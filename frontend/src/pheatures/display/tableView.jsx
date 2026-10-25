@@ -11,7 +11,7 @@
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useInventoryStore } from '../../store/inventoryStore'
-import { FeaturePanel } from './featurePanel.jsx'
+import { FeaturePanel } from '../../components/featurePanel.jsx'
 import {
   CONSONANT_CELLS,
   MANNERS,
@@ -24,6 +24,18 @@ import {
 import { useDiacriticRows } from '../../components/ipaTable/useDiacriticRows.js'
 import { IpaTableGrid } from '../../components/ipaTable/IpaTableGrid.jsx'
 import { DiacriticChip } from '../../components/ipaTable/symbolCells.jsx'
+
+// Given a rows x cols grid (cells[row][col] = [symbols], diacriticRows[row][col] = items), returns the
+// rows and cols that hold at least one selected base phoneme or diacritic item.
+function activeAxes(rows, cols, cells, baseSymbols, diacriticRows) {
+  const isFilled = (row, col) =>
+    cells[row]?.[col]?.some(s => s && baseSymbols.has(s.trim())) ||
+    diacriticRows[row]?.[col] != null
+  return {
+    rows: rows.filter(row => cols.some(col => isFilled(row, col))),
+    cols: cols.filter(col => rows.some(row => isFilled(row, col))),
+  }
+}
 
 // inventory: the (possibly rule-filtered) items passed from pheatures.jsx
 // transforms: { phoneme_id_str: { matched, original_symbol, result_symbol } } — drives chip labels
@@ -47,33 +59,12 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
    * Only render rows and columns that have at least one selected phoneme
    * (either a base phoneme or a diacritic item whose base lives in that slot).
    */
-  const activePlaces = useMemo(
-    () => PLACES.filter(place =>
-      MANNERS.some(manner => CONSONANT_CELLS[manner]?.[place]?.some(s => s && baseSymbols.has(s.trim()))) ||
-      MANNERS.some(manner => diacriticRowsByConsonant[manner]?.[place] != null)
-    ),
+  const { rows: activeManners, cols: activePlaces } = useMemo(
+    () => activeAxes(MANNERS, PLACES, CONSONANT_CELLS, baseSymbols, diacriticRowsByConsonant),
     [baseSymbols, diacriticRowsByConsonant]
   )
-  const activeManners = useMemo(
-    () => MANNERS.filter(manner =>
-      PLACES.some(place => CONSONANT_CELLS[manner]?.[place]?.some(s => s && baseSymbols.has(s.trim()))) ||
-      (diacriticRowsByConsonant[manner] != null)
-    ),
-    [baseSymbols, diacriticRowsByConsonant]
-  )
-
-  const activeVowelBackness = useMemo(
-    () => VOWEL_BACKNESS.filter(backness =>
-      VOWEL_HEIGHTS.some(height => VOWEL_CELLS[height]?.[backness]?.some(s => s && baseSymbols.has(s.trim()))) ||
-      VOWEL_HEIGHTS.some(height => diacriticRowsByVowel[height]?.[backness] != null)
-    ),
-    [baseSymbols, diacriticRowsByVowel]
-  )
-  const activeVowelHeights = useMemo(
-    () => VOWEL_HEIGHTS.filter(height =>
-      VOWEL_BACKNESS.some(backness => VOWEL_CELLS[height]?.[backness]?.some(s => s && baseSymbols.has(s.trim()))) ||
-      (diacriticRowsByVowel[height] != null)
-    ),
+  const { rows: activeVowelHeights, cols: activeVowelBackness } = useMemo(
+    () => activeAxes(VOWEL_HEIGHTS, VOWEL_BACKNESS, VOWEL_CELLS, baseSymbols, diacriticRowsByVowel),
     [baseSymbols, diacriticRowsByVowel]
   )
 

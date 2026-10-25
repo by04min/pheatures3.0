@@ -5,7 +5,7 @@ import SheetView from './display/sheetView.jsx'
 import TableView from './display/tableView.jsx'
 import RulePanel from './RulePanel.jsx'
 import { postJson } from '../api.js'
-import { hasRedundantTargetFeatures, hasRedundantChangeFeatures, rowsToSpec } from './ruleValidation.js'
+import { hasRedundantTargetFeatures, hasRedundantChangeFeatures, newRow, rowsToSpec } from './ruleValidation.js'
 
 export default function Pheatures() {
   const { inventory } = useInventoryStore()
@@ -18,8 +18,8 @@ export default function Pheatures() {
 
   // rule panel row state: [{value: '+'/'-'/'0', feature: string}]
   // start with one empty row so the panel always shows inputs on load
-  const [targetRows, setTargetRows] = useState([{ value: '', feature: '' }])
-  const [changeRows, setChangeRows] = useState([{ value: '', feature: '' }])
+  const [targetRows, setTargetRows] = useState(() => [newRow()])
+  const [changeRows, setChangeRows] = useState(() => [newRow()])
 
   // transform results from /api/phonemes/transform: { phoneme_id_str: { matched, original_symbol, result_symbol, result_bundle, valid } }
   const [transforms, setTransforms] = useState({})

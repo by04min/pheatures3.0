@@ -1,14 +1,15 @@
 // RULE PANEL
 // two columns: Target Features (which phonemes to match) and Feature Changes (what to apply)
-// each column holds a list of {value: +/-/0, feature: <name>} rows
+// each column holds a list of {id, value: +/-/0, feature: <name>} rows
 // parent owns the row state; RulePanel just fires onChange callbacks
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import { FEATURE_NAMES } from '../inventory/format/phonemeFeatures.js'
 import { RuleContradictionError, RuleNonMinimalWarning } from '../components/errorMsg.jsx'
+import { newRow } from './ruleValidation.js'
 
 const VALUES = ['+', '-', '0']
 
@@ -58,10 +59,10 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
 
 // a labeled column of FeatureRows; "clear" in the header resets to one empty row
 function FeatureColumn({ label, rows, onChange }) {
-  const addRow    = () => onChange([...rows, { value: '', feature: '' }])
+  const addRow    = () => onChange([...rows, newRow()])
   const removeRow = (i) => onChange(rows.filter((_, idx) => idx !== i))
   const updateRow = (i, updated) => onChange(rows.map((r, idx) => idx === i ? updated : r))
-  const clearRows = () => onChange([{ value: '', feature: '' }])
+  const clearRows = () => onChange([newRow()])
 
   return (
     <div className="flex flex-col space-y-[8px] flex-1">
@@ -84,7 +85,7 @@ function FeatureColumn({ label, rows, onChange }) {
           )
           return (
             <FeatureRow
-              key={i}
+              key={row.id}
               row={row}
               onChange={(updated) => updateRow(i, updated)}
               onRemove={i > 0 ? () => removeRow(i) : undefined}
@@ -103,6 +104,13 @@ function FeatureColumn({ label, rows, onChange }) {
   )
 }
 
+// renders children(close) until close() is called. give it a `key` that changes whenever the
+// thing it shows changes, so a dismissed banner comes back when its content does
+function Dismissible({ children }) {
+  const [dismissed, setDismissed] = useState(false)
+  return dismissed ? null : children(() => setDismissed(true))
+}
+
 export default function RulePanel({ targetRows, featureChangeRows, onTargetChange, onChangesChange, validation = {} }) {
   const {
     targetContradictions = [],
@@ -111,41 +119,27 @@ export default function RulePanel({ targetRows, featureChangeRows, onTargetChang
     redundantChanges = false,
   } = validation
 
-  const [dismissed, setDismissed] = useState({
-    targetContradictions: false,
-    targetNonMinimal: false,
-    changeContradictions: false,
-    changesNonMinimal: false,
-  })
-
-  // reset dismissed state when the underlying violation changes
-  useEffect(() => { setDismissed(d => ({ ...d, targetContradictions: false })) }, [JSON.stringify(targetContradictions)])
-  useEffect(() => { setDismissed(d => ({ ...d, targetNonMinimal: false })) }, [redundantTarget])
-  useEffect(() => { setDismissed(d => ({ ...d, changeContradictions: false })) }, [JSON.stringify(changeContradictions)])
-  useEffect(() => { setDismissed(d => ({ ...d, changesNonMinimal: false })) }, [redundantChanges])
-
-  const dismiss = (key) => setDismissed(d => ({ ...d, [key]: true }))
-
-  const hasErrors =
-    (targetContradictions.length > 0 && !dismissed.targetContradictions) ||
-    (changeContradictions.length > 0 && !dismissed.changeContradictions) ||
-    (redundantTarget && !dismissed.targetNonMinimal) ||
-    (redundantChanges && !dismissed.changesNonMinimal)
-
   return (
     <div className="flex flex-col gap-4">
-      {hasErrors && (
-        <div className="flex flex-col md:flex-row gap-8 md:gap-36">
-          <div className="flex flex-col gap-2 flex-1">
-            <RuleContradictionError violations={targetContradictions} onClose={() => dismiss('targetContradictions')} />
-            <RuleNonMinimalWarning message={redundantTarget ? 'Target features are non-minimal' : null} variant="target" onClose={() => dismiss('targetNonMinimal')} />
-          </div>
-          <div className="flex flex-col gap-2 flex-1">
-            <RuleContradictionError violations={changeContradictions} onClose={() => dismiss('changeContradictions')} />
-            <RuleNonMinimalWarning message={redundantChanges ? 'Feature changes are redundant' : null} variant="changes" onClose={() => dismiss('changesNonMinimal')} />
-          </div>
+      {/* banners render nothing when there is nothing to show; the wrapper hides itself when empty */}
+      <div className="flex flex-col md:flex-row gap-8 md:gap-36 not-has-[[data-banner]]:hidden">
+        <div className="flex flex-col gap-2 flex-1">
+          <Dismissible key={`tc-${JSON.stringify(targetContradictions)}`}>
+            {(close) => <RuleContradictionError violations={targetContradictions} onClose={close} />}
+          </Dismissible>
+          <Dismissible key={`tn-${redundantTarget}`}>
+            {(close) => <RuleNonMinimalWarning message={redundantTarget ? 'Target features are non-minimal' : null} variant="target" onClose={close} />}
+          </Dismissible>
         </div>
-      )}
+        <div className="flex flex-col gap-2 flex-1">
+          <Dismissible key={`cc-${JSON.stringify(changeContradictions)}`}>
+            {(close) => <RuleContradictionError violations={changeContradictions} onClose={close} />}
+          </Dismissible>
+          <Dismissible key={`cn-${redundantChanges}`}>
+            {(close) => <RuleNonMinimalWarning message={redundantChanges ? 'Feature changes are redundant' : null} variant="changes" onClose={close} />}
+          </Dismissible>
+        </div>
+      </div>
 
       <div className="flex flex-col md:flex-row gap-8 md:gap-64">
         <FeatureColumn
