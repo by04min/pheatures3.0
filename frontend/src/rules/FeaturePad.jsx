@@ -9,7 +9,7 @@ import { useTransforms } from './useTransforms.js'
 import { useRuleCheck } from './useRuleCheck.js'
 import { hasRedundantTargetFeatures, hasRedundantChangeFeatures, newRow, rowsToSpec } from './ruleValidation.js'
 
-export default function Pheatures() {
+export default function FeaturePad() {
   const { inventory } = useInventoryStore()
   const [view, setView] = useState('sheet')
 

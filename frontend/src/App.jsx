@@ -2,7 +2,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import NavBar from './navigation/NavBar.jsx'
 import PhonemeInventory from './inventory/PhonemeInventory.jsx'
-import Pheatures from './pheatures/Pheatures.jsx'
+import FeaturePad from './rules/FeaturePad.jsx'
 import About from './about/About.jsx'
 
 const pageVariants = {
@@ -27,7 +27,7 @@ function App() {
         <AnimatePresence mode="wait">
           <motion.div key={location.key} variants={pageVariants} initial="initial" animate="animate" exit="exit">
             <Routes location={location}>
-              <Route path="/" element={<Pheatures />} />
+              <Route path="/" element={<FeaturePad />} />
               <Route path="/inventory" element={<PhonemeInventory />} />
               <Route path="/about" element={<About />} />
             </Routes>

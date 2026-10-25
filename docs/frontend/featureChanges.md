@@ -1,6 +1,6 @@
 # Feature Changes
 
-The Feature Changes system lets you define phonological rules that filter and transform phonemes in your inventory. It lives on the Pheatures page and is made up of three layers: the UI panel, the page-level state and fetch logic, and the backend endpoint.
+The Feature Changes system lets you define phonological rules that filter and transform phonemes in your inventory. It lives on the FeaturePad page and is made up of three layers: the UI panel, the page-level state and fetch logic, and the backend endpoint.
 
 ---
 
@@ -14,7 +14,7 @@ The Feature Changes system lets you define phonological rules that filter and tr
 
 ## Frontend
 
-### `src/pheatures/RulePanel.jsx`
+### `src/rules/RulePanel.jsx`
 
 The Rule Panel renders two columns side by side (stacks vertically on small screens).
 
@@ -25,7 +25,7 @@ Each column contains:
   - A wider **feature select** (populated from `FEATURE_NAMES`)
 - A **"+" button** at the bottom to add another row
 
-The parent (`pheatures.jsx`) owns all row state. `RulePanel` only fires `onTargetChange` and `onChangesChange` callbacks — it holds no state of its own.
+The parent (`FeaturePad.jsx`) owns all row state. `RulePanel` only fires `onTargetChange` and `onChangesChange` callbacks — it holds no state of its own.
 
 **Props:**
 
@@ -35,7 +35,7 @@ The parent (`pheatures.jsx`) owns all row state. `RulePanel` only fires `onTarge
 | `featureChangeRows` | `{value, feature}[]` | Current rows for the Feature Changes column |
 | `onTargetChange` | `fn(rows)` | Called whenever Target Features rows change |
 | `onChangesChange` | `fn(rows)` | Called whenever Feature Changes rows change |
-| `validation` | `object` | Validation results from `pheatures.jsx` — see below |
+| `validation` | `object` | Validation results from `FeaturePad.jsx` — see below |
 
 **`validation` shape:**
 
@@ -52,9 +52,9 @@ Each row's feature dropdown excludes features already selected in sibling rows w
 
 ---
 
-### `src/pheatures/pheatures.jsx`
+### `src/rules/FeaturePad.jsx`
 
-The Pheatures page manages all state and coordinates between the Rule Panel and the Sheet/Table views.
+The FeaturePad page manages all state and coordinates between the Rule Panel and the Sheet/Table views.
 
 **State:**
 
@@ -108,9 +108,9 @@ Two memos derived from already-loaded feature bundles — no extra network calls
 
 ---
 
-### `src/pheatures/ruleValidation.js`
+### `src/rules/ruleValidation.js`
 
-Pure utility functions for frontend minimality checks. No API calls — all checks use `baseFeatures` and `diacriticFeatures` already loaded in `pheatures.jsx`.
+Pure utility functions for frontend minimality checks. No API calls — all checks use `baseFeatures` and `diacriticFeatures` already loaded in `FeaturePad.jsx`.
 
 | Function | Description |
 |---|---|

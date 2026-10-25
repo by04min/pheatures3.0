@@ -36,7 +36,7 @@ function activeAxes(rows, cols, cells, baseSymbols, diacriticRows) {
   }
 }
 
-// inventory: the (possibly rule-filtered) items passed from pheatures.jsx
+// inventory: the (possibly rule-filtered) items passed from FeaturePad.jsx
 // transforms: { phoneme_id_str: { matched, original_symbol, result_symbol } } — drives chip labels
 export default function TableView({ inventory, transforms = {}, diacriticFeatures = {} }) {
   const { toggleInventory } = useInventoryStore()
