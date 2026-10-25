@@ -28,7 +28,6 @@ import {
 } from './format/phonemeLayout.js'
 import { useDiacriticRows } from '../components/ipaTable/useDiacriticRows.js'
 import { IpaTableGrid } from '../components/ipaTable/IpaTableGrid.jsx'
-import { FeaturePanel } from '../pheatures/display/featurePanel.jsx'
 import InvalidDiacriticTarget from '../components/errorMsg.jsx'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { SymbolButton, DiacriticChip } from '../components/ipaTable/symbolCells.jsx'
@@ -41,11 +40,6 @@ import { PRESETS } from './format/presetInventories.js'
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ??
   (import.meta.env.DEV ? '/api' : 'http://127.0.0.1:5000/api')
-
-const isCombining = (symbol) => {
-  const cp = symbol?.codePointAt(0)
-  return cp >= 0x0300 && cp <= 0x036F
-}
 
 export default function PhonemeInventory() {
   const { isDark } = useThemeStore()

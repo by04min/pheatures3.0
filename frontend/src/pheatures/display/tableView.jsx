@@ -25,12 +25,10 @@ import { useDiacriticRows } from '../../components/ipaTable/useDiacriticRows.js'
 import { IpaTableGrid } from '../../components/ipaTable/IpaTableGrid.jsx'
 import { DiacriticChip } from '../../components/ipaTable/symbolCells.jsx'
 
-// inventory prop overrides the store when rules are active (filtered to matched phonemes)
+// inventory: the (possibly rule-filtered) items passed from pheatures.jsx
 // transforms: { phoneme_id_str: { matched, original_symbol, result_symbol } } — drives chip labels
-export default function TableView({ inventory: inventoryProp, transforms = {}, diacriticFeatures = {} }) {
-  const { inventory: storeInventory, toggleInventory } = useInventoryStore()
-  // prefer the filtered prop passed from pheatures.jsx; fall back to full store inventory
-  const inventory = inventoryProp ?? storeInventory
+export default function TableView({ inventory, transforms = {}, diacriticFeatures = {} }) {
+  const { toggleInventory } = useInventoryStore()
   const [activeItem, setActiveItem] = useState(null)
 
   // set of base phoneme symbols (no diacritics) that are in the (possibly filtered) inventory

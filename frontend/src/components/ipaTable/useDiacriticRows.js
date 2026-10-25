@@ -9,14 +9,35 @@ import {
   VOWEL_HEIGHTS,
 } from "../../inventory/format/phonemeLayout.js";
 
-// Shared hook used by PhonemeInventory and TableView.
-//
-// Given the full inventory array, returns the six values needed to render
-// diacritic sub-rows in the IPA grid layout:
-//
+// position lookup maps (layout constants never change → built once at module load)
 //   consonantPositionOf   symbol → { manner, place, idx }
 //   vowelPositionOf       symbol → { height, backness, idx }
 //   otherPositionOf       symbol → { label, idx }
+const consonantPositionOf = {};
+for (const manner of MANNERS)
+  for (const place of PLACES)
+    CONSONANT_CELLS[manner]?.[place]?.forEach((sym, idx) => {
+      if (sym) consonantPositionOf[sym.trim()] = { manner, place, idx };
+    });
+
+const vowelPositionOf = {};
+for (const height of VOWEL_HEIGHTS)
+  for (const backness of VOWEL_BACKNESS)
+    VOWEL_CELLS[height]?.[backness]?.forEach((sym, idx) => {
+      if (sym) vowelPositionOf[sym.trim()] = { height, backness, idx };
+    });
+
+const otherPositionOf = {};
+for (const group of OTHER_PHONEME_GROUPS)
+  group.phonemes.forEach((sym, idx) => {
+    if (sym) otherPositionOf[sym.trim()] = { label: group.label, idx };
+  });
+
+// Shared hook used by PhonemeInventory and TableView.
+//
+// Given the full inventory array, returns the three values needed to render
+// diacritic sub-rows in the IPA grid layout:
+//
 //   diacriticRowsByConsonant  [manner][place][idx] → item[]
 //   diacriticRowsByVowel      [height][backness][idx] → item[]
 //   diacriticRowsByOther      [groupLabel][idx] → item[]
@@ -31,36 +52,6 @@ export function useDiacriticRows(inventory) {
     [inventory],
   );
 
-  // position lookup maps (layout constants never change → empty deps)
-  const consonantPositionOf = useMemo(() => {
-    const out = {};
-    for (const manner of MANNERS)
-      for (const place of PLACES)
-        CONSONANT_CELLS[manner]?.[place]?.forEach((sym, idx) => {
-          if (sym) out[sym.trim()] = { manner, place, idx };
-        });
-    return out;
-  }, []);
-
-  const vowelPositionOf = useMemo(() => {
-    const out = {};
-    for (const height of VOWEL_HEIGHTS)
-      for (const backness of VOWEL_BACKNESS)
-        VOWEL_CELLS[height]?.[backness]?.forEach((sym, idx) => {
-          if (sym) out[sym.trim()] = { height, backness, idx };
-        });
-    return out;
-  }, []);
-
-  const otherPositionOf = useMemo(() => {
-    const out = {};
-    for (const group of OTHER_PHONEME_GROUPS)
-      group.phonemes.forEach((sym, idx) => {
-        if (sym) out[sym.trim()] = { label: group.label, idx };
-      });
-    return out;
-  }, []);
-
   // diacritic grouping maps — keyed by base phoneme grid position
   const diacriticRowsByConsonant = useMemo(() => {
     const out = {};
@@ -71,7 +62,7 @@ export function useDiacriticRows(inventory) {
       (cell[pos.idx] ??= []).push(item);
     }
     return out;
-  }, [inventoryWithDiacritic, consonantPositionOf]);
+  }, [inventoryWithDiacritic]);
 
   const diacriticRowsByVowel = useMemo(() => {
     const out = {};
@@ -82,7 +73,7 @@ export function useDiacriticRows(inventory) {
       (cell[pos.idx] ??= []).push(item);
     }
     return out;
-  }, [inventoryWithDiacritic, vowelPositionOf]);
+  }, [inventoryWithDiacritic]);
 
   const diacriticRowsByOther = useMemo(() => {
     const out = {};
@@ -92,12 +83,9 @@ export function useDiacriticRows(inventory) {
       ((out[pos.label] ??= {})[pos.idx] ??= []).push(item);
     }
     return out;
-  }, [inventoryWithDiacritic, otherPositionOf]);
+  }, [inventoryWithDiacritic]);
 
   return {
-    consonantPositionOf,
-    vowelPositionOf,
-    otherPositionOf,
     diacriticRowsByConsonant,
     diacriticRowsByVowel,
     diacriticRowsByOther,
