@@ -24,7 +24,7 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
                 key={f}
                 className={`border border-slate-200 px-3 py-2 ${isDark ? 'bg-gray-100' : 'bg-slate-50'} whitespace-nowrap font-light`}
               >
-                {f.toLowerCase()}
+                {f}
               </th>
             ))}
           </tr>
@@ -39,7 +39,7 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
               : item.symbol.trim()
 
             // when a transform matched and actually changed the phoneme, show "original → result"
-            const t = transforms[item.diacritic_id != null ? item.key : String(item.phoneme_id)]
+            const t = transforms[item.key]
             const symbolCell = t?.matched && t.transformed
               ? `${t.original_symbol ?? baseLabel} → ${t.result_symbol ?? '?'}`
               : baseLabel
@@ -54,7 +54,7 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
                 {/* feature value columns: reflect transformed bundle when applicable */}
                 {FEATURE_NAMES.map((f) => (
                   <td key={f} className="border border-slate-200 px-3 py-2 text-[14px] text-center">
-                    {features?.[f.toLowerCase()] ?? ''}
+                    {features?.[f] ?? ''}
                   </td>
                 ))}
               </tr>

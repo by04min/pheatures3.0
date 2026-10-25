@@ -15,7 +15,8 @@
  * both applied to /p/), two sub-rows are rendered, each chip aligned to /p/'s column.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { API_BASE, postJson } from '../api.js'
 import { useInventoryStore } from '../store/inventoryStore'
 import { useThemeStore } from '../store/themeStore'
 import { PHONEME_FEATURES } from './format/phonemeFeatures.js'
@@ -36,11 +37,6 @@ import { PRESETS } from './format/presetInventories.js'
 
 /** MAIN COMPONENT! **/
 
-// 00. SETUP: this URL is what allows the frontend to talk to the backend (database)
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ??
-  (import.meta.env.DEV ? '/api' : 'http://127.0.0.1:5000/api')
-
 export default function PhonemeInventory() {
   const { isDark } = useThemeStore()
 
@@ -53,7 +49,8 @@ export default function PhonemeInventory() {
   const [loading, setLoading] = useState(true)
   const [loadingSlow, setLoadingSlow] = useState(false)
   const [error, setError] = useState('')
-  const [diacriticError, setDiacriticError] = useState('')
+  // null | { title, phonemeSymbol?, condition?, phonemeFeatures? }
+  const [diacriticError, setDiacriticError] = useState(null)
   const [loadingApplicable, setLoadingApplicable] = useState(false)
 
   /* SELECTED INVENTORY */
@@ -71,6 +68,18 @@ export default function PhonemeInventory() {
   // touch drag state
   const [touchIndicatorPos, setTouchIndicatorPos] = useState(null)
   const touchDraggingRef = useRef(null) // { id, displaySymbol } | null
+
+  // empties the valid-target set (state + its ref mirror)
+  const clearApplicable = useCallback(() => {
+    applicableIdsRef.current = new Set()
+    setApplicablePhonemeIds(new Set())
+  }, [])
+
+  // ends any drag: nothing is being dragged and no phonemes are highlighted
+  const endDrag = useCallback(() => {
+    setDraggingDiacriticId(null)
+    clearApplicable()
+  }, [clearApplicable])
 
   // gets phoneme symbols
   const phonemesBySymbol = useMemo(() => {
@@ -119,7 +128,7 @@ export default function PhonemeInventory() {
     const phoneme = phonemesBySymbol[symbol]
     if (!phoneme) return
     const key = getInventoryKey(phoneme.id, null)
-    setDiacriticError('')
+    setDiacriticError(null)
     toggleInventory({ key, phoneme_id: phoneme.id, symbol: phoneme.symbol, diacritic_id: null, diacritic_symbol: null })
     setActiveSymbol(symbol)
   }
@@ -135,7 +144,7 @@ export default function PhonemeInventory() {
     if (inventoryKeys.has(key)) {
       setDiacriticError({ title: `'${diacritic.name}' is already applied to ${phoneme.symbol.trim()}` })
     } else {
-      setDiacriticError('')
+      setDiacriticError(null)
       toggleInventory({
         key,
         phoneme_id: phoneme.id,
@@ -144,9 +153,7 @@ export default function PhonemeInventory() {
         diacritic_symbol: diacritic.symbol,
       })
     }
-    setDraggingDiacriticId(null)
-    applicableIdsRef.current = new Set()
-    setApplicablePhonemeIds(new Set())
+    endDrag()
   }
 
   /** Drop on an incompatible phoneme: compute required vs actual features and show mismatch error. */
@@ -166,9 +173,7 @@ export default function PhonemeInventory() {
       condition,
       phonemeFeatures,
     })
-    setDraggingDiacriticId(null)
-    applicableIdsRef.current = new Set()
-    setApplicablePhonemeIds(new Set())
+    endDrag()
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -283,26 +288,13 @@ export default function PhonemeInventory() {
   useEffect(() => {
     const evaluateCompatibility = async () => {
       if (!draggingDiacriticId) {
-        applicableIdsRef.current = new Set()
-        setApplicablePhonemeIds(new Set())
+        clearApplicable()
         setLoadingApplicable(false)
         return
       }
       setLoadingApplicable(true)
       try {
-        const res = await fetch(`${API_BASE}/diacritics/applicable-phonemes`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ diacritic_id: draggingDiacriticId }),
-        })
-        if (!res.ok) {
-          console.error('applicable-phonemes failed', res.status)
-          const fallback = new Set(phonemes.map((p) => p.id))
-          applicableIdsRef.current = fallback
-          setApplicablePhonemeIds(fallback)
-          return
-        }
-        const data = await res.json()
+        const data = await postJson('/diacritics/applicable-phonemes', { diacritic_id: draggingDiacriticId })
         const ids = Array.isArray(data.phoneme_ids) ? data.phoneme_ids : []
         const idSet = new Set(ids)
         applicableIdsRef.current = idSet
@@ -317,7 +309,7 @@ export default function PhonemeInventory() {
       }
     }
     evaluateCompatibility()
-  }, [phonemes, draggingDiacriticId])
+  }, [phonemes, draggingDiacriticId, clearApplicable])
 
   /* TOUCH DRAG: prevent page scroll while a diacritic is being touch-dragged */
   useEffect(() => {
@@ -329,9 +321,7 @@ export default function PhonemeInventory() {
 
   const resetTouchDrag = () => {
     touchDraggingRef.current = null
-    setDraggingDiacriticId(null)
-    applicableIdsRef.current = new Set()
-    setApplicablePhonemeIds(new Set())
+    endDrag()
     setTouchIndicatorPos(null)
   }
 
@@ -366,7 +356,7 @@ export default function PhonemeInventory() {
               ))}
             </select>
             <button
-              onClick={() => { clearInventory(); setDiacriticError(''); setSelectedPresetId('') }}
+              onClick={() => { clearInventory(); setDiacriticError(null); setSelectedPresetId('') }}
               className={`text-[14px] font-light underline transition-colors ${isDark ? 'hover:text-gray-300' : 'hover:text-slate-600'}`}
             >
               <span className="flex items-center gap-1">
@@ -398,11 +388,7 @@ export default function PhonemeInventory() {
                     e.dataTransfer.effectAllowed = 'copy'
                     setDraggingDiacriticId(d.id)
                   }}
-                  onDragEnd={() => {
-                    setDraggingDiacriticId(null)
-                    applicableIdsRef.current = new Set()
-                    setApplicablePhonemeIds(new Set())
-                  }}
+                  onDragEnd={endDrag}
                   onTouchStart={(e) => {
                     e.preventDefault()
                     const displaySymbol = d.symbol.codePointAt(0) === 0x0320 ? '_' : d.symbol

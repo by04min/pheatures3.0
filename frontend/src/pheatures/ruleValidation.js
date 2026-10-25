@@ -1,13 +1,13 @@
 // Pure frontend minimality checks for rule specifications.
 // Contradiction detection is handled by the backend /api/rules/check endpoint.
 
-function getBundle(item, baseFeatures, diacriticFeatures) {
-  return item.diacritic_id != null
-    ? diacriticFeatures[item.key]
-    : baseFeatures[String(item.phoneme_id)]
+// bundles: { item.key: { feature: value, ... } } — item.key is "phonemeId" or "phonemeId:diacriticId"
+function getBundle(item, bundles) {
+  return bundles[item.key]
 }
 
-function rowsToSpec(rows) {
+// [{value, feature}, ...] -> { feature: value }, skipping rows that aren't fully filled in
+export function rowsToSpec(rows) {
   return Object.fromEntries(
     rows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
   )
@@ -30,21 +30,20 @@ function rowsToSpec(rows) {
     - targetRows: [{value: '+'/'-'/'0', feature: string}]
     - changeRows:  [{value: '+'/'-'/'0', feature: string}]  (needed for fire-and-rain)
     - inventory: the current inventory items from the store
-    - baseFeatures: { phoneme_id_str: { feature: value, ... } }
-    - diacriticFeatures: { item.key: { feature: value, ... } }
+    - bundles: { item.key: { feature: value, ... } }
 
     RETURNS:
     - true  if at least one target feature is redundant (either sub-check)
     - false otherwise
 */
-export function hasRedundantTargetFeatures(targetRows, changeRows, inventory, baseFeatures, diacriticFeatures) {
+export function hasRedundantTargetFeatures(targetRows, changeRows, inventory, bundles) {
   const targetSpec = rowsToSpec(targetRows)
   const changeSpec = rowsToSpec(changeRows)
   const entries = Object.entries(targetSpec)
   if (entries.length === 0) return false
 
   const matchesSpec = (item, featureSpec) => {
-    const bundle = getBundle(item, baseFeatures, diacriticFeatures)
+    const bundle = getBundle(item, bundles)
     return bundle != null && Object.entries(featureSpec).every(([f, v]) => bundle[f] === v)
   }
 
@@ -80,27 +79,26 @@ export function hasRedundantTargetFeatures(targetRows, changeRows, inventory, ba
     - changeRows:  [{value: '+'/'-'/'0', feature: string}]
     - targetRows: [{value: '+'/'-'/'0', feature: string}]
     - inventory: the current inventory items from the store
-    - baseFeatures: { phoneme_id_str: { feature: value, ... } }
-    - diacriticFeatures: { item.key: { feature: value, ... } }
+    - bundles: { item.key: { feature: value, ... } }
 
     RETURNS:
     - true  if at least one change feature is already satisfied by every matched phoneme
     - false otherwise (or if no phonemes are matched)
 */
-export function hasRedundantChangeFeatures(changeRows, targetRows, inventory, baseFeatures, diacriticFeatures) {
+export function hasRedundantChangeFeatures(changeRows, targetRows, inventory, bundles) {
   const targetSpec = rowsToSpec(targetRows)
   const changeSpec = rowsToSpec(changeRows)
   if (Object.keys(changeSpec).length === 0) return false
 
   const matched = inventory.filter((item) => {
-    const bundle = getBundle(item, baseFeatures, diacriticFeatures)
+    const bundle = getBundle(item, bundles)
     return bundle != null && Object.entries(targetSpec).every(([f, v]) => bundle[f] === v)
   })
   if (matched.length === 0) return false
 
   return Object.entries(changeSpec).some(([feat, val]) =>
     matched.every((item) => {
-      const bundle = getBundle(item, baseFeatures, diacriticFeatures)
+      const bundle = getBundle(item, bundles)
       return bundle != null && bundle[feat] === val
     })
   )

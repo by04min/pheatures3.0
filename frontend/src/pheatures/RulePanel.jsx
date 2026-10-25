@@ -40,7 +40,7 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set(), isDa
         {FEATURE_NAMES
           .filter((f) => !excludeFeatures.has(f) || f === row.feature)
           .map((f) => (
-            <option key={f} value={f}>{f.toLowerCase()}</option>
+            <option key={f} value={f}>{f}</option>
           ))}
       </select>
 

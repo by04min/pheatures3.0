@@ -5,11 +5,8 @@ import { useThemeStore } from '../store/themeStore'
 import SheetView from './display/sheetView.jsx'
 import TableView from './display/tableView.jsx'
 import RulePanel from './RulePanel.jsx'
-import { hasRedundantTargetFeatures, hasRedundantChangeFeatures } from './ruleValidation.js'
-
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ??
-  (import.meta.env.DEV ? '/api' : 'http://127.0.0.1:5000/api')
+import { postJson } from '../api.js'
+import { hasRedundantTargetFeatures, hasRedundantChangeFeatures, rowsToSpec } from './ruleValidation.js'
 
 export default function Pheatures() {
   const { inventory } = useInventoryStore()
@@ -41,20 +38,11 @@ export default function Pheatures() {
     const phonemeIds = [...new Set(inventory.map((item) => item.phoneme_id))]
     const diacriticItems = inventory.filter((item) => item.diacritic_id != null)
 
-    const fetchBase = fetch(`${API_BASE}/phonemes/features`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phoneme_ids: phonemeIds }),
-    }).then((r) => r.json())
+    const fetchBase = postJson('/phonemes/features', { phoneme_ids: phonemeIds })
 
     const fetchDiacritics = Promise.all(
       diacriticItems.map((item) =>
-        fetch(`${API_BASE}/diacritics/apply`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneme_id: item.phoneme_id, diacritic_id: item.diacritic_id }),
-        })
-          .then((r) => r.json())
+        postJson('/diacritics/apply', { phoneme_id: item.phoneme_id, diacritic_id: item.diacritic_id })
           .then((bundle) => ({ key: item.key, bundle }))
       )
     )
@@ -67,16 +55,12 @@ export default function Pheatures() {
     })
   }, [inventory])
 
+  // rule specs: { feature: value }. only rows where both value and feature are filled count
+  const targetFeatures = useMemo(() => rowsToSpec(targetRows), [targetRows])
+  const featureChanges = useMemo(() => rowsToSpec(changeRows), [changeRows])
+
   // call the transform endpoint whenever rules or inventory changes
   useEffect(() => {
-    // only rows where both value and feature are filled count
-    const targetFeatures = Object.fromEntries(
-      targetRows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
-    )
-    const featureChanges = Object.fromEntries(
-      changeRows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
-    )
-
     // clear only when both columns are empty; either alone is enough to call the backend:
     // - target only → filter inventory to matching phonemes
     // - changes only → apply to all inventory phonemes (empty target matches everything)
@@ -106,70 +90,50 @@ export default function Pheatures() {
       }))
 
     setTransformsLoading(true)
-    fetch(`${API_BASE}/phonemes/transform`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phoneme_ids: phonemeIds, diacritic_items: diacriticItems, target_features: targetFeatures, feature_changes: featureChanges }),
-    })
-      .then((r) => r.json())
+    postJson('/phonemes/transform', { phoneme_ids: phonemeIds, diacritic_items: diacriticItems, target_features: targetFeatures, feature_changes: featureChanges })
       .then((data) => { setTransforms(data); setTransformsLoading(false) })
       .catch(() => setTransformsLoading(false))
-  }, [targetRows, changeRows, inventory, diacriticFeatures])
+  }, [targetFeatures, featureChanges, inventory, diacriticFeatures])
 
   // contradiction results from /api/rules/check: { target_contradictions: [...], change_contradictions: [...] }
   const [contradictions, setContradictions] = useState({ target_contradictions: [], change_contradictions: [] })
 
   // call /api/rules/check whenever the rule rows change to detect phonologically impossible specs
   useEffect(() => {
-    const targetFeatures = Object.fromEntries(
-      targetRows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
-    )
-    const featureChanges = Object.fromEntries(
-      changeRows.filter((r) => r.value && r.feature).map((r) => [r.feature, r.value])
-    )
-
     if (Object.keys(targetFeatures).length === 0 && Object.keys(featureChanges).length === 0) {
       setContradictions({ target_contradictions: [], change_contradictions: [] })
       return
     }
 
-    fetch(`${API_BASE}/rules/check`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target_features: targetFeatures, feature_changes: featureChanges }),
-    })
-      .then((r) => r.json())
+    postJson('/rules/check', { target_features: targetFeatures, feature_changes: featureChanges })
       .then(setContradictions)
-  }, [targetRows, changeRows])
+  }, [targetFeatures, featureChanges])
+
+  // all loaded feature bundles by item.key ("phonemeId" or "phonemeId:diacriticId")
+  const bundles = useMemo(() => ({ ...baseFeatures, ...diacriticFeatures }), [baseFeatures, diacriticFeatures])
 
   // minimality checks computed from the already-loaded feature bundles
   const redundantTarget = useMemo(
-    () => hasRedundantTargetFeatures(targetRows, changeRows, inventory, baseFeatures, diacriticFeatures),
-    [targetRows, changeRows, inventory, baseFeatures, diacriticFeatures]
+    () => hasRedundantTargetFeatures(targetRows, changeRows, inventory, bundles),
+    [targetRows, changeRows, inventory, bundles]
   )
   const redundantChanges = useMemo(
-    () => hasRedundantChangeFeatures(changeRows, targetRows, inventory, baseFeatures, diacriticFeatures),
-    [changeRows, targetRows, inventory, baseFeatures, diacriticFeatures]
+    () => hasRedundantChangeFeatures(changeRows, targetRows, inventory, bundles),
+    [changeRows, targetRows, inventory, bundles]
   )
 
   // resolve the feature bundle for a given inventory item, applying transforms when matched
   const resolveFeatures = (item) => {
-    const key = item.diacritic_id != null ? item.key : String(item.phoneme_id)
-    const t = transforms[key]
+    const t = transforms[item.key]
     if (t?.matched && t.result_bundle) return t.result_bundle
-    return item.diacritic_id != null
-      ? diacriticFeatures[item.key]
-      : baseFeatures[String(item.phoneme_id)]
+    return bundles[item.key]
   }
 
   const rulesActive = Object.keys(transforms).length > 0
   // only filter when target features are set; changes-only applies to the whole inventory
-  const hasTargetFeatures = targetRows.some((r) => r.value && r.feature)
+  const hasTargetFeatures = Object.keys(targetFeatures).length > 0
   const visibleInventory = rulesActive && hasTargetFeatures
-    ? inventory.filter((item) => {
-        const key = item.diacritic_id != null ? item.key : String(item.phoneme_id)
-        return transforms[key]?.matched
-      })
+    ? inventory.filter((item) => transforms[item.key]?.matched)
     : inventory
 
   return (
