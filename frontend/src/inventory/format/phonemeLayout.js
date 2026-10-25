@@ -13,19 +13,6 @@ export const PLACES = [
   "Glottal",
 ];
 
-export const MANNERS = [
-  "Plosive",
-  "Nasal",
-  "Trill",
-  "Tap/Flap",
-  "Fricative",
-  "Lateral Fric",
-  "Affricate",
-  "Lateral Affr",
-  "Approximant",
-  "Lateral Approx",
-];
-
 // Each entry: [voiceless, voiced] — omit second element if no voiced counterpart
 export const CONSONANT_CELLS = {
   Plosive: {
@@ -101,6 +88,9 @@ export const CONSONANT_CELLS = {
     Velar: ["", "ʟ"],
   },
 };
+
+// derived from CONSONANT_CELLS so row labels can never drift from the cell keys
+export const MANNERS = Object.keys(CONSONANT_CELLS);
 
 export const VOWEL_HEIGHTS = [
   "High",
