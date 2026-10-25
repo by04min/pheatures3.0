@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { postJson } from '../api.js'
+import { isAbort, postJson } from '../api.js'
 
 // postalv / backed-velar diacritics render incorrectly on their own because the unicode
 // symbol needs a base char, so show _ instead (the real symbol is still used when applying)
@@ -40,6 +40,8 @@ export function useDiacriticDrag({ phonemes, phonemesBySymbol }) {
 
   /* DIACRITIC TARGETS: fetch which phonemes are valid drop targets */
   useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
     const evaluateCompatibility = async () => {
       if (!draggingDiacriticId) {
         setApplicable(new Set())
@@ -48,16 +50,20 @@ export function useDiacriticDrag({ phonemes, phonemesBySymbol }) {
       }
       setLoadingApplicable(true)
       try {
-        const data = await postJson('/diacritics/applicable-phonemes', { diacritic_id: draggingDiacriticId })
+        const data = await postJson('/diacritics/applicable-phonemes', { diacritic_id: draggingDiacriticId }, { signal })
         setApplicable(new Set(Array.isArray(data.phoneme_ids) ? data.phoneme_ids : []))
       } catch (e) {
+        if (isAbort(e)) return
         console.error(e)
+        // if the lookup fails, let the diacritic be dropped anywhere rather than blocking the user
         setApplicable(new Set(phonemes.map((p) => p.id)))
       } finally {
-        setLoadingApplicable(false)
+        // an aborted request was superseded by a newer drag, which owns the loading flag
+        if (!signal.aborted) setLoadingApplicable(false)
       }
     }
     evaluateCompatibility()
+    return () => controller.abort()
   }, [phonemes, draggingDiacriticId, setApplicable])
 
   /* TOUCH DRAG: prevent page scroll while a diacritic is being touch-dragged */

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { API_BASE } from '../api.js'
+import { API_BASE, isAbort } from '../api.js'
 
 // Loads every phoneme and diacritic from the backend (GET /phonemes, GET /diacritics) and
 // indexes them for lookup.
@@ -12,6 +12,8 @@ export function useInventoryData() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
     const slowTimer = setTimeout(() => setLoadingSlow(true), 5000)
     const load = async () => {
       try {
@@ -19,8 +21,8 @@ export function useInventoryData() {
         setLoadingSlow(false)
         setError('')
         const [phonemeRes, diacriticRes] = await Promise.all([
-          fetch(`${API_BASE}/phonemes`),
-          fetch(`${API_BASE}/diacritics`),
+          fetch(`${API_BASE}/phonemes`, { signal }),
+          fetch(`${API_BASE}/diacritics`, { signal }),
         ])
         if (!phonemeRes.ok || !diacriticRes.ok) {
           throw new Error('Failed to load phoneme or diacritic data.')
@@ -32,6 +34,7 @@ export function useInventoryData() {
         setPhonemes(phonemeData)
         setDiacritics(diacriticData)
       } catch (err) {
+        if (isAbort(err)) return
         const msg = err.message ?? 'Failed to load API data.'
         setError(
           msg === 'Failed to fetch'
@@ -39,12 +42,18 @@ export function useInventoryData() {
             : msg
         )
       } finally {
-        setLoading(false)
-        setLoadingSlow(false)
+        // an aborted load was superseded (unmount / StrictMode remount); the new one owns these flags
+        if (!signal.aborted) {
+          setLoading(false)
+          setLoadingSlow(false)
+        }
       }
     }
     load()
-    return () => clearTimeout(slowTimer)
+    return () => {
+      clearTimeout(slowTimer)
+      controller.abort()
+    }
   }, [])
 
   const phonemesBySymbol = useMemo(() => {

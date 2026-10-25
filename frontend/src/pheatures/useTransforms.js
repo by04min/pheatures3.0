@@ -1,29 +1,36 @@
-import { useEffect, useState } from 'react'
-import { postJson } from '../api.js'
+import { useEffect, useMemo, useState } from 'react'
+import { isAbort, postJson } from '../api.js'
+
+const NO_TRANSFORMS = {}
 
 // Applies the rule (target features -> feature changes) to the inventory via POST /phonemes/transform.
-// transforms: { item.key: { matched, transformed, original_symbol, result_symbol, result_bundle, valid } }
-// is empty when there is nothing to apply.
-export function useTransforms(inventory, targetFeatures, featureChanges, diacriticFeatures) {
-  const [transforms, setTransforms] = useState({})
-  const [transformsLoading, setTransformsLoading] = useState(false)
+// Waits for `ready` (feature bundles loaded) so one change produces one request.
+// Returns
+//   transforms         { item.key: { matched, transformed, original_symbol, result_symbol, result_bundle, valid } },
+//                      empty when there is nothing to apply
+//   transformsLoading  true while a request for the current inputs is pending
+//   error              message when the last request failed, else null
+export function useTransforms(inventory, targetFeatures, featureChanges, diacriticFeatures, ready) {
+  // the request inputs; `result.inputs` records which inputs a result belongs to
+  const inputs = useMemo(
+    () => ({ inventory, targetFeatures, featureChanges, diacriticFeatures }),
+    [inventory, targetFeatures, featureChanges, diacriticFeatures]
+  )
+  const [result, setResult] = useState({ inputs: null, transforms: NO_TRANSFORMS, error: null })
+
+  // nothing to do when both columns are empty (either alone is enough to call the backend:
+  // - target only → filter inventory to matching phonemes
+  // - changes only → apply to all inventory phonemes, since an empty target matches everything)
+  // or when the inventory is empty
+  const idle =
+    inventory.length === 0 ||
+    (Object.keys(targetFeatures).length === 0 && Object.keys(featureChanges).length === 0)
 
   useEffect(() => {
-    // clear only when both columns are empty; either alone is enough to call the backend:
-    // - target only → filter inventory to matching phonemes
-    // - changes only → apply to all inventory phonemes (empty target matches everything)
-    if (Object.keys(targetFeatures).length === 0 && Object.keys(featureChanges).length === 0) {
-      setTransforms({})
-      setTransformsLoading(false)
-      return
-    }
+    if (idle || !ready) return
 
+    const controller = new AbortController()
     const phonemeIds = [...new Set(inventory.map((item) => item.phoneme_id))]
-    if (phonemeIds.length === 0) {
-      setTransforms({})
-      setTransformsLoading(false)
-      return
-    }
 
     // send all diacritic items; include the pre-fetched bundle when available so the backend
     // can skip its own DB lookup, otherwise the backend derives it from phoneme_id + diacritic_id
@@ -37,11 +44,25 @@ export function useTransforms(inventory, targetFeatures, featureChanges, diacrit
         bundle: diacriticFeatures[item.key] ?? null,
       }))
 
-    setTransformsLoading(true)
-    postJson('/phonemes/transform', { phoneme_ids: phonemeIds, diacritic_items: diacriticItems, target_features: targetFeatures, feature_changes: featureChanges })
-      .then((data) => { setTransforms(data); setTransformsLoading(false) })
-      .catch(() => setTransformsLoading(false))
-  }, [targetFeatures, featureChanges, inventory, diacriticFeatures])
+    postJson(
+      '/phonemes/transform',
+      { phoneme_ids: phonemeIds, diacritic_items: diacriticItems, target_features: targetFeatures, feature_changes: featureChanges },
+      { signal: controller.signal }
+    )
+      .then((data) => setResult({ inputs, transforms: data, error: null }))
+      .catch((err) => {
+        if (isAbort(err)) return
+        console.error(err)
+        setResult({ inputs, transforms: NO_TRANSFORMS, error: 'Failed to apply rules.' })
+      })
 
-  return { transforms, transformsLoading }
+    return () => controller.abort()
+  }, [idle, ready, inputs, inventory, targetFeatures, featureChanges, diacriticFeatures])
+
+  if (idle) return { transforms: NO_TRANSFORMS, transformsLoading: false, error: null }
+  return {
+    transforms: result.transforms,
+    transformsLoading: !ready || result.inputs !== inputs,
+    error: result.inputs === inputs ? result.error : null,
+  }
 }

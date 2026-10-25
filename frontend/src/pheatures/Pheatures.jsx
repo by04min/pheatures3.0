@@ -22,10 +22,13 @@ export default function Pheatures() {
   const targetFeatures = useMemo(() => rowsToSpec(targetRows), [targetRows])
   const featureChanges = useMemo(() => rowsToSpec(changeRows), [changeRows])
 
-  const { bundles, diacriticFeatures } = useFeatureBundles(inventory)
-  const { transforms, transformsLoading } = useTransforms(inventory, targetFeatures, featureChanges, diacriticFeatures)
+  const { bundles, diacriticFeatures, ready: bundlesReady, error: bundlesError } = useFeatureBundles(inventory)
+  const { transforms, transformsLoading, error: transformsError } = useTransforms(
+    inventory, targetFeatures, featureChanges, diacriticFeatures, bundlesReady
+  )
   // contradictions: { target_contradictions: [...], change_contradictions: [...] }
-  const contradictions = useRuleCheck(targetFeatures, featureChanges)
+  const { contradictions, error: ruleCheckError } = useRuleCheck(targetFeatures, featureChanges)
+  const error = bundlesError ?? transformsError ?? ruleCheckError
 
   // minimality checks computed from the already-loaded feature bundles
   const redundantTarget = useMemo(
@@ -62,6 +65,8 @@ export default function Pheatures() {
             Pick out sounds by features, and apply feature rules
           </p>
         </div>
+
+        {error && <div className="text-sm text-rose-600">{error}</div>}
 
         <RulePanel
           targetRows={targetRows}
