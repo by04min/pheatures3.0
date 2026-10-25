@@ -17,7 +17,7 @@ import { Fragment } from 'react'
 import {
   CONSONANT_CELLS,
   VOWEL_CELLS,
-} from '../../inventory/format/phonemeLayout.js'
+} from '../../inventory/data/phonemeLayout.js'
 
 // Diacritic sub-rows stacked under a base row: one <tr> per diacritic applied to a base phoneme.
 //   columns: [{ key, items, slots }] — items is { slotIdx: item[] } (or undefined), slots is the

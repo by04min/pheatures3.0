@@ -1,4 +1,4 @@
-import { FEATURE_NAMES } from '../../inventory/format/phonemeFeatures.js'
+import { FEATURE_NAMES } from '../../inventory/data/phonemeFeatures.js'
 
 // SHEET VIEW
 // rows    → one per inventory item (base phoneme or base+diacritic pair)

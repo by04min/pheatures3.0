@@ -7,7 +7,7 @@ import {
   VOWEL_BACKNESS,
   VOWEL_CELLS,
   VOWEL_HEIGHTS,
-} from "../../inventory/format/phonemeLayout.js";
+} from "../../inventory/data/phonemeLayout.js";
 
 // position lookup maps (layout constants never change → built once at module load)
 //   consonantPositionOf   symbol → { manner, place, idx }

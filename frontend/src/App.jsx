@@ -2,7 +2,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import NavBar from './navigation/NavBar.jsx'
 import PhonemeInventory from './inventory/PhonemeInventory.jsx'
-import Pheatures from './pheatures/pheatures.jsx'
+import Pheatures from './pheatures/Pheatures.jsx'
 import About from './about/About.jsx'
 
 const pageVariants = {

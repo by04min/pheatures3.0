@@ -11,7 +11,7 @@
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useInventoryStore } from '../../store/inventoryStore'
-import { FeaturePanel } from '../../components/featurePanel.jsx'
+import { FeaturePanel } from '../../components/FeaturePanel.jsx'
 import {
   CONSONANT_CELLS,
   MANNERS,
@@ -20,10 +20,10 @@ import {
   VOWEL_BACKNESS,
   VOWEL_CELLS,
   VOWEL_HEIGHTS,
-} from '../../inventory/format/phonemeLayout.js'
+} from '../../inventory/data/phonemeLayout.js'
 import { useDiacriticRows } from '../../components/ipaTable/useDiacriticRows.js'
 import { IpaTableGrid } from '../../components/ipaTable/IpaTableGrid.jsx'
-import { DiacriticChip } from '../../components/ipaTable/symbolCells.jsx'
+import { DiacriticChip } from '../../components/ipaTable/SymbolCells.jsx'
 
 // Given a rows x cols grid (cells[row][col] = [symbols], diacriticRows[row][col] = items), returns the
 // rows and cols that hold at least one selected base phoneme or diacritic item.

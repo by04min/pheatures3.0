@@ -7,8 +7,8 @@ import { useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
-import { FEATURE_NAMES } from '../inventory/format/phonemeFeatures.js'
-import { RuleContradictionError, RuleNonMinimalWarning } from '../components/errorMsg.jsx'
+import { FEATURE_NAMES } from '../inventory/data/phonemeFeatures.js'
+import { RuleContradictionError, RuleNonMinimalWarning } from '../components/ErrorMsg.jsx'
 import { newRow } from './ruleValidation.js'
 
 const VALUES = ['+', '-', '0']

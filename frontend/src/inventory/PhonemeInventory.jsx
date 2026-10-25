@@ -3,11 +3,12 @@
  *
  * this is the interactive IPA chart (+ diacritics and whatnot) for users to choose their phoneme inventory
  *
- * DATA FLOW:
- * - GET /api/phonemes: this matches every phoneme on the table to its corresponding id in the backend
- * - GET /api/diacritics: this matches every diacritic on the table to its corresponding id in the backend
- * - when a diacritic is dragged: POST /api/diacritics/applicable-phonemes returns which phoneme
- *   ids satisfy apply_diacritic; those phonemes light up as valid drop targets.
+ * DATA FLOW (see the hooks next to this file):
+ * - useInventoryData: GET /api/phonemes and GET /api/diacritics match every phoneme and diacritic
+ *   on the table to its corresponding id in the backend
+ * - useDiacriticDrag: when a diacritic is dragged, POST /api/diacritics/applicable-phonemes returns
+ *   which phoneme ids satisfy apply_diacritic; those phonemes light up as valid drop targets.
+ * - usePresets: loads a preset inventory (data/*.csv) into the store
  *
  * DIACRITIC SUB-ROWS:
  * Each diacritic applied to a phoneme appears in its own sub-row directly beneath
@@ -15,89 +16,54 @@
  * both applied to /p/), two sub-rows are rendered, each chip aligned to /p/'s column.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { API_BASE, postJson } from '../api.js'
+import { useMemo, useState } from 'react'
 import { useInventoryStore } from '../store/inventoryStore'
-import { PHONEME_FEATURES } from './format/phonemeFeatures.js'
+import { PHONEME_FEATURES } from './data/phonemeFeatures.js'
 import {
   MANNERS,
   OTHER_PHONEME_GROUPS,
   PLACES,
   VOWEL_BACKNESS,
   VOWEL_HEIGHTS,
-} from './format/phonemeLayout.js'
+} from './data/phonemeLayout.js'
+import { PRESETS } from './data/presetInventories.js'
+import { getInventoryKey, makeInventoryItem } from './inventoryItems.js'
+import { useInventoryData } from './useInventoryData.js'
+import { diacriticDisplaySymbol, useDiacriticDrag } from './useDiacriticDrag.js'
+import { usePresets } from './usePresets.js'
 import { useDiacriticRows } from '../components/ipaTable/useDiacriticRows.js'
 import { IpaTableGrid } from '../components/ipaTable/IpaTableGrid.jsx'
-import InvalidDiacriticTarget from '../components/errorMsg.jsx'
+import InvalidDiacriticTarget from '../components/ErrorMsg.jsx'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import { SymbolButton, DiacriticChip } from '../components/ipaTable/symbolCells.jsx'
-import { PRESETS } from './format/presetInventories.js'
+import { SymbolButton, DiacriticChip } from '../components/ipaTable/SymbolCells.jsx'
 
 
 /** MAIN COMPONENT! **/
 
 export default function PhonemeInventory() {
+  const { inventory, toggleInventory, clearInventory } = useInventoryStore()
+  const {
+    phonemes,
+    diacritics,
+    phonemesBySymbol,
+    diacriticsById,
+    diacriticsBySymbol,
+    loading,
+    loadingSlow,
+    error,
+  } = useInventoryData()
+  const { selectedPresetId, selectPreset, resetPreset } = usePresets({ phonemesBySymbol, diacriticsBySymbol })
+  const {
+    draggingDiacriticId,
+    applicablePhonemeIds,
+    loadingApplicable,
+    touchIndicator,
+    endDrag,
+    dragHandlers,
+  } = useDiacriticDrag({ phonemes, phonemesBySymbol })
 
-  /* SETUP */
-  // the phonemes and diacrtics for display! (using the GET endpoints)
-  const [phonemes, setPhonemes] = useState([])
-  const [diacritics, setDiacritics] = useState([])
-
-  // loading and error state handling
-  const [loading, setLoading] = useState(true)
-  const [loadingSlow, setLoadingSlow] = useState(false)
-  const [error, setError] = useState('')
   // null | { title, phonemeSymbol?, condition?, phonemeFeatures? }
   const [diacriticError, setDiacriticError] = useState(null)
-  const [loadingApplicable, setLoadingApplicable] = useState(false)
-
-  /* SELECTED INVENTORY */
-  const [activeSymbol, setActiveSymbol] = useState(null)
-  const [selectedPresetId, setSelectedPresetId] = useState('')
-  const { inventory, toggleInventory, clearInventory } = useInventoryStore()
-
-  /* DIACRITICS */
-  // which diacritic is currently being dragged?
-  const [draggingDiacriticId, setDraggingDiacriticId] = useState(null)
-  // the list of phonemes that can receive the dragged diacritic
-  const [applicablePhonemeIds, setApplicablePhonemeIds] = useState(new Set())
-  // ref mirror of applicablePhonemeIds for use in touch handlers (avoids stale closures)
-  const applicableIdsRef = useRef(new Set())
-  // touch drag state
-  const [touchIndicatorPos, setTouchIndicatorPos] = useState(null)
-  const touchDraggingRef = useRef(null) // { id, displaySymbol } | null
-
-  // empties the valid-target set (state + its ref mirror)
-  const clearApplicable = useCallback(() => {
-    applicableIdsRef.current = new Set()
-    setApplicablePhonemeIds(new Set())
-  }, [])
-
-  // ends any drag: nothing is being dragged and no phonemes are highlighted
-  const endDrag = useCallback(() => {
-    setDraggingDiacriticId(null)
-    clearApplicable()
-  }, [clearApplicable])
-
-  // gets phoneme symbols
-  const phonemesBySymbol = useMemo(() => {
-    const out = {}
-    for (const phoneme of phonemes) out[phoneme.symbol.trim().normalize('NFC')] = phoneme
-    return out
-  }, [phonemes])
-
-  // gets diacritic symbols
-  const diacriticsById = useMemo(() => {
-    const out = {}
-    for (const diacritic of diacritics) out[diacritic.id] = diacritic
-    return out
-  }, [diacritics])
-
-  const diacriticsBySymbol = useMemo(() => {
-    const out = {}
-    for (const d of diacritics) out[d.symbol.trim()] = d
-    return out
-  }, [diacritics])
 
   const {
     diacriticRowsByConsonant,
@@ -115,20 +81,12 @@ export default function PhonemeInventory() {
     return !!phonemesBySymbol[cleanSymbol]
   }
 
-  /** unique key for inventory Set membership / dedupe (plain vs paired with modifier). */
-  const getInventoryKey = (phonemeId, diacriticId) =>
-    diacriticId ? `${phonemeId}:${diacriticId}` : `${phonemeId}`
-
   /** HANDLE CLICK: add/remove the base phoneme (no diacritic). */
   const onSelectSymbol = (rawSymbol) => {
     const symbol = rawSymbol?.trim()
     if (!canClickSymbol(symbol)) return
-    const phoneme = phonemesBySymbol[symbol]
-    if (!phoneme) return
-    const key = getInventoryKey(phoneme.id, null)
     setDiacriticError(null)
-    toggleInventory({ key, phoneme_id: phoneme.id, symbol: phoneme.symbol, diacritic_id: null, diacritic_symbol: null })
-    setActiveSymbol(symbol)
+    toggleInventory(makeInventoryItem(phonemesBySymbol[symbol]))
   }
 
   /** Drop: add the phoneme+diacritic pair to inventory, or show an error if already applied. */
@@ -138,18 +96,12 @@ export default function PhonemeInventory() {
     if (!phoneme || !applicablePhonemeIds.has(phoneme.id)) return
     const diacritic = diacriticsById[diacriticId]
     if (!diacritic) return
-    const key = getInventoryKey(phoneme.id, diacritic.id)
-    if (inventoryKeys.has(key)) {
+    const entry = makeInventoryItem(phoneme, diacritic)
+    if (inventoryKeys.has(entry.key)) {
       setDiacriticError({ title: `'${diacritic.name}' is already applied to ${phoneme.symbol.trim()}` })
     } else {
       setDiacriticError(null)
-      toggleInventory({
-        key,
-        phoneme_id: phoneme.id,
-        symbol: phoneme.symbol,
-        diacritic_id: diacritic.id,
-        diacritic_symbol: diacritic.symbol,
-      })
+      toggleInventory(entry)
     }
     endDrag()
   }
@@ -162,51 +114,17 @@ export default function PhonemeInventory() {
     const diacritic = diacriticsById[diacriticId]
     if (!diacritic?.condition) return
 
-    const phonemeFeatures = PHONEME_FEATURES[symbol.normalize('NFC')] ?? {}
-    const condition = diacritic.condition
-
     setDiacriticError({
       title: `Cannot apply ${diacritic.name} to`,
       phonemeSymbol: phoneme.symbol.trim(),
-      condition,
-      phonemeFeatures,
+      condition: diacritic.condition,
+      phonemeFeatures: PHONEME_FEATURES[symbol.normalize('NFC')] ?? {},
     })
     endDrag()
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  /** Resolve a CSV symbol string to an inventory entry, handling base-only and base+diacritic forms. */
-  const resolvePresetSymbol = (raw) => {
-    const symbol = raw.trim().normalize('NFC')
-    const phoneme = phonemesBySymbol[symbol]
-    if (phoneme) {
-      return { key: getInventoryKey(phoneme.id, null), phoneme_id: phoneme.id, symbol: phoneme.symbol, diacritic_id: null, diacritic_symbol: null }
-    }
-    const diacriticSymbols = Object.keys(diacriticsBySymbol).sort((a, b) => b.length - a.length)
-    for (const ds of diacriticSymbols) {
-      if (ds && symbol.endsWith(ds)) {
-        const base = symbol.slice(0, -ds.length)
-        const basePhoneme = phonemesBySymbol[base]
-        const diacritic = diacriticsBySymbol[ds]
-        if (basePhoneme && diacritic) {
-          return { key: getInventoryKey(basePhoneme.id, diacritic.id), phoneme_id: basePhoneme.id, symbol: basePhoneme.symbol, diacritic_id: diacritic.id, diacritic_symbol: diacritic.symbol }
-        }
-      }
-    }
-    return null
-  }
-
-  const loadPreset = (presetId) => {
-    const preset = PRESETS.find(p => p.id === presetId)
-    if (!preset) return
-    clearInventory()
-    for (const sym of preset.symbols) {
-      const entry = resolvePresetSymbol(sym)
-      if (entry) toggleInventory(entry)
-    }
-  }
-
-  /** Factory passed into ConsonantCell/VowelCell so each grid slot shares gating + inventory styling. */
+  /** Factory passed into IpaTableGrid so each grid slot shares gating + inventory styling. */
   const renderSymbolButton = (symbol) => {
     if (!symbol) return <div className="w-14 h-10" />
     const cleanSymbol = symbol.trim()
@@ -224,7 +142,6 @@ export default function PhonemeInventory() {
         key={`${cleanSymbol}-btn`}
         symbol={cleanSymbol}
         disabled={!canClick}
-        isActive={activeSymbol === cleanSymbol}
         isInInventory={key ? inventoryKeys.has(key) : false}
         isDragging={!!draggingDiacriticId}
         isDragTarget={isDragTarget}
@@ -243,84 +160,6 @@ export default function PhonemeInventory() {
         title={title}
       />
     )
-  }
-
-  /* GET PHONEMES AND DIACRITICS */
-  useEffect(() => {
-    const slowTimer = setTimeout(() => setLoadingSlow(true), 5000)
-    const load = async () => {
-      try {
-        setLoading(true)
-        setLoadingSlow(false)
-        setError('')
-        const [phonemeRes, diacriticRes] = await Promise.all([
-          fetch(`${API_BASE}/phonemes`),
-          fetch(`${API_BASE}/diacritics`),
-        ])
-        if (!phonemeRes.ok || !diacriticRes.ok) {
-          throw new Error('Failed to load phoneme or diacritic data.')
-        }
-        const [phonemeData, diacriticData] = await Promise.all([
-          phonemeRes.json(),
-          diacriticRes.json(),
-        ])
-        setPhonemes(phonemeData)
-        setDiacritics(diacriticData)
-      } catch (err) {
-        const msg = err.message ?? 'Failed to load API data.'
-        setError(
-          msg === 'Failed to fetch'
-            ? `${msg} — start the Flask app from the backend folder (or ensure it is reachable). With Vite dev, API calls use the /api proxy.`
-            : msg
-        )
-      } finally {
-        setLoading(false)
-        setLoadingSlow(false)
-      }
-    }
-    load()
-    return () => clearTimeout(slowTimer)
-  }, [])
-
-  /* DIACRITIC TARGETS: fetch which phonemes are valid drop targets */
-  useEffect(() => {
-    const evaluateCompatibility = async () => {
-      if (!draggingDiacriticId) {
-        clearApplicable()
-        setLoadingApplicable(false)
-        return
-      }
-      setLoadingApplicable(true)
-      try {
-        const data = await postJson('/diacritics/applicable-phonemes', { diacritic_id: draggingDiacriticId })
-        const ids = Array.isArray(data.phoneme_ids) ? data.phoneme_ids : []
-        const idSet = new Set(ids)
-        applicableIdsRef.current = idSet
-        setApplicablePhonemeIds(idSet)
-      } catch (e) {
-        console.error(e)
-        const fallback = new Set(phonemes.map((p) => p.id))
-        applicableIdsRef.current = fallback
-        setApplicablePhonemeIds(fallback)
-      } finally {
-        setLoadingApplicable(false)
-      }
-    }
-    evaluateCompatibility()
-  }, [phonemes, draggingDiacriticId, clearApplicable])
-
-  /* TOUCH DRAG: prevent page scroll while a diacritic is being touch-dragged */
-  useEffect(() => {
-    if (!draggingDiacriticId) return
-    const prevent = (e) => e.preventDefault()
-    document.addEventListener('touchmove', prevent, { passive: false })
-    return () => document.removeEventListener('touchmove', prevent)
-  }, [draggingDiacriticId])
-
-  const resetTouchDrag = () => {
-    touchDraggingRef.current = null
-    endDrag()
-    setTouchIndicatorPos(null)
   }
 
   return (
@@ -345,7 +184,7 @@ export default function PhonemeInventory() {
           <div className="flex items-center justify-between">
             <select
               value={selectedPresetId}
-              onChange={(e) => { setSelectedPresetId(e.target.value); loadPreset(e.target.value) }}
+              onChange={(e) => selectPreset(e.target.value)}
               className={`border border-slate-200 rounded-[4px] px-[8px] py-[6px] text-[14px] font-light text-black bg-white dark:bg-gray-100`}
             >
               <option value="" disabled>Select Preset</option>
@@ -354,7 +193,7 @@ export default function PhonemeInventory() {
               ))}
             </select>
             <button
-              onClick={() => { clearInventory(); setDiacriticError(null); setSelectedPresetId('') }}
+              onClick={() => { clearInventory(); setDiacriticError(null); resetPreset() }}
               className={`text-[14px] font-light underline transition-colors hover:text-slate-600 dark:hover:text-gray-300`}
             >
               <span className="flex items-center gap-1">
@@ -380,51 +219,14 @@ export default function PhonemeInventory() {
             {diacritics.map((d) => (
               <div key={d.id} className="relative group">
                 <div
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData('diacritic_id', d.id)
-                    e.dataTransfer.effectAllowed = 'copy'
-                    setDraggingDiacriticId(d.id)
-                  }}
-                  onDragEnd={endDrag}
-                  onTouchStart={(e) => {
-                    e.preventDefault()
-                    const displaySymbol = d.symbol.codePointAt(0) === 0x0320 ? '_' : d.symbol
-                    touchDraggingRef.current = { id: d.id, displaySymbol }
-                    setDraggingDiacriticId(d.id)
-                    const t = e.touches[0]
-                    setTouchIndicatorPos({ x: t.clientX, y: t.clientY })
-                  }}
-                  onTouchMove={(e) => {
-                    const t = e.touches[0]
-                    setTouchIndicatorPos({ x: t.clientX, y: t.clientY })
-                  }}
-                  onTouchEnd={(e) => {
-                    const t = e.changedTouches[0]
-                    const el = document.elementFromPoint(t.clientX, t.clientY)
-                    const target = el?.closest('[data-phoneme-symbol]')
-                    const sym = target?.dataset?.phonemeSymbol
-                    const diacriticId = touchDraggingRef.current?.id
-                    if (sym && diacriticId != null) {
-                      const phoneme = phonemesBySymbol[sym.trim()]
-                      if (phoneme && applicableIdsRef.current.has(phoneme.id)) {
-                        onDropSymbol(sym, diacriticId)
-                      } else if (phoneme) {
-                        onInvalidDropSymbol(sym, diacriticId)
-                      }
-                    }
-                    resetTouchDrag()
-                  }}
-                  onTouchCancel={resetTouchDrag}
+                  {...dragHandlers(d, { onDrop: onDropSymbol, onInvalidDrop: onInvalidDropSymbol })}
                   className={`w-9 h-8 border rounded flex items-center justify-center text-[16px] select-none cursor-grab active:cursor-grabbing ${
                     draggingDiacriticId === d.id
                       ? 'border-blue-100 bg-blue-100'
                       : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 dark:text-black dark:bg-white dark:hover:bg-gray-300'
                   }`}
                 >
-                  {/* temp fix: postalv, backed velar diacritics render incorrectly because the unicode symbol requires a base char */}
-                  {/* rendered _ instead, but uses correct unicode symbol when applying to base phoneme */}
-                  {d.symbol.codePointAt(0) === 0x0320 ? '_' : d.symbol}
+                  {diacriticDisplaySymbol(d)}
                 </div>
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded bg-slate-800 text-white text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10">
                   {d.name}
@@ -468,12 +270,12 @@ export default function PhonemeInventory() {
       </div>
 
       {/* Touch drag floating indicator */}
-      {touchIndicatorPos && touchDraggingRef.current && (
+      {touchIndicator && (
         <div
           className="fixed z-50 pointer-events-none w-9 h-8 border border-blue-400 bg-blue-100 rounded flex items-center justify-center text-[16px] font-mono opacity-80 select-none"
-          style={{ left: touchIndicatorPos.x - 18, top: touchIndicatorPos.y - 16 }}
+          style={{ left: touchIndicator.x - 18, top: touchIndicator.y - 16 }}
         >
-          {touchDraggingRef.current.displaySymbol}
+          {touchIndicator.displaySymbol}
         </div>
       )}
     </div>

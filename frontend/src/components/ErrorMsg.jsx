@@ -2,7 +2,7 @@ import { useState } from 'react'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import CloseIcon from '@mui/icons-material/Close'
-import { FeatureValueBadge } from './badges'
+import { FeatureValueBadge } from './Badges'
 
 /* 00. SHARED PIECES */
 

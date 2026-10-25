@@ -1,5 +1,5 @@
-import { PHONEME_FEATURES } from "../inventory/format/phonemeFeatures";
-import { FeatureValueBadge } from "./badges";
+import { PHONEME_FEATURES } from "../inventory/data/phonemeFeatures";
+import { FeatureValueBadge } from "./Badges";
 
 const FEATURE_GROUPS = [
   {
