@@ -1,4 +1,4 @@
-import { PHONEME_FEATURES } from '../inventory/data/phonemeFeatures'
+import { PHONEME_FEATURES } from '../data/phonemeFeatures'
 import { FeatureValueBadge } from './Badges'
 
 /*

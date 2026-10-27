@@ -23,3 +23,12 @@ export const makeInventoryItem = (phoneme, diacritic = null) => ({
   diacritic_id: diacritic?.id ?? null,
   diacritic_symbol: diacritic?.symbol ?? null,
 })
+
+/*
+03. DIACRITIC DISPLAY SYMBOL
+    The symbol shown on a diacritic's tile (the real symbol is still used when it's applied)
+*/
+export const diacriticDisplaySymbol = (diacritic) =>
+  // postalveolar and backed velar render as the same symbol in the frontend until it is applied
+  // (for some reason the symbol for backed velar won't show unless it's attached to something)
+  diacritic.symbol.codePointAt(0) === 0x0320 ? '_' : diacritic.symbol

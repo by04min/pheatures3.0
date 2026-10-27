@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { CONSONANT_CELLS, VOWEL_CELLS } from '../../inventory/data/phonemeLayout.js'
+import { CONSONANT_CELLS, VOWEL_CELLS } from '../../data/phonemeLayout.js'
 
 /*
 01. DIACRITIC SUB ROWS

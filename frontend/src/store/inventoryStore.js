@@ -10,7 +10,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 */
 export const useInventoryStore = create(
   persist(
-    (set, get) => ({
+    (set) => ({
       inventory: [],
       // adds the entry if not already present; removes it if it is (toggle behavior)
       toggleInventory: (entry) => {

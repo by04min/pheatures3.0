@@ -1,4 +1,4 @@
-import { TutorialSections } from '../tutorial.jsx'
+import { TutorialSections } from '../Tutorial.jsx'
 import rulePageInventory from '../media/rule-page-inventory.gif'
 import tableViewClick from '../media/table-view-click.gif'
 import addTargetFeature from '../media/add-target-feature.gif'

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { checkRules, isAbort } from '../api.js'
+import { checkRules, isAbort } from '../../lib/api.js'
 
 const NO_CONTRADICTIONS = { target_contradictions: [], change_contradictions: [] }
 

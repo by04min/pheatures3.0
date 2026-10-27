@@ -10,7 +10,7 @@ import {
   VOWEL_BACKNESS,
   VOWEL_CELLS,
   VOWEL_HEIGHTS,
-} from '../../inventory/data/phonemeLayout.js'
+} from '../../data/phonemeLayout.js'
 import { useDiacriticRows } from '../../components/ipaTable/useDiacriticRows.js'
 import { IpaTableGrid } from '../../components/ipaTable/IpaTableGrid.jsx'
 import { DiacriticChip } from '../../components/ipaTable/SymbolCells.jsx'

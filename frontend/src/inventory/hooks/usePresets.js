@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useInventoryStore } from '../store/inventoryStore'
-import { PHONEME_FEATURES } from './data/phonemeFeatures.js'
-import { PRESETS } from './data/presetInventories.js'
-import { makeInventoryItem } from './inventoryItems.js'
+import { useInventoryStore } from '../../store/inventoryStore'
+import { PHONEME_FEATURES } from '../../data/phonemeFeatures.js'
+import { PRESETS } from '../../data/presetInventories.js'
+import { makeInventoryItem } from '../inventoryItems.js'
 
 /*
 01. PICK DIACRITIC

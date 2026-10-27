@@ -15,7 +15,7 @@ const SECTIONS = [
 02. ABOUT
     The guide page: a side menu of topics, and the tutorials for the selected topic
 */
-function About() {
+function AboutPage() {
   // Which topic is open (starts on the first one)
   const [activeId, setActiveId] = useState(SECTIONS[0].id)
 
@@ -65,4 +65,4 @@ function About() {
   )
 }
 
-export default About
+export default AboutPage

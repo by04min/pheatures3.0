@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useInventoryStore } from '../store/inventoryStore'
-import { PHONEME_FEATURES } from './data/phonemeFeatures.js'
-import { MANNERS, OTHER_PHONEME_GROUPS, PLACES, VOWEL_BACKNESS, VOWEL_HEIGHTS } from './data/phonemeLayout.js'
-import { PRESETS } from './data/presetInventories.js'
-import { getInventoryKey, makeInventoryItem } from './inventoryItems.js'
-import { useInventoryData } from './useInventoryData.js'
-import { diacriticDisplaySymbol, useDiacriticDrag } from './useDiacriticDrag.js'
-import { usePresets } from './usePresets.js'
+import { PHONEME_FEATURES } from '../data/phonemeFeatures.js'
+import { MANNERS, OTHER_PHONEME_GROUPS, PLACES, VOWEL_BACKNESS, VOWEL_HEIGHTS } from '../data/phonemeLayout.js'
+import { PRESETS } from '../data/presetInventories.js'
+import { diacriticDisplaySymbol, getInventoryKey, makeInventoryItem } from './inventoryItems.js'
+import { useInventoryData } from './hooks/useInventoryData.js'
+import { useDiacriticDrag } from './hooks/useDiacriticDrag.js'
+import { usePresets } from './hooks/usePresets.js'
 import { useDiacriticRows } from '../components/ipaTable/useDiacriticRows.js'
 import { IpaTableGrid } from '../components/ipaTable/IpaTableGrid.jsx'
-import InvalidDiacriticTarget from '../components/ErrorMsg.jsx'
+import InvalidDiacriticTarget from '../components/ErrorMessages.jsx'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import { SymbolButton, DiacriticChip } from '../components/ipaTable/SymbolCells.jsx'
 
@@ -18,7 +18,7 @@ import { SymbolButton, DiacriticChip } from '../components/ipaTable/SymbolCells.
     The interactive IPA chart where users choose their phoneme inventory:
     click sounds to add or remove them, drag diacritics onto sounds, or load a preset
 */
-export default function PhonemeInventory() {
+export default function InventoryPage() {
   // The user's chosen sounds ("inventory"), plus the actions to add/remove them or empty the list
   const { inventory, toggleInventory, clearInventory } = useInventoryStore()
 

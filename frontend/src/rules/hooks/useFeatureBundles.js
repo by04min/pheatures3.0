@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { applyDiacritic, fetchFeatures, isAbort } from '../api.js'
+import { applyDiacritic, fetchFeatures, isAbort } from '../../lib/api.js'
 
 /*
 01. USE FEATURE BUNDLES

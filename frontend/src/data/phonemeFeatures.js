@@ -1,4 +1,4 @@
-import rawCSV from '../../../../data/feature_table.csv?raw'
+import rawCSV from '../../../data/feature_table.csv?raw'
 
 /*
 01. PHONEME FEATURES

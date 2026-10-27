@@ -1,9 +1,9 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import NavBar from './navigation/NavBar.jsx'
-import PhonemeInventory from './inventory/PhonemeInventory.jsx'
-import FeaturePad from './rules/FeaturePad.jsx'
-import About from './about/About.jsx'
+import InventoryPage from './inventory/InventoryPage.jsx'
+import RulesPage from './rules/RulesPage.jsx'
+import AboutPage from './about/AboutPage.jsx'
 
 /*
 01. PAGE TRANSITION
@@ -36,9 +36,9 @@ function App() {
         <AnimatePresence mode="wait">
           <motion.div key={location.key} variants={pageVariants} initial="initial" animate="animate" exit="exit">
             <Routes location={location}>
-              <Route path="/" element={<FeaturePad />} />
-              <Route path="/inventory" element={<PhonemeInventory />} />
-              <Route path="/about" element={<About />} />
+              <Route path="/" element={<RulesPage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
+              <Route path="/about" element={<AboutPage />} />
             </Routes>
           </motion.div>
         </AnimatePresence>

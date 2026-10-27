@@ -70,7 +70,7 @@ function featureInfo({ condition, phonemeFeatures = {} }) {
       label: `Mismatching features`,
       features: Object.entries(condition)
         .filter(([feat, val]) => phonemeFeatures[feat] !== val)
-        .map(([feat, val]) => ({ val: phonemeFeatures[feat], feat })),
+        .map(([feat]) => ({ val: phonemeFeatures[feat], feat })),
     },
   ]
 }

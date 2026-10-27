@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { isAbort, transformInventory } from '../api.js'
+import { isAbort, transformInventory } from '../../lib/api.js'
 
 const NO_TRANSFORMS = {}
 

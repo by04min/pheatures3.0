@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useInventoryStore } from '../store/inventoryStore'
-import SheetView from './display/SheetView.jsx'
-import TableView from './display/TableView.jsx'
+import SheetView from './views/SheetView.jsx'
+import TableView from './views/TableView.jsx'
 import RulePanel from './RulePanel.jsx'
-import { useFeatureBundles } from './useFeatureBundles.js'
-import { useTransforms } from './useTransforms.js'
-import { useRuleCheck } from './useRuleCheck.js'
+import { useFeatureBundles } from './hooks/useFeatureBundles.js'
+import { useTransforms } from './hooks/useTransforms.js'
+import { useRuleCheck } from './hooks/useRuleCheck.js'
 import { hasRedundantTargetFeatures, hasRedundantChangeFeatures, newRow, rowsToSpec } from './ruleValidation.js'
 
 /*
@@ -14,7 +14,7 @@ import { hasRedundantTargetFeatures, hasRedundantChangeFeatures, newRow, rowsToS
     The rule application page: pick out sounds by their features,
     and apply rules that change those features
 */
-export default function FeaturePad() {
+export default function RulesPage() {
 
   // The sounds the user chose on the Inventory page
   const { inventory } = useInventoryStore()

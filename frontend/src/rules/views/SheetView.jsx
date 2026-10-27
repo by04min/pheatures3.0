@@ -1,4 +1,4 @@
-import { FEATURE_NAMES } from '../../inventory/data/phonemeFeatures.js'
+import { FEATURE_NAMES } from '../../data/phonemeFeatures.js'
 
 /*
 01. SHEET VIEW

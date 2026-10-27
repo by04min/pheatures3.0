@@ -7,7 +7,7 @@ import {
   VOWEL_BACKNESS,
   VOWEL_CELLS,
   VOWEL_HEIGHTS,
-} from '../../inventory/data/phonemeLayout.js'
+} from '../../data/phonemeLayout.js'
 
 /*
 01. SOUND POSITIONS

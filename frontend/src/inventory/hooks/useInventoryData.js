@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getDiacritics, getPhonemes, isAbort } from '../api.js'
+import { getDiacritics, getPhonemes, isAbort } from '../../lib/api.js'
 
 /*
 01. USE INVENTORY DATA

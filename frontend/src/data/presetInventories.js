@@ -1,6 +1,6 @@
-import koreanRaw from '../../../../data/inventories/korean.csv?raw'
-import catalanRaw from '../../../../data/inventories/catalan.csv?raw'
-import finnishRaw from '../../../../data/inventories/finnish.csv?raw'
+import koreanRaw from '../../../data/inventories/korean.csv?raw'
+import catalanRaw from '../../../data/inventories/catalan.csv?raw'
+import finnishRaw from '../../../data/inventories/finnish.csv?raw'
 
 /*
 01. PARSE SYMBOLS

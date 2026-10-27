@@ -1,4 +1,4 @@
-import { TutorialSections } from '../tutorial.jsx'
+import { TutorialSections } from '../Tutorial.jsx'
 import inventoryScrollChoose from '../media/inventory-scroll-choose.gif'
 import viewAddDiacritic from '../media/view-add-diacritic.gif'
 import invalidDiacritic from '../media/invalid-diacritic.gif'
