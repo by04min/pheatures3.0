@@ -42,7 +42,7 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
         ))}
       </select>
 
-      {onRemove && (
+  
         <button
           onClick={onRemove}
           className="text-slate-300 hover:text-slate-500 transition-colors leading-none"
@@ -50,7 +50,6 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
         >
           <CloseIcon sx={{ fontSize: 14 }} />
         </button>
-      )}
     </div>
   )
 }
@@ -62,16 +61,17 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
 */
 function FeatureColumn({ label, rows, onChange }) {
   const addRow = () => onChange([...rows, newRow()])
-  const removeRow = (i) => onChange(rows.filter((_, idx) => idx !== i))
+  const clearRow = (i) => updateRow(i, {...rows[i], value: '', feature: ''})
+  const removeRow = (i) => rows.length === 1 ? clearRow(i) : onChange(rows.filter((_, idx) => idx !== i))
   const updateRow = (i, updated) => onChange(rows.map((r, idx) => (idx === i ? updated : r)))
-  const clearRows = () => onChange([newRow()])
+  const clearAllRows = () => onChange([newRow()])
 
   return (
     <div className="flex flex-col space-y-[8px] flex-1">
       <div className="flex justify-between items-center">
         <span className="text-[16px] font-light">{label}</span>
         <button
-          onClick={clearRows}
+          onClick={clearAllRows}
           className={`text-[14px] font-light underline transition-colors hover:text-slate-600 dark:hover:text-gray-300`}
         >
           <span className="flex items-center gap-1">
@@ -93,7 +93,7 @@ function FeatureColumn({ label, rows, onChange }) {
               key={row.id}
               row={row}
               onChange={(updated) => updateRow(i, updated)}
-              onRemove={i > 0 ? () => removeRow(i) : undefined}
+              onRemove={() => removeRow(i)}
               excludeFeatures={excludeFeatures}
             />
           )
