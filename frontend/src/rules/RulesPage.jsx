@@ -8,6 +8,7 @@ import { useFeatureBundles } from './hooks/useFeatureBundles.js'
 import { useTransforms } from './hooks/useTransforms.js'
 import { useRuleCheck } from './hooks/useRuleCheck.js'
 import { hasRedundantTargetFeatures, hasRedundantChangeFeatures, newRow, rowsToSpec } from './ruleValidation.js'
+import { useRuleStore } from '../store/ruleStore.js'
 
 /*
 01. FEATURE PAD
@@ -22,10 +23,8 @@ export default function RulesPage() {
   // Whether results are shown as a "sheet" or a "table"
   const [view, setView] = useState('sheet')
 
-  // The rows typed into the rule panel: "target" rows say which sounds the rule applies to,
-  // "change" rows say what happens to them. Each starts with one empty row.
-  const [targetRows, setTargetRows] = useState(() => [newRow()])
-  const [changeRows, setChangeRows] = useState(() => [newRow()])
+  // TODO: define Rule store
+  const { targetRows, changeRows, setTargetRows, setChangeRows } = useRuleStore()
 
   // The rows turned into a rule; half-filled rows are ignored
   const targetFeatures = useMemo(() => rowsToSpec(targetRows), [targetRows])

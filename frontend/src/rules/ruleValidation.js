@@ -13,9 +13,8 @@ function getBundle(item, bundles) {
     Makes a blank rule row; the id lets the page keep track of each row
     even if one is removed from the middle
 */
-let nextRowId = 0
 export function newRow() {
-  return { id: nextRowId++, value: '', feature: '' }
+  return { id: crypto.randomUUID(), value: '', feature: '' }
 }
 
 /*
