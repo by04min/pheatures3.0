@@ -4,8 +4,10 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import CloseIcon from '@mui/icons-material/Close'
 import { FeatureValueBadge } from './Badges'
 
-/* 00. SHARED PIECES */
-
+/*
+00. SHARED PIECES
+    The banner box and feature list used by every message below
+*/
 const VARIANTS = {
   error: {
     Icon: ErrorOutlineIcon,
@@ -52,14 +54,11 @@ function FeatureList({ features }) {
   )
 }
 
-/* 01. INVENTORY ERRORS: error messages for diacritic application
-
-- displays simple error message if user attempts to apply a diacritic to a phoneme that already has that diacritic
-- displays an error message that details why a diacritic cannot apply to a particular phoneme (prints required conditions and mismatching features)
-
+/*
+01. FEATURE INFO
+    Formats the details of an invalid diacritic application:
+    what the diacritic requires, and which of the sound's features don't match
 */
-
-// 1.1 HELPER: formats details of invalid diacritic application
 function featureInfo({ condition, phonemeFeatures = {} }) {
   if (!condition) return []
   return [
@@ -76,6 +75,12 @@ function featureInfo({ condition, phonemeFeatures = {} }) {
   ]
 }
 
+/*
+02. INVALID DIACRITIC TARGET
+    Error message for applying a diacritic:
+    - a simple message if the sound already has that diacritic
+    - a detailed message if the diacritic can't apply to that sound (shows what's required and what doesn't match)
+*/
 // message — null, a string, or { title, phonemeSymbol?, condition?, phonemeFeatures? }
 export default function InvalidDiacriticTarget({ message, onClose }) {
   if (!message) return null
@@ -104,10 +109,12 @@ export default function InvalidDiacriticTarget({ message, onClose }) {
   )
 }
 
-/* 02. RULE CONTRADICTION ERROR: shown when a feature spec violates a phonological
-       contradiction rule (e.g. -sonorant +approximant cannot coexist).
-       violations — array of violated rule objects [{ feature: value, ... }, ...]
+/*
+03. RULE CONTRADICTION ERROR
+    Shown when a rule asks for features that can't go together
+    (e.g. -sonorant +approximant cannot coexist)
 */
+// violations — array of violated rule objects [{ feature: value, ... }, ...]
 export function RuleContradictionError({ violations, title = 'Contradictory feature combination', onClose }) {
   if (!violations || violations.length === 0) return null
   return (
@@ -119,10 +126,12 @@ export function RuleContradictionError({ violations, title = 'Contradictory feat
   )
 }
 
-/* 03. RULE NON-MINIMAL WARNING: shown when a rule spec is non-minimal
-       (a feature can be removed without changing which phonemes are affected).
-       message — descriptive string shown to the user
+/*
+04. RULE NON-MINIMAL WARNING
+    Shown when a rule includes a feature it doesn't need
+    (it can be removed without changing which sounds are affected)
 */
+// message — descriptive string shown to the user
 const NON_MINIMAL_DETAILS = {
   target:
     'Removing feature(s) result in the same transformation and select a larger class of sounds. Try taking some features out for a minimal selection.',

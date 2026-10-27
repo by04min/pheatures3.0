@@ -1,8 +1,3 @@
-// RULE PANEL
-// two columns: Target Features (which phonemes to match) and Feature Changes (what to apply)
-// each column holds a list of {id, value: +/-/0, feature: <name>} rows
-// parent owns the row state; RulePanel just fires onChange callbacks
-
 import { useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
@@ -13,12 +8,14 @@ import { newRow } from './ruleValidation.js'
 
 const VALUES = ['+', '-', '0']
 
-// a single row: value selector (small) + feature selector (wide)
-// excludeFeatures — Set of feature names already selected in sibling rows (i.e. if you add +voice, can't add voice again)
+/*
+01. FEATURE ROW
+    One row: a +/-/0 dropdown and a feature dropdown.
+    Features already used in the other rows are left out, so the same feature can't be added twice.
+*/
 function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
   return (
     <div className="flex items-center gap-2">
-      {/* +/-/0 selector */}
       <select
         value={row.value}
         onChange={(e) => onChange({ ...row, value: e.target.value })}
@@ -32,7 +29,6 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
         ))}
       </select>
 
-      {/* feature name selector — omits features already used in other rows */}
       <select
         value={row.feature}
         onChange={(e) => onChange({ ...row, feature: e.target.value })}
@@ -59,7 +55,11 @@ function FeatureRow({ row, onChange, onRemove, excludeFeatures = new Set() }) {
   )
 }
 
-// a labeled column of FeatureRows; "clear" in the header resets to one empty row
+/*
+02. FEATURE COLUMN
+    A titled column of rows, with a "+" button to add a row
+    and "Clear" to start over with one empty row
+*/
 function FeatureColumn({ label, rows, onChange }) {
   const addRow = () => onChange([...rows, newRow()])
   const removeRow = (i) => onChange(rows.filter((_, idx) => idx !== i))
@@ -109,13 +109,23 @@ function FeatureColumn({ label, rows, onChange }) {
   )
 }
 
-// renders children(close) until close() is called. give it a `key` that changes whenever the
-// thing it shows changes, so a dismissed banner comes back when its content does
+/*
+03. DISMISSIBLE
+    Shows a message until the user closes it. If the message changes, it reappears.
+*/
 function Dismissible({ children }) {
   const [dismissed, setDismissed] = useState(false)
   return dismissed ? null : children(() => setDismissed(true))
 }
 
+/*
+04. RULE PANEL
+    The panel where the user builds a rule, in two columns:
+    - Target Features: which sounds the rule applies to
+    - Feature Changes: what the rule does to them
+    Each row is a value (+, -, or 0) plus a feature name, e.g. "+ voice".
+    The page that uses this panel keeps track of the rows; the panel only reports edits.
+*/
 export default function RulePanel({ targetRows, featureChangeRows, onTargetChange, onChangesChange, validation = {} }) {
   const {
     targetContradictions = [],
@@ -126,7 +136,7 @@ export default function RulePanel({ targetRows, featureChangeRows, onTargetChang
 
   return (
     <div className="flex flex-col gap-4">
-      {/* banners render nothing when there is nothing to show; the wrapper hides itself when empty */}
+      {/* Warning messages (contradictions, unneeded features); this area stays hidden when there are none */}
       <div className="flex flex-col md:flex-row gap-8 md:gap-36 not-has-[[data-banner]]:hidden">
         <div className="flex flex-col gap-2 flex-1">
           <Dismissible key={`tc-${JSON.stringify(targetContradictions)}`}>

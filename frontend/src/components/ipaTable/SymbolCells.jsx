@@ -1,4 +1,7 @@
-// 01. SYMBOL BUTTON: each symbol in the table is like a 'button' that the user can select
+/*
+01. SYMBOL BUTTON
+    Each symbol in the table is a button the user can select
+*/
 export function SymbolButton({
   symbol,
   disabled,
@@ -37,9 +40,12 @@ export function SymbolButton({
   )
 }
 
-// 02. DIACRITIC CHIP: a modified phoneme shown inline in the table row beneath its base phoneme.
-//     clicking removes it from the inventory (same toggleInventory logic as SymbolButton).
-//     pass `label` to override the display text (e.g. "pː → bː" when a rule is active).
+/*
+02. DIACRITIC CHIP
+    A sound with a diacritic, shown in the row beneath its plain sound.
+    Clicking removes it from the inventory (same toggle as the symbol button).
+    A custom label can replace the text, e.g. "pː → bː" when a rule is active.
+*/
 export function DiacriticChip({
   item,
   onRemove,

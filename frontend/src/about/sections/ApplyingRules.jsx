@@ -4,6 +4,11 @@ import tableViewClick from '../media/table-view-click.gif'
 import addTargetFeature from '../media/add-target-feature.gif'
 import applyFeatureChange from '../media/apply-feature-change.gif'
 
+/*
+01. SECTIONS
+    The tutorial content: each section has steps, and each step has a caption (one entry per line),
+    a demo GIF, and a text description of the GIF for screen readers
+*/
 const SECTIONS = [
   {
     title: '01. Selecting Views',
@@ -45,6 +50,10 @@ const SECTIONS = [
   },
 ]
 
+/*
+02. APPLYING RULES
+    The "Apply Rules" tutorials
+*/
 export default function ApplyingRules() {
   return <TutorialSections sections={SECTIONS} />
 }

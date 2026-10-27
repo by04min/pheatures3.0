@@ -1,13 +1,19 @@
-// All backend calls live here, so the API contract (paths and body shapes) is in one place.
-// Each function takes an optional { signal } from an AbortController to cancel the request.
-
-// backend URL: Vite's /api proxy in dev, VITE_API_BASE_URL (or local Flask) otherwise
+/*
+01. BACKEND URL
+    Where the server lives; this changes between the live site and local development
+*/
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? '/api' : 'http://127.0.0.1:5000/api')
 
-// true for the error thrown when a request is cancelled with an AbortController (not a real failure)
+/*
+02. IS ABORT
+    True if a request was cancelled on purpose (not a real error)
+*/
 export const isAbort = (err) => err?.name === 'AbortError'
 
-// fetch and parse JSON; throws on a non-2xx status
+/*
+03. REQUEST
+    Sends data to the server, reads the response, and raises an error if something goes wrong
+*/
 async function request(method, path, body, signal) {
   const res = await fetch(`${API_BASE}${path}`, {
     method,
@@ -19,29 +25,28 @@ async function request(method, path, body, signal) {
   return res.json()
 }
 
+/*
+04. GET AND POST
+    Shortcuts for the two kinds of request: asking for data (get) and sending data (post)
+*/
 const get = (path, { signal } = {}) => request('GET', path, undefined, signal)
 const post = (path, body, { signal } = {}) => request('POST', path, body, signal)
 
-// every phoneme: [{ id, symbol, ... }]
+/*
+05. API FUNCTIONS
+    One named function for each server call, for easier reference
+*/
+
 export const getPhonemes = (opts) => get('/phonemes', opts)
-
-// every diacritic: [{ id, symbol, name, condition, ... }]
 export const getDiacritics = (opts) => get('/diacritics', opts)
-
-// feature bundles of base phonemes: { phoneme_id: { feature: value, ... } }
 export const fetchFeatures = (phonemeIds, opts) => post('/phonemes/features', { phoneme_ids: phonemeIds }, opts)
-
-// feature bundle of a phoneme with a diacritic applied: { feature: value, ... }
 export const applyDiacritic = (phonemeId, diacriticId, opts) =>
   post('/diacritics/apply', { phoneme_id: phonemeId, diacritic_id: diacriticId }, opts)
-
-// ids of the phonemes a diacritic can be applied to: number[]
 export const fetchApplicablePhonemes = async (diacriticId, opts) => {
   const data = await post('/diacritics/applicable-phonemes', { diacritic_id: diacriticId }, opts)
   return Array.isArray(data.phoneme_ids) ? data.phoneme_ids : []
 }
 
-// applies a rule to the inventory: { item.key: { matched, transformed, original_symbol, result_symbol, result_bundle, valid } }
 export const transformInventory = ({ phonemeIds, diacriticItems, targetFeatures, featureChanges }, opts) =>
   post(
     '/phonemes/transform',
@@ -54,6 +59,5 @@ export const transformInventory = ({ phonemeIds, diacriticItems, targetFeatures,
     opts,
   )
 
-// phonologically impossible rule specs: { target_contradictions: [...], change_contradictions: [...] }
 export const checkRules = (targetFeatures, featureChanges, opts) =>
   post('/rules/check', { target_features: targetFeatures, feature_changes: featureChanges }, opts)

@@ -2,8 +2,12 @@ import { Fragment, useState } from 'react'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
 
-// collapsible section: click the title to show or hide its steps
+/*
+01. SECTION
+    A tutorial section that opens and closes when its title is clicked
+*/
 function Section({ title, children }) {
+  // Starts closed
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -20,7 +24,10 @@ function Section({ title, children }) {
   )
 }
 
-// one tutorial step: caption (one entry per line) above a GIF
+/*
+02. TUTORIAL STEP
+    One step: a short caption above an animated demo (GIF)
+*/
 function TutorialStep({ lines, src, alt }) {
   return (
     <div className="ml-7 space-y-[12px]">
@@ -37,7 +44,10 @@ function TutorialStep({ lines, src, alt }) {
   )
 }
 
-// sections: [{ title, steps: [{ lines: string[], src, alt }] }]
+/*
+03. TUTORIAL SECTIONS
+    Shows a list of tutorial sections, each with its steps. Used by both guide pages.
+*/
 export function TutorialSections({ sections }) {
   return (
     <div className="space-y-[24px]">

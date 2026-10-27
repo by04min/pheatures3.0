@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getDiacritics, getPhonemes, isAbort } from '../api.js'
 
-// Loads every phoneme and diacritic from the backend (GET /phonemes, GET /diacritics) and
-// indexes them for lookup.
-//   loadingSlow flips on after 5s so the page can warn about the free-tier cold start
+/*
+01. USE INVENTORY DATA
+    Loads all sounds and diacritics from the server when the page opens,
+    and builds lookup tables to find each one by its symbol or id
+*/
 export function useInventoryData() {
   const [phonemes, setPhonemes] = useState([])
   const [diacritics, setDiacritics] = useState([])
@@ -14,12 +16,14 @@ export function useInventoryData() {
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
+    // After 5 seconds, flag the load as "slow" so the page can show a patience message
     const slowTimer = setTimeout(() => setLoadingSlow(true), 5000)
     const load = async () => {
       try {
         setLoading(true)
         setLoadingSlow(false)
         setError('')
+        // This is the request to the backend using routes!
         const [phonemeData, diacriticData] = await Promise.all([getPhonemes({ signal }), getDiacritics({ signal })])
         setPhonemes(phonemeData)
         setDiacritics(diacriticData)
@@ -32,7 +36,6 @@ export function useInventoryData() {
             : 'Failed to load phoneme or diacritic data.',
         )
       } finally {
-        // an aborted load was superseded (unmount / StrictMode remount); the new one owns these flags
         if (!signal.aborted) {
           setLoading(false)
           setLoadingSlow(false)
@@ -46,6 +49,7 @@ export function useInventoryData() {
     }
   }, [])
 
+  // Lookup tables: find a sound or diacritic instantly by symbol or id
   const phonemesBySymbol = useMemo(() => {
     const out = {}
     for (const phoneme of phonemes) out[phoneme.symbol.trim().normalize('NFC')] = phoneme
@@ -58,9 +62,10 @@ export function useInventoryData() {
     return out
   }, [diacritics])
 
+  // a list per symbol, since two diacritics can share one mark (postalveolar and backed velar)
   const diacriticsBySymbol = useMemo(() => {
     const out = {}
-    for (const d of diacritics) out[d.symbol.trim()] = d
+    for (const d of diacritics) (out[d.symbol.trim()] ??= []).push(d)
     return out
   }, [diacritics])
 

@@ -1,23 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchApplicablePhonemes, isAbort } from '../api.js'
 
-// postalv / backed-velar diacritics render incorrectly on their own because the unicode
-// symbol needs a base char, so show _ instead (the real symbol is still used when applying)
+/*
+01. DIACRITIC DISPLAY SYMBOL
+    The symbol shown on a diacritic's tile (the real symbol is still used when it's applied)
+*/
 export const diacriticDisplaySymbol = (diacritic) =>
+  
+  // postalveolar and backed velar render as the same symbol in the frontend until it is applied
+  // (for some reason the symbol for backed velar won't show unless it's attached to something)
   diacritic.symbol.codePointAt(0) === 0x0320 ? '_' : diacritic.symbol
 
-// Drag state for diacritics, with mouse (HTML5 drag) and touch support.
-//   - while a diacritic is dragged, POST /diacritics/applicable-phonemes returns the phoneme ids
-//     it can be applied to; those become valid drop targets (applicablePhonemeIds)
-//   - dragHandlers(diacritic, { onDrop, onInvalidDrop }) returns the props for a draggable chip.
-//     onDrop/onInvalidDrop are called as (phonemeSymbol, diacriticId) on a touch release
-//   - touchIndicator is { x, y, displaySymbol } while a touch drag is in progress, else null
+/*
+02. USE DIACRITIC DRAG
+    Handles dragging a diacritic onto a sound, with mouse or touchscreen
+*/
 export function useDiacriticDrag({ phonemes, phonemesBySymbol }) {
-  // which diacritic is currently being dragged?
+  
+  // Which diacritic is being dragged right now (null = none)
   const [draggingDiacriticId, setDraggingDiacriticId] = useState(null)
-  // the phonemes that can receive the dragged diacritic
+  
+  // The sounds the dragged diacritic is allowed to go on
   const [applicablePhonemeIds, setApplicablePhonemeIds] = useState(new Set())
-  // ref mirror of applicablePhonemeIds for use in touch handlers (avoids stale closures)
+  
+  // A copy of the list above that touch handlers can always read up to date
   const applicableIdsRef = useRef(new Set())
   const [loadingApplicable, setLoadingApplicable] = useState(false)
   const [touchIndicator, setTouchIndicator] = useState(null)
@@ -27,7 +33,7 @@ export function useDiacriticDrag({ phonemes, phonemesBySymbol }) {
     setApplicablePhonemeIds(ids)
   }, [])
 
-  // ends any drag: nothing is being dragged and no phonemes are highlighted
+  // Stops any drag: nothing is being dragged and no sounds are highlighted
   const endDrag = useCallback(() => {
     setDraggingDiacriticId(null)
     setApplicable(new Set())
@@ -38,7 +44,7 @@ export function useDiacriticDrag({ phonemes, phonemesBySymbol }) {
     setTouchIndicator(null)
   }
 
-  /* DIACRITIC TARGETS: fetch which phonemes are valid drop targets */
+  /* VALID TARGETS: when a drag starts, ask the backend which sounds the diacritic can go on */
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
@@ -54,10 +60,10 @@ export function useDiacriticDrag({ phonemes, phonemesBySymbol }) {
       } catch (e) {
         if (isAbort(e)) return
         console.error(e)
-        // if the lookup fails, let the diacritic be dropped anywhere rather than blocking the user
+        // If the lookup fails, allow dropping anywhere rather than blocking the user
         setApplicable(new Set(phonemes.map((p) => p.id)))
       } finally {
-        // an aborted request was superseded by a newer drag, which owns the loading flag
+        // A cancelled request was replaced by a newer drag, which handles the loading flag
         if (!signal.aborted) setLoadingApplicable(false)
       }
     }
@@ -65,7 +71,7 @@ export function useDiacriticDrag({ phonemes, phonemesBySymbol }) {
     return () => controller.abort()
   }, [phonemes, draggingDiacriticId, setApplicable])
 
-  /* TOUCH DRAG: prevent page scroll while a diacritic is being touch-dragged */
+  /* TOUCH DRAG (for mobile): stop the page from scrolling while a diacritic is being dragged by finger */
   useEffect(() => {
     if (!draggingDiacriticId) return
     const prevent = (e) => e.preventDefault()
@@ -92,6 +98,7 @@ export function useDiacriticDrag({ phonemes, phonemesBySymbol }) {
       setTouchIndicator((prev) => prev && { ...prev, x: t.clientX, y: t.clientY })
     },
     onTouchEnd: (e) => {
+      // Finger lifted: find which sound (if any) is underneath, and drop there
       const t = e.changedTouches[0]
       const el = document.elementFromPoint(t.clientX, t.clientY)
       const sym = el?.closest('[data-phoneme-symbol]')?.dataset?.phonemeSymbol

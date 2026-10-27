@@ -9,10 +9,11 @@ import {
   VOWEL_HEIGHTS,
 } from '../../inventory/data/phonemeLayout.js'
 
-// position lookup maps (layout constants never change → built once at module load)
-//   consonantPositionOf   symbol → { manner, place, idx }
-//   vowelPositionOf       symbol → { height, backness, idx }
-//   otherPositionOf       symbol → { label, idx }
+/*
+01. SOUND POSITIONS
+    For each sound, remembers where it sits in the chart (its row, column, and which spot in the cell).
+    Used to sort sounds-with-diacritics into the right place.
+*/
 const consonantPositionOf = {}
 for (const manner of MANNERS)
   for (const place of PLACES)
@@ -33,23 +34,16 @@ for (const group of OTHER_PHONEME_GROUPS)
     if (sym) otherPositionOf[sym.trim()] = { label: group.label, idx }
   })
 
-// Shared hook used by PhonemeInventory and TableView.
-//
-// Given the full inventory array, returns the three values needed to render
-// diacritic sub-rows in the IPA grid layout:
-//
-//   diacriticRowsByConsonant  [manner][place][idx] → item[]
-//   diacriticRowsByVowel      [height][backness][idx] → item[]
-//   diacriticRowsByOther      [groupLabel][idx] → item[]
-//
-// item[] may contain more than one entry when multiple diacritics are applied
-// to the same base phoneme. PhonemeInventory renders one sub-row per item in
-// that array (each diacritic gets its own row under the base phoneme's row).
-
+/*
+02. USE DIACRITIC ROWS
+    Used by the Phoneme Inventory and Table View pages.
+    Takes the user's chosen sounds and returns the ones with diacritics, grouped by where
+    their plain sound sits in the chart (consonants, vowels, or other). If a sound has
+    several diacritics, each one gets its own row beneath it.
+*/
 export function useDiacriticRows(inventory) {
   const inventoryWithDiacritic = useMemo(() => inventory.filter((i) => i.diacritic_id != null), [inventory])
 
-  // diacritic grouping maps — keyed by base phoneme grid position
   const diacriticRowsByConsonant = useMemo(() => {
     const out = {}
     for (const item of inventoryWithDiacritic) {

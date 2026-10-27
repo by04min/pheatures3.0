@@ -1,6 +1,10 @@
 import { PHONEME_FEATURES } from '../inventory/data/phonemeFeatures'
 import { FeatureValueBadge } from './Badges'
 
+/*
+01. FEATURE GROUPS
+    How the features are grouped (and laid out) on the card
+*/
 const FEATURE_GROUPS = [
   {
     label: 'Prosodic',
@@ -39,7 +43,10 @@ const FEATURE_GROUPS = [
   },
 ]
 
-// given a phoneme, provides all information about it!
+/*
+02. FEATURE PANEL
+    The pop-up card for a sound: shows its full list of features
+*/
 export function FeaturePanel({ symbol, feats: featsProp, onClose }) {
   const feats = featsProp ?? PHONEME_FEATURES[symbol]
 

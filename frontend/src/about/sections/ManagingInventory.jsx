@@ -4,6 +4,11 @@ import viewAddDiacritic from '../media/view-add-diacritic.gif'
 import invalidDiacritic from '../media/invalid-diacritic.gif'
 import presets from '../media/presets.gif'
 
+/*
+01. SECTIONS
+    The tutorial content: each section has steps, and each step has a caption (one entry per line),
+    a demo GIF, and a text description of the GIF for screen readers
+*/
 const SECTIONS = [
   {
     title: '01. Select Phonemes',
@@ -48,6 +53,10 @@ const SECTIONS = [
   },
 ]
 
+/*
+02. MANAGING INVENTORY
+    The "Manage Inventory" tutorials
+*/
 export default function ManagingInventory() {
   return <TutorialSections sections={SECTIONS} />
 }

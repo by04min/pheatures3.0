@@ -6,12 +6,20 @@ import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import { useThemeStore } from '../store/themeStore'
 
+/*
+01. NAV LINKS
+    The options in the navigation bar, and which page each one leads to
+*/
 const NAV_LINKS = [
   { to: '/', label: 'Rules', Icon: RuleOutlinedIcon },
   { to: '/inventory', label: 'Inventory', Icon: TableChartOutlinedIcon },
   { to: '/about', label: 'About', Icon: HelpOutlineOutlinedIcon },
 ]
 
+/*
+02. NAV BAR
+    The bar at the top of every page: links to each page, plus the light/dark switch
+*/
 function NavBar() {
   const location = useLocation()
   const { isDark, toggleTheme } = useThemeStore()

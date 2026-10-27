@@ -1,24 +1,22 @@
 import { FEATURE_NAMES } from '../../inventory/data/phonemeFeatures.js'
 
-// SHEET VIEW
-// rows    → one per inventory item (base phoneme or base+diacritic pair)
-// columns → phoneme symbol (sticky) + one column per feature in FEATURE_NAMES
-//
-// when transforms are active, the symbol column shows "original → result" (or "original → ?")
-// and feature columns reflect the transformed bundle
-
+/*
+01. SHEET VIEW
+    A spreadsheet of the chosen sounds: one row per sound, one column per feature.
+    If a rule changes a sound, it shows "before → after" and the changed features.
+*/
 export default function SheetView({ inventory, resolveFeatures, transforms = {} }) {
   return (
     <div className="relative overflow-x-auto">
       <table className={`border-collapse text-[12px] font-light text-black bg-white dark:bg-slate-50`}>
         <thead>
           <tr>
-            {/* top-left corner: empty cell above the symbol column */}
+            {/* empty corner cell above the sounds column */}
             <th
               className={`border border-slate-200 px-3 py-2 bg-slate-50 dark:bg-gray-100 text-left sticky left-0 z-10 whitespace-nowrap`}
             />
 
-            {/* header row: one column per feature name */}
+            {/* column headings: the feature names */}
             {FEATURE_NAMES.map((f) => (
               <th
                 key={f}
@@ -30,29 +28,28 @@ export default function SheetView({ inventory, resolveFeatures, transforms = {} 
           </tr>
         </thead>
         <tbody>
-          {/* one row per inventory item */}
           {inventory.map((item) => {
             const features = resolveFeatures(item)
-            // display label: base symbol alone, or base+diacritic combined
+            // The sound's name: the plain symbol, or the symbol with its diacritic
             const baseLabel = item.diacritic_symbol
               ? `${item.symbol.trim()}${item.diacritic_symbol}`
               : item.symbol.trim()
 
-            // when a transform matched and actually changed the phoneme, show "original → result"
+            // If the rule changed this sound, show "before → after" ("?" if the result is unknown)
             const t = transforms[item.key]
             const symbolCell =
               t?.matched && t.transformed ? `${t.original_symbol ?? baseLabel} → ${t.result_symbol ?? '?'}` : baseLabel
 
             return (
               <tr key={item.key}>
-                {/* symbol column: sticky; shows transform arrow when rules are active */}
+                {/* the sound (stays visible when scrolling sideways) */}
                 <td
                   className={`border border-slate-200 px-5 py-2 bg-slate-50 dark:bg-gray-100 sticky left-0 text-center text-[14px] font-mono whitespace-nowrap`}
                 >
                   {symbolCell}
                 </td>
 
-                {/* feature value columns: reflect transformed bundle when applicable */}
+                {/* the sound's value (+, -, 0) for each feature, after the rule is applied */}
                 {FEATURE_NAMES.map((f) => (
                   <td key={f} className="border border-slate-200 px-3 py-2 text-[14px] text-center">
                     {features?.[f] ?? ''}

@@ -9,16 +9,25 @@ import { useTransforms } from './useTransforms.js'
 import { useRuleCheck } from './useRuleCheck.js'
 import { hasRedundantTargetFeatures, hasRedundantChangeFeatures, newRow, rowsToSpec } from './ruleValidation.js'
 
+/*
+01. FEATURE PAD
+    The rule application page: pick out sounds by their features,
+    and apply rules that change those features
+*/
 export default function FeaturePad() {
+
+  // The sounds the user chose on the Inventory page
   const { inventory } = useInventoryStore()
+
+  // Whether results are shown as a "sheet" or a "table"
   const [view, setView] = useState('sheet')
 
-  // rule panel row state: [{id, value: '+'/'-'/'0', feature: string}]
-  // start with one empty row so the panel always shows inputs on load
+  // The rows typed into the rule panel: "target" rows say which sounds the rule applies to,
+  // "change" rows say what happens to them. Each starts with one empty row.
   const [targetRows, setTargetRows] = useState(() => [newRow()])
   const [changeRows, setChangeRows] = useState(() => [newRow()])
 
-  // rule specs: { feature: value }. only rows where both value and feature are filled count
+  // The rows turned into a rule; half-filled rows are ignored
   const targetFeatures = useMemo(() => rowsToSpec(targetRows), [targetRows])
   const featureChanges = useMemo(() => rowsToSpec(changeRows), [changeRows])
 
@@ -28,11 +37,12 @@ export default function FeaturePad() {
     transformsLoading,
     error: transformsError,
   } = useTransforms(inventory, targetFeatures, featureChanges, diacriticFeatures, bundlesReady)
-  // contradictions: { target_contradictions: [...], change_contradictions: [...] }
+  
+  // Flags rules that contradict themselves (e.g. asking for both + and - of the same feature)
   const { contradictions, error: ruleCheckError } = useRuleCheck(targetFeatures, featureChanges)
   const error = bundlesError ?? transformsError ?? ruleCheckError
 
-  // minimality checks computed from the already-loaded feature bundles
+  // Flags features in the rule that aren't needed (they don't change which sounds match or what changes)
   const redundantTarget = useMemo(
     () => hasRedundantTargetFeatures(targetRows, changeRows, inventory, bundles),
     [targetRows, changeRows, inventory, bundles],
@@ -42,7 +52,7 @@ export default function FeaturePad() {
     [changeRows, targetRows, inventory, bundles],
   )
 
-  // resolve the feature bundle for a given inventory item, applying transforms when matched
+  // Gets a sound's features: the changed version if the rule applies to it, otherwise the original
   const resolveFeatures = (item) => {
     const t = transforms[item.key]
     if (t?.matched && t.result_bundle) return t.result_bundle
@@ -50,14 +60,14 @@ export default function FeaturePad() {
   }
 
   const rulesActive = Object.keys(transforms).length > 0
-  // only filter when target features are set; changes-only applies to the whole inventory
+  // Show only matching sounds when a target is set; with no target, the rule applies to every sound
   const hasTargetFeatures = Object.keys(targetFeatures).length > 0
   const visibleInventory =
     rulesActive && hasTargetFeatures ? inventory.filter((item) => transforms[item.key]?.matched) : inventory
 
   return (
     <div className="flex flex-col h-[calc(100vh-160px)] w-full">
-      {/* fixed top: title + rule panel + view toggle */}
+      {/* Top section (stays in place): title, rule panel, and the Sheet/Table switch */}
       <div className={`shrink-0 space-y-[32px] pb-6 transition-colors duration-300 bg-white dark:bg-[#0E1116]`}>
         <div className="space-y-[4px]">
           <h1 className="text-[28px]">Rule Application</h1>
@@ -100,7 +110,7 @@ export default function FeaturePad() {
         )}
       </div>
 
-      {/* scrollable view */}
+      {/* Results (scrollable): a "no sounds" message, or the sheet/table view */}
       <div className="relative flex-1">
         {transformsLoading && (
           <div className={`absolute inset-0 z-10 flex items-center justify-center bg-white/60 dark:bg-[#0E1116]/60`}>

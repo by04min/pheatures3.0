@@ -1,21 +1,3 @@
-/**
- * PHONEME INVENTORY
- *
- * this is the interactive IPA chart (+ diacritics and whatnot) for users to choose their phoneme inventory
- *
- * DATA FLOW (see the hooks next to this file):
- * - useInventoryData: GET /api/phonemes and GET /api/diacritics match every phoneme and diacritic
- *   on the table to its corresponding id in the backend
- * - useDiacriticDrag: when a diacritic is dragged, POST /api/diacritics/applicable-phonemes returns
- *   which phoneme ids satisfy apply_diacritic; those phonemes light up as valid drop targets.
- * - usePresets: loads a preset inventory (data/*.csv) into the store
- *
- * DIACRITIC SUB-ROWS:
- * Each diacritic applied to a phoneme appears in its own sub-row directly beneath
- * that phoneme's base row. If two diacritics are applied to the same phoneme (e.g.
- * both applied to /p/), two sub-rows are rendered, each chip aligned to /p/'s column.
- */
-
 import { useMemo, useState } from 'react'
 import { useInventoryStore } from '../store/inventoryStore'
 import { PHONEME_FEATURES } from './data/phonemeFeatures.js'
@@ -31,24 +13,35 @@ import InvalidDiacriticTarget from '../components/ErrorMsg.jsx'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import { SymbolButton, DiacriticChip } from '../components/ipaTable/SymbolCells.jsx'
 
-/** MAIN COMPONENT! **/
-
+/*
+01. PHONEME INVENTORY
+    The interactive IPA chart where users choose their phoneme inventory:
+    click sounds to add or remove them, drag diacritics onto sounds, or load a preset
+*/
 export default function PhonemeInventory() {
+  // The user's chosen sounds ("inventory"), plus the actions to add/remove them or empty the list
   const { inventory, toggleInventory, clearInventory } = useInventoryStore()
+
+  // The full list of sounds and diacritics, loaded from the database
   const { phonemes, diacritics, phonemesBySymbol, diacriticsById, diacriticsBySymbol, loading, loadingSlow, error } =
     useInventoryData()
+
+  // Tracks the presets the user can pick from a dropdown, plus the action to de/select them
   const { selectedPresetId, selectPreset, resetPreset } = usePresets({ phonemesBySymbol, diacriticsBySymbol })
+  
   const { draggingDiacriticId, applicablePhonemeIds, loadingApplicable, touchIndicator, endDrag, dragHandlers } =
     useDiacriticDrag({ phonemes, phonemesBySymbol })
 
-  // null | { title, phonemeSymbol?, condition?, phonemeFeatures? }
   const [diacriticError, setDiacriticError] = useState(null)
 
+  // Sounds with diacritics attached
   const { diacriticRowsByConsonant, diacriticRowsByVowel, diacriticRowsByOther } = useDiacriticRows(inventory)
 
+  // Quick lookup of which sounds are already chosen
   const inventoryKeys = useMemo(() => new Set(inventory.map((item) => item.key)), [inventory])
 
-  /** ERROR HANDLING: a cell is clickable only if the features CSV + API fetch both have the segment. */
+  // A symbol can only be clicked if we have data for it in both places (the features file and the database).
+  // Otherwise the button is greyed out.
   const canClickSymbol = (symbol) => {
     const cleanSymbol = symbol?.trim()
     if (!cleanSymbol) return false
@@ -56,7 +49,7 @@ export default function PhonemeInventory() {
     return !!phonemesBySymbol[cleanSymbol]
   }
 
-  /** HANDLE CLICK: add/remove the base phoneme (no diacritic). */
+  // When a sound is clicked: add it to the inventory, or remove it if it's already there
   const onSelectSymbol = (rawSymbol) => {
     const symbol = rawSymbol?.trim()
     if (!canClickSymbol(symbol)) return
@@ -64,7 +57,8 @@ export default function PhonemeInventory() {
     toggleInventory(makeInventoryItem(phonemesBySymbol[symbol]))
   }
 
-  /** Drop: add the phoneme+diacritic pair to inventory, or show an error if already applied. */
+  // When a diacritic is dropped on a valid sound: add the combined sound to the inventory,
+  // or show an error if that combination was already added
   const onDropSymbol = (rawSymbol, diacriticId) => {
     const symbol = rawSymbol?.trim()
     const phoneme = phonemesBySymbol[symbol]
@@ -81,7 +75,8 @@ export default function PhonemeInventory() {
     endDrag()
   }
 
-  /** Drop on an incompatible phoneme: compute required vs actual features and show mismatch error. */
+  // When a diacritic is dropped on a sound it doesn't fit: show an error explaining
+  // what the diacritic requires versus what that sound actually has, then scroll up to the message
   const onInvalidDropSymbol = (rawSymbol, diacriticId) => {
     const symbol = rawSymbol?.trim()
     const phoneme = phonemesBySymbol[symbol]
@@ -99,7 +94,8 @@ export default function PhonemeInventory() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  /** Factory passed into IpaTableGrid so each grid slot shares gating + inventory styling. */
+  // Builds one button for one sound in the chart. Decides whether it's clickable,
+  // highlighted as selected, or highlighted as a valid/invalid spot for a dragged diacritic
   const renderSymbolButton = (symbol) => {
     if (!symbol) return <div className="w-14 h-10" />
     const cleanSymbol = symbol.trim()
@@ -109,6 +105,7 @@ export default function PhonemeInventory() {
     const isDragTarget = !!(draggingDiacriticId && phoneme && applicablePhonemeIds.has(phoneme.id))
     const isInvalidDropTarget = !!(draggingDiacriticId && phoneme && !isDragTarget)
     const hasFeatureData = !!PHONEME_FEATURES[cleanSymbol]
+
     let title = cleanSymbol
     if (!hasFeatureData) title = `${cleanSymbol} (missing feature_table.csv data)`
     if (hasFeatureData && !phoneme) title = `${cleanSymbol} (missing backend phoneme id)`
@@ -139,9 +136,10 @@ export default function PhonemeInventory() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-160px)] w-full">
-      {/* ── Sticky top: title, errors, diacritics ── */}
+      {/* ── Top section (stays in place while the chart scrolls): title, errors, presets, diacritics ── */}
       <div className={`shrink-0 space-y-[32px] pb-8 transition-colors duration-300 bg-white dark:bg-[#0E1116]`}>
-        {/* Title + load / API error banners */}
+        
+        {/* Page title and instructions */}
         <div className="space-y-[4px]">
           <h1 className="text-[28px]">Phoneme Inventory</h1>
           <p className={`text-[16px] font-light text-gray-500 dark:text-gray-400`}>
@@ -149,13 +147,15 @@ export default function PhonemeInventory() {
           </p>
         </div>
 
-        {/* ERROR HANDLING: error messages */}
+        {/* Error messages: a problem loading data, or a diacritic that can't be applied */}
         {error && <div className="text-sm text-rose-600">{error}</div>}
         <InvalidDiacriticTarget message={diacriticError} onClose={() => setDiacriticError(null)} />
 
-        {/* Diacritics: drag onto a phoneme to add the combined entry */}
+        {/* Presets dropdown, "Clear Inventory" button, and the draggable diacritics */}
         <section className="space-y-[32px] font-light">
           <div className="flex items-center justify-between">
+            
+            {/* Dropdown for preset selection */}
             <select
               value={selectedPresetId}
               onChange={(e) => selectPreset(e.target.value)}
@@ -170,6 +170,7 @@ export default function PhonemeInventory() {
                 </option>
               ))}
             </select>
+
             <button
               onClick={() => {
                 clearInventory()
@@ -185,7 +186,7 @@ export default function PhonemeInventory() {
             </button>
           </div>
 
-          {/* loading message  */}
+          {/* "Loading..." message while data is fetched */}
           {loading && (
             <div className="flex flex-col items-center justify-center h-[60vh] gap-2">
               <span className="text-sm text-slate-600">Loading phoneme data...</span>
@@ -227,13 +228,16 @@ export default function PhonemeInventory() {
         </section>
       </div>
 
-      {/* ── Scrollable tables ── */}
+      {/* ── Bottom section: the scrollable IPA chart ── */}
       <div className="relative flex-1">
+        
+        {/* Loading verlay shown briefly while figuring out which sounds a dragged diacritic can go on */}
         {loadingApplicable && (
           <div className={`absolute inset-0 z-10 flex items-center justify-center bg-white/60 dark:bg-[#0E1116]/60`}>
             <span className="text-sm text-slate-600">Loading valid targets...</span>
           </div>
         )}
+        
         <div className="absolute inset-0 overflow-y-auto space-y-[32px]">
           <IpaTableGrid
             activeManners={MANNERS}
@@ -254,7 +258,7 @@ export default function PhonemeInventory() {
         </div>
       </div>
 
-      {/* Touch drag floating indicator */}
+      {/* On touchscreens: a small floating copy of the diacritic that follows the finger while dragging */}
       {touchIndicator && (
         <div
           className="fixed z-50 pointer-events-none w-9 h-8 border border-blue-400 bg-blue-100 rounded flex items-center justify-center text-[16px] font-mono opacity-80 select-none"

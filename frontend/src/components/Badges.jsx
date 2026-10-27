@@ -1,4 +1,7 @@
-// renders +, -, 0 for feature
+/*
+01. FEATURE VALUE BADGE
+    Draws the small circle for a feature value: green +, red -, blue 0
+*/
 export function FeatureValueBadge({ value }) {
   if (value === '+')
     return (

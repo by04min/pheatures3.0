@@ -1,13 +1,3 @@
-// TABLE VIEW
-// displays the selected inventory laid out like an IPA chart:
-//   consonants: rows = manner, columns = place, each cell holds [voiceless, voiced]
-//   vowels:     rows = height, columns = backness, each cell holds [unrounded, rounded]
-//   other:      rows = phoneme group label, columns = individual phonemes
-//
-// only rows/columns that contain at least one selected phoneme are rendered.
-// diacritic items appear in a sub-row directly below their base phoneme's row.
-// clicking any phoneme or diacritic chip opens a FeaturePanel modal.
-
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useInventoryStore } from '../../store/inventoryStore'
@@ -25,8 +15,10 @@ import { useDiacriticRows } from '../../components/ipaTable/useDiacriticRows.js'
 import { IpaTableGrid } from '../../components/ipaTable/IpaTableGrid.jsx'
 import { DiacriticChip } from '../../components/ipaTable/SymbolCells.jsx'
 
-// Given a rows x cols grid (cells[row][col] = [symbols], diacriticRows[row][col] = items), returns the
-// rows and cols that hold at least one selected base phoneme or diacritic item.
+/*
+01. ACTIVE AXES
+    Works out which rows and columns of the chart to show: those with at least one chosen sound
+*/
 function activeAxes(rows, cols, cells, baseSymbols, diacriticRows) {
   const isFilled = (row, col) =>
     cells[row]?.[col]?.some((s) => s && baseSymbols.has(s.trim())) || diacriticRows[row]?.[col] != null
@@ -36,13 +28,21 @@ function activeAxes(rows, cols, cells, baseSymbols, diacriticRows) {
   }
 }
 
-// inventory: the (possibly rule-filtered) items passed from FeaturePad.jsx
-// transforms: { phoneme_id_str: { matched, original_symbol, result_symbol } } — drives chip labels
+/*
+02. TABLE VIEW
+    Shows the chosen sounds laid out like an IPA chart. Only rows and columns that contain
+    a chosen sound are shown, and clicking a sound opens a pop-up with its features.
+
+    PARAMS:
+    - inventory: the sounds to show (already narrowed down by the rule, if there is one)
+    - transforms: how the rule changes each sound, used to show "before → after" labels
+*/
 export default function TableView({ inventory, transforms = {}, diacriticFeatures = {} }) {
   const { toggleInventory } = useInventoryStore()
+  // The sound whose features pop-up is open (null = closed)
   const [activeItem, setActiveItem] = useState(null)
 
-  // set of base phoneme symbols (no diacritics) that are in the (possibly filtered) inventory
+  // The plain sounds (no diacritic) that are being shown
   const baseSymbols = useMemo(
     () => new Set(inventory.filter((i) => i.diacritic_id == null).map((i) => i.symbol.trim())),
     [inventory],
@@ -50,10 +50,7 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
 
   const { diacriticRowsByConsonant, diacriticRowsByVowel, diacriticRowsByOther } = useDiacriticRows(inventory)
 
-  /* ACTIVE ROW/COLUMN FILTERS
-   * Only render rows and columns that have at least one selected phoneme
-   * (either a base phoneme or a diacritic item whose base lives in that slot).
-   */
+  // Hide empty rows and columns, so the chart only shows what's relevant
   const { rows: activeManners, cols: activePlaces } = useMemo(
     () => activeAxes(MANNERS, PLACES, CONSONANT_CELLS, baseSymbols, diacriticRowsByConsonant),
     [baseSymbols, diacriticRowsByConsonant],
@@ -71,7 +68,7 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
     [baseSymbols, diacriticRowsByOther],
   )
 
-  // map symbol → phoneme_id so renderSelectedSymbol can look up transforms
+  // Lets us find a sound's id from its symbol, to look up how the rule changes it
   const symbolToPhonemeId = useMemo(() => {
     const map = {}
     for (const item of inventory) {
@@ -80,9 +77,8 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
     return map
   }, [inventory])
 
-  // renders a single phoneme cell: empty placeholder if not in inventory,
-  // otherwise a clickable button that opens the FeaturePanel.
-  // when a transform is active, shows "original → result" (or "→ ?") inside the chip.
+  // Draws one spot in the chart: blank if the sound isn't chosen, otherwise a button that opens its features.
+  // If the rule changes the sound, the button shows "before → after" ("?" if the result is unknown).
   const renderSelectedSymbol = (symbol) => {
     if (!symbol) return <div className="w-20 h-10" />
     const clean = symbol.trim()
@@ -109,7 +105,7 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
 
   return (
     <div className="relative space-y-[32px]">
-      {/* FeaturePanel modal — portaled to document.body to escape any overflow/stacking constraints */}
+      {/* Features pop-up, shown on top of the whole page; click outside it to close */}
       {activeItem &&
         createPortal(
           <div
@@ -134,6 +130,7 @@ export default function TableView({ inventory, transforms = {}, diacriticFeature
         diacriticRowsByOther={diacriticRowsByOther}
         renderSymbol={renderSelectedSymbol}
         renderDiacriticChip={(item) => {
+          // Same "before → after" label for sounds with a diacritic
           const t = transforms[item.key]
           const chipLabel =
             t?.matched && t.transformed

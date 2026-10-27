@@ -1,3 +1,7 @@
+/*
+01. PLACES
+    The consonant chart's columns (where in the mouth the sound is made)
+*/
 export const PLACES = [
   'Bilabial',
   'Labiodental',
@@ -13,7 +17,11 @@ export const PLACES = [
   'Glottal',
 ]
 
-// Each entry: [voiceless, voiced] — omit second element if no voiced counterpart
+/*
+02. CONSONANT CELLS
+    The consonant chart: each cell holds [voiceless, voiced]
+    Symbols that don't exist in the database are greyed out
+*/
 export const CONSONANT_CELLS = {
   Plosive: {
     Bilabial: ['p', 'b'],
@@ -89,13 +97,24 @@ export const CONSONANT_CELLS = {
   },
 }
 
-// derived from CONSONANT_CELLS so row labels can never drift from the cell keys
+/*
+03. MANNERS
+    The consonant chart's rows (how the sound is made)
+    Taken from CONSONANT_CELLS so the row labels always match the cells
+*/
 export const MANNERS = Object.keys(CONSONANT_CELLS)
 
+/*
+04. VOWEL HEIGHTS AND BACKNESS
+    The vowel chart's rows (tongue height) and columns (tongue position)
+*/
 export const VOWEL_HEIGHTS = ['High', 'High lax', 'Upper-mid', 'Lower-mid', 'Low']
 export const VOWEL_BACKNESS = ['Front', 'Central', 'Back']
 
-// Pairs are [unrounded, rounded] following IPA chart convention
+/*
+05. VOWEL CELLS
+    The vowel chart: each cell holds [unrounded, rounded], following the IPA chart
+*/
 export const VOWEL_CELLS = {
   High: { Front: ['i', 'y'], Central: ['ɨ', 'ʉ'], Back: ['ɯ', 'u'] },
   'High lax': { Front: ['ɪ', 'ʏ'], Back: ['', 'ʊ'] },
@@ -104,6 +123,10 @@ export const VOWEL_CELLS = {
   Low: { Front: ['æ', 'ɶ'], Central: ['a', ''], Back: ['ɑ', 'ɒ'] },
 }
 
+/*
+06. OTHER PHONEME GROUPS
+    Sounds that don't fit the consonant or vowel chart, in labeled groups
+*/
 export const OTHER_PHONEME_GROUPS = [
   { label: 'lab-velar approx', phonemes: ['ʍ', 'w'] },
   { label: 'lab-pal approx', phonemes: ['ɥ'] },

@@ -5,6 +5,10 @@ import PhonemeInventory from './inventory/PhonemeInventory.jsx'
 import FeaturePad from './rules/FeaturePad.jsx'
 import About from './about/About.jsx'
 
+/*
+01. PAGE TRANSITION
+    How a page fades and slides in and out when switching between tabs
+*/
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
   animate: {
@@ -15,6 +19,11 @@ const pageVariants = {
   exit: { opacity: 0, y: 8, transition: { duration: 0.18, ease: 'easeIn' } },
 }
 
+/*
+02. APP
+    The app's frame: creates the navigation bar and sets which page
+    each tab opens (rules, inventory, about)
+*/
 function App() {
   const location = useLocation()
 

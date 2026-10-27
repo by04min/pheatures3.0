@@ -1,25 +1,11 @@
-/**
- * IPA TABLE GRID
- *
- * Shared table layout used by both PhonemeInventory and TableView.
- * Renders three sections — Consonants, Vowels, Other Phonemes — with
- * diacritic items appearing in individual sub-rows beneath their base row.
- *
- * The caller controls what goes inside each cell by passing two render props:
- *   renderSymbol(symbol)      — renders one phoneme slot (base phoneme or placeholder)
- *   renderDiacriticChip(item) — renders one diacritic chip in a sub-row
- *
- * Differences between PhonemeInventory and TableView are isolated to those
- * two callbacks and the cellWidth / slotWidth sizing props.
- */
-
 import { Fragment } from 'react'
 import { CONSONANT_CELLS, VOWEL_CELLS } from '../../inventory/data/phonemeLayout.js'
 
-// Diacritic sub-rows stacked under a base row: one <tr> per diacritic applied to a base phoneme.
-//   columns: [{ key, items, slots }] — items is { slotIdx: item[] } (or undefined), slots is the
-//            number of phoneme slots in that column's cell (2 for consonants/vowels, group size for "other")
-//   hasHeader: whether the table has a leading row-header column that needs an empty cell
+/*
+01. DIACRITIC SUB ROWS
+    The extra rows under a plain sound that show it with each diacritic applied.
+    There are as many rows as the cell with the most diacritics needs.
+*/
 function DiacriticSubRows({ columns, hasHeader, justify = '', cellCls, headerCls, slotWidth, renderDiacriticChip }) {
   const numRows = Math.max(
     0,
@@ -46,15 +32,11 @@ function DiacriticSubRows({ columns, hasHeader, justify = '', cellCls, headerCls
   ))
 }
 
-// One matrix table (consonants or vowels): a header of column labels, then one base row per row label
-// followed by its diacritic sub-rows. Each cell holds up to two phoneme slots.
-//   rows / cols: row and column labels to render
-//   cells: cells[row][col] = [symbol, symbol?] (e.g. CONSONANT_CELLS)
-//   diacriticRows: diacriticRows[row][col][slotIdx] = item[] (from useDiacriticRows)
-//   cornerWidth: width class of the row-label column, wide enough for the longest label
-//   scrollX: wrap the table so it scrolls horizontally
-//   justify: flex justification for the slots inside a cell
-//   styles: shared class strings and render props from IpaTableGrid
+/*
+02. MATRIX TABLE
+    One chart (consonants or vowels): column labels across the top, row labels down the side,
+    and up to two sounds per cell (e.g. voiceless and voiced). Diacritic rows sit under each row.
+*/
 function MatrixTable({ title, rows, cols, cells, diacriticRows, cornerWidth, scrollX = false, justify = '', styles }) {
   const { tableCls, headerCellCls, rowHeaderCls, dataCellCls, subRowProps, renderSymbol } = styles
   const table = (
@@ -72,7 +54,6 @@ function MatrixTable({ title, rows, cols, cells, diacriticRows, cornerWidth, scr
       <tbody>
         {rows.map((row) => (
           <Fragment key={row}>
-            {/* base phoneme row */}
             <tr>
               <td className={rowHeaderCls}>{row}</td>
               {cols.map((col) => {
@@ -88,7 +69,6 @@ function MatrixTable({ title, rows, cols, cells, diacriticRows, cornerWidth, scr
                 )
               })}
             </tr>
-            {/* one sub-row per diacritic stacked under this row */}
             <DiacriticSubRows
               {...subRowProps}
               hasHeader
@@ -108,22 +88,31 @@ function MatrixTable({ title, rows, cols, cells, diacriticRows, cornerWidth, scr
   )
 }
 
+/*
+03. IPA TABLE GRID
+    The chart layout shared by the Phoneme Inventory page and the Table View page.
+    It has three sections (Consonants, Vowels, Other Phonemes), and sounds with
+    diacritics appear in extra rows directly beneath their plain sound.
+
+    Each page decides how a sound and a diacritic look by passing in two functions:
+    - renderSymbol(symbol): draws one sound (or a blank space)
+    - renderDiacriticChip(item): draws one sound-with-diacritic
+*/
 export function IpaTableGrid({
-  // rows / columns to render (pass full MANNERS/PLACES/etc. for PhonemeInventory;
-  // filtered arrays for TableView)
+  // Which rows and columns to show (everything on the inventory page, only chosen ones on the table view)
   activeManners,
   activePlaces,
   activeVowelHeights,
   activeVowelBackness,
   activeOtherGroups,
-  // diacritic grouping data from useDiacriticRows()
+  // Sounds with diacritics, grouped by where they belong in the chart
   diacriticRowsByConsonant,
   diacriticRowsByVowel,
   diacriticRowsByOther,
-  // render props
+  // How each sound and each sound-with-diacritic is drawn
   renderSymbol,
   renderDiacriticChip,
-  // sizing: data-cell width and half-cell slot placeholder width
+  // Cell width, and the width of one sound within a cell
   cellWidth = 'w-28',
   slotWidth = 'w-14',
 }) {
@@ -167,7 +156,7 @@ export function IpaTableGrid({
           />
         )}
 
-        {/* OTHER PHONEMES — split into two sub-tables (groups 0–3 and 4+) */}
+        {/* OTHER PHONEMES — split into two smaller tables (first four groups, then the rest) */}
         {activeOtherGroups.length > 0 && (
           <section className="space-y-[8px] font-light">
             <h3 className="text-[16px]">Other Phonemes</h3>
@@ -186,7 +175,6 @@ export function IpaTableGrid({
                       </tr>
                     </thead>
                     <tbody>
-                      {/* base phoneme row */}
                       <tr>
                         {groups.map((group) => (
                           <td key={group.label} className={dataCellCls}>
@@ -194,7 +182,6 @@ export function IpaTableGrid({
                           </td>
                         ))}
                       </tr>
-                      {/* one sub-row per diacritic stacked under each group */}
                       <DiacriticSubRows
                         {...subRowProps}
                         columns={groups.map((group) => ({
