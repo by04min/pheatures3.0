@@ -1,42 +1,67 @@
-# routes/phonemes.py
-# GET  /api/phonemes           — returns every phoneme in the database as [{id, symbol}, ...]
-# POST /api/phonemes/features  — given a list of phoneme_ids, returns their feature bundles keyed by id
-# POST /api/phonemes/transform — applies a phonological rule to matching inventory phonemes
-
 from flask import Blueprint, jsonify, request
 from backend.logic.phoneme_funcs import get_all_phonemes, get_phoneme_features, find_phoneme_by_features, get_all_phoneme_bundles
 from backend.logic.dependency_funcs import apply_dependencies
 from backend.logic.contradiction_funcs import no_contradictions
 from backend.logic.diacritic_funcs import apply_diacritic_to_bundle, get_all_diacritic_rules
 
+"""
+01. PHONEMES BLUEPRINT
+    The server routes for sounds and rules, all under /api:
+    - GET  /phonemes            all sounds
+    - POST /phonemes/features   the features of the sounds asked for
+    - POST /phonemes/transform  applies a rule to the inventory
+    - POST /rules/check         checks a rule for contradictions
+"""
 phonemes_bp = Blueprint("phonemes", __name__)
 
+"""
+02. GET PHONEMES
+    Returns every sound in the database as [{id, symbol}, ...]
+"""
 @phonemes_bp.route("/phonemes")
 def get_phonemes():
     return jsonify(get_all_phonemes())
 
+"""
+03. GET FEATURES BATCH
+    Given a list of phoneme_ids, returns each sound's features, keyed by id
+"""
 @phonemes_bp.route("/phonemes/features", methods=["POST"])
 def get_features_batch():
     body = request.get_json(silent=True) or {}
     phoneme_ids = body.get("phoneme_ids", [])
     return jsonify({pid: get_phoneme_features(pid) for pid in phoneme_ids})
 
+"""
+04. TRANSFORM PHONEMES
+    Applies a rule (target features -> feature changes) to the sounds in the inventory
+
+    RECEIVES:
+    - phoneme_ids: the base sounds in the inventory
+    - diacritic_items: sounds with diacritics, as [{key, phoneme_id, diacritic_id, symbol, bundle}]
+      (the frontend may already have worked out the bundle)
+    - target_features: which sounds the rule applies to, as {feature: value}
+    - feature_changes: what the rule changes, as {feature: value}
+
+    RETURNS:
+    - for each sound, whether it matched, what it turned into, and whether the result is valid
+"""
 @phonemes_bp.route("/phonemes/transform", methods=["POST"])
 def transform_phonemes():
     body = request.get_json(silent=True) or {}
     phoneme_ids = body.get("phoneme_ids", [])
-    # [{key, phoneme_id, diacritic_id, symbol, bundle}] — pre-computed diacritic bundles from frontend
     diacritic_items = body.get("diacritic_items", [])
-    target_features = body.get("target_features", {})   # {feature: value}
-    feature_changes = body.get("feature_changes", {})   # {feature: value}
+    target_features = body.get("target_features", {})
+    feature_changes = body.get("feature_changes", {})
 
-    # pre-fetch all inventory bundles for fast in-inventory matching
+    # Features of every inventory sound, looked up once so matching is fast
     inventory_bundles = {pid: get_phoneme_features(pid) for pid in phoneme_ids}
-    # all diacritic rules loaded once for in-memory matching
+    # Every diacritic rule, loaded once for matching in memory
     diacritic_rules = get_all_diacritic_rules()
-    # full DB phoneme bundles — used as fallback when the result isn't in the user's inventory
+    # Every sound in the database, used as a backup when the result isn't in the user's inventory
     all_db_bundles = get_all_phoneme_bundles()
 
+    # Adds a diacritic to a sound's features, or gives back None if the sound doesn't meet its conditions
     def _apply_rule(bundle, rule):
         for feature, value in rule["condition"].items():
             if bundle.get(feature) != value:
@@ -47,19 +72,17 @@ def transform_phonemes():
         return updated
 
     def find_in_inventory(bundle):
-        """Return the IPA symbol for a result bundle, or None if it has no IPA spelling.
-        Searches the user's inventory first (fast path), then falls back to the full IPA
-        database. None is only returned when no base symbol or base+diacritic combination
-        anywhere in the IPA corresponds to this feature matrix — that is when ? is shown."""
-        # fast path: exact match in the user's selected base phonemes
+        # Finds the IPA symbol for a set of features, or None if no symbol fits (the page then shows ?).
+        # Looks in the user's inventory first, then in the whole IPA database.
+        # Exact match among the user's base sounds
         for inv_pid, inv_bundle in inventory_bundles.items():
             if inv_bundle == bundle:
                 return find_phoneme_by_features(inv_bundle)
-        # fast path: pre-computed diacritic combinations the frontend sent
+        # Sounds with diacritics that the frontend already worked out
         for item in diacritic_items:
             if item.get("bundle") == bundle:
                 return item["symbol"]
-        # fast path: every diacritic applied to every inventory base phoneme
+        # Every diacritic added to every inventory sound
         for rule in diacritic_rules:
             for inv_pid, inv_bundle in inventory_bundles.items():
                 applied = _apply_rule(inv_bundle, rule)
@@ -67,19 +90,20 @@ def transform_phonemes():
                     base_symbol = find_phoneme_by_features(inv_bundle)
                     if base_symbol:
                         return f"{base_symbol}{rule['symbol']}"
-        # fallback: search all IPA base phonemes (result not in inventory but still a real sound)
+        # Backup: any IPA sound (not in the inventory, but still a real sound)
         base_match = find_phoneme_by_features(bundle)
         if base_match:
             return base_match
-        # fallback: every diacritic applied to every IPA base phoneme
+        # Backup: every diacritic added to every IPA sound
         for rule in diacritic_rules:
             for pid, entry in all_db_bundles.items():
                 applied = _apply_rule(entry["bundle"], rule)
                 if applied == bundle:
                     return f"{entry['symbol']}{rule['symbol']}"
-        # genuinely unspellable feature matrix — caller will show ?
+        # No symbol fits these features
         return None
 
+    # Builds the answer for one sound: what it turned into, and whether that result is valid
     def _make_result(key, bundle, original_symbol):
         if not feature_changes:
             return {
@@ -116,7 +140,7 @@ def transform_phonemes():
             continue
         results[str(pid)] = _make_result(str(pid), bundle, find_phoneme_by_features(bundle))
 
-    # process diacritic items: apply change to base, then re-apply the diacritic if it still fits
+    # Sounds with diacritics: change the base sound, then add the diacritic back if it still fits
     for item in diacritic_items:
         bundle = item.get("bundle")
         key = item["key"]
@@ -124,7 +148,7 @@ def transform_phonemes():
         diacritic_id = item["diacritic_id"]
         original_symbol = item["symbol"]
         if not bundle:
-            # bundle not pre-loaded by frontend — compute it now from base + diacritic
+            # The frontend didn't send the features, so work them out from the base sound + diacritic
             base = inventory_bundles.get(phoneme_id)
             if not base:
                 continue
@@ -142,7 +166,7 @@ def transform_phonemes():
             }
             continue
 
-        # step 1: apply feature change to the base phoneme (not the diacritic bundle)
+        # Step 1: apply the changes to the base sound (not the one with the diacritic)
         base_bundle = inventory_bundles.get(phoneme_id)
         if not base_bundle:
             continue
@@ -159,10 +183,9 @@ def transform_phonemes():
             }
             continue
 
-        # step 2: try to re-apply the diacritic to the transformed base
+        # Step 2: try adding the diacritic back to the changed sound
         diacritic_result = apply_diacritic_to_bundle(updated_base, diacritic_id)
-        # only use the diacritic result if it doesn't conflict with the requested feature changes
-        # (e.g. if +long was the change and the diacritic sets long=+, the change wins → drop it)
+        # Keep the diacritic only if it doesn't undo the rule's changes; otherwise the rule wins and the diacritic is dropped
         if diacritic_result is not None and all(
             diacritic_result.get(f) == v for f, v in feature_changes.items()
         ):
@@ -180,9 +203,12 @@ def transform_phonemes():
 
     return jsonify(results)
 
+"""
+05. CHECK RULE
+    Checks a rule's target features and feature changes for contradictions (no inventory needed)
+"""
 @phonemes_bp.route("/rules/check", methods=["POST"])
 def check_rule():
-    """Check a rule spec for contradictions without needing an inventory."""
     body = request.get_json(silent=True) or {}
     target_features = body.get("target_features", {})
     feature_changes = body.get("feature_changes", {})
