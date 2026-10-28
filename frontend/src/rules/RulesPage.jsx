@@ -19,12 +19,11 @@ export default function RulesPage() {
 
   // The sounds the user chose on the Inventory page
   const { inventory } = useInventoryStore()
+  
+  const { targetRows, changeRows, setTargetRows, setChangeRows } = useRuleStore()
 
   // Whether results are shown as a "sheet" or a "table"
   const [view, setView] = useState('sheet')
-
-  // TODO: define Rule store
-  const { targetRows, changeRows, setTargetRows, setChangeRows } = useRuleStore()
 
   // The rows turned into a rule; half-filled rows are ignored
   const targetFeatures = useMemo(() => rowsToSpec(targetRows), [targetRows])
