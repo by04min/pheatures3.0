@@ -12,6 +12,8 @@ import { IpaTableGrid } from '../components/ipaTable/IpaTableGrid.jsx'
 import InvalidDiacriticTarget from '../components/ErrorMessages.jsx'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import { SymbolButton, DiacriticChip } from '../components/ipaTable/SymbolCells.jsx'
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 
 /*
 01. PHONEME INVENTORY
@@ -33,6 +35,7 @@ export default function InventoryPage() {
     useDiacriticDrag({ phonemes, phonemesBySymbol })
 
   const [diacriticError, setDiacriticError] = useState(null)
+  const [diacriticsOpen, setDiacriticsOpen] = useState(true)}
 
   // Sounds with diacritics attached
   const { diacriticRowsByConsonant, diacriticRowsByVowel, diacriticRowsByOther } = useDiacriticRows(inventory)
@@ -137,23 +140,18 @@ export default function InventoryPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-160px)] w-full">
       {/* ── Top section (stays in place while the chart scrolls): title, errors, presets, diacritics ── */}
-      <div className={`shrink-0 space-y-[32px] pb-8 transition-colors duration-300 bg-white dark:bg-[#0E1116]`}>
+      <div className={`shrink-0 space-y-[32px] pb-2 transition-colors duration-300 bg-white dark:bg-[#0E1116]`}>
         
         {/* Page title and instructions */}
         <div className="space-y-[4px]">
           <h1 className="text-[28px]">Phoneme Inventory</h1>
+
+          <div className="flex flex-row justify-between items-center">
+
           <p className={`text-[16px] font-light text-gray-500 dark:text-gray-400`}>
             Click phonemes to add or remove from the inventory
           </p>
-        </div>
-
-        {/* Error messages: a problem loading data, or a diacritic that can't be applied */}
-        {error && <div className="text-sm text-rose-600">{error}</div>}
-        <InvalidDiacriticTarget message={diacriticError} onClose={() => setDiacriticError(null)} />
-
-        {/* Presets dropdown, "Clear Inventory" button, and the draggable diacritics */}
-        <section className="space-y-[32px] font-light">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
             
             {/* Dropdown for preset selection */}
             <select
@@ -185,6 +183,16 @@ export default function InventoryPage() {
               </span>
             </button>
           </div>
+          </div>
+        </div>
+
+        {/* Error messages: a problem loading data, or a diacritic that can't be applied */}
+        {error && <div className="text-sm text-rose-600">{error}</div>}
+        <InvalidDiacriticTarget message={diacriticError} onClose={() => setDiacriticError(null)} />
+
+        {/* Presets dropdown, "Clear Inventory" button, and the draggable diacritics */}
+        <section className="space-y-[32px] font-light">
+        
 
           {/* "Loading..." message while data is fetched */}
           {loading && (
@@ -200,36 +208,17 @@ export default function InventoryPage() {
             </div>
           )}
 
-          <div className="space-y-[8px]">
-            <h3 className="text-[16px] font-light">Diacritics</h3>
-            <div className="flex flex-wrap gap-1.5">
-              {diacritics.map((d) => (
-                <div key={d.id} className="relative group">
-                  <div
-                    {...dragHandlers(d, { onDrop: onDropSymbol, onInvalidDrop: onInvalidDropSymbol })}
-                    className={`w-9 h-8 border rounded flex items-center justify-center text-[16px] select-none cursor-grab active:cursor-grabbing ${
-                      draggingDiacriticId === d.id
-                        ? 'border-blue-100 bg-blue-100'
-                        : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 dark:text-black dark:bg-white dark:hover:bg-gray-300'
-                    }`}
-                  >
-                    {diacriticDisplaySymbol(d)}
-                  </div>
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded bg-slate-800 text-white text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10">
-                    {d.name}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className={`text-[12px] font-light text-gray-500 dark:text-gray-400`}>
-              Drag a diacritic onto a compatible phoneme to add it to the inventory.
-            </p>
-          </div>
+          
         </section>
       </div>
 
       {/* ── Bottom section: the scrollable IPA chart ── */}
-      <div className="relative flex-1">
+      <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-0">
+
+        {/* IPA chart */}
+        <div className="relative flex-1 min-w-0 min-h-0 order-last lg:order-first">
+
+        
         
         {/* Loading verlay shown briefly while figuring out which sounds a dragged diacritic can go on */}
         {loadingApplicable && (
@@ -256,6 +245,45 @@ export default function InventoryPage() {
             slotWidth="w-14"
           />
         </div>
+      </div>
+{/* Diacritics panel (paste and change just the first row) */}
+      <aside className={`shrink-0 ${diacriticsOpen ? 'lg:w-[8.25rem]' : ''} md:self-start space-y-[8px]`}>
+          <button
+            type="button"
+            onClick={() => setDiacriticsOpen((o) => !o)}
+            aria-expanded={diacriticsOpen}
+            aria-label={diacriticsOpen ? 'Hide diacritics' : 'Show diacritics'}
+            className="flex items-center gap-1 text-[16px] font-light hover:text-slate-600 dark:hover:text-gray-300"
+          >
+            Diacritics
+            {diacriticsOpen ? <KeyboardArrowUpIcon style={{ fontSize: 20 }} /> : <KeyboardArrowDownIcon style={{ fontSize: 20 }} />}
+          </button>
+          {diacriticsOpen && (<>
+          <div className="flex flex-wrap gap-1.5">
+            {diacritics.map((d) => (
+              <div key={d.id} className="relative group">
+                <div
+                  {...dragHandlers(d, { onDrop: onDropSymbol, onInvalidDrop: onInvalidDropSymbol })}
+                  // w-10 h-10 text-[24px] text-center
+                  className={`w-10 h-10 border rounded flex items-center justify-center font-light text-[24px] text-center select-none cursor-grab active:cursor-grabbing ${
+                    draggingDiacriticId === d.id
+                      ? 'border-blue-100 bg-blue-100'
+                      : 'border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100 dark:text-black dark:bg-white dark:hover:bg-gray-300'
+                  }`}
+                >
+                  {diacriticDisplaySymbol(d)}
+                </div>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded bg-slate-800 text-white text-[12px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-10">
+                  {d.name}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className={`text-[12px] font-light text-gray-500 dark:text-gray-400`}>
+            Drag a diacritic onto a compatible phoneme.
+          </p>
+          </>)}
+        </aside>
       </div>
 
       {/* On touchscreens: a small floating copy of the diacritic that follows the finger while dragging */}
