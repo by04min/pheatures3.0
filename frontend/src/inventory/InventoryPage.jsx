@@ -35,7 +35,7 @@ export default function InventoryPage() {
     useDiacriticDrag({ phonemes, phonemesBySymbol })
 
   const [diacriticError, setDiacriticError] = useState(null)
-  const [diacriticsOpen, setDiacriticsOpen] = useState(true)}
+  const [diacriticsOpen, setDiacriticsOpen] = useState(true)
 
   // Sounds with diacritics attached
   const { diacriticRowsByConsonant, diacriticRowsByVowel, diacriticRowsByOther } = useDiacriticRows(inventory)
